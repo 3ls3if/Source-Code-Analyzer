@@ -79,9 +79,9 @@ def upload_and_analyze(language):
             unsafe_lines, prediction = analyze_code(code)
 
             # Prepare results
-            result_message = f"{Fore.YELLOW}Unsafe Lines of Code with Vulnerability Types:{Style.RESET_ALL}\n"
+            result_message = f"\n\n{Fore.YELLOW}[!] Unsafe Lines of Code with Vulnerability Types:{Style.RESET_ALL}\n\n"
             if not unsafe_lines:
-                result_message += f"\n{Fore.GREEN}No vulnerabilities found.{Style.RESET_ALL}\n"
+                result_message += f"[!]\n{Fore.GREEN} No vulnerabilities found.{Style.RESET_ALL}\n"
             else:
                 for line, vuln_type in unsafe_lines:
                     result_message += f"{Fore.RED}{line} - {vuln_type}{Style.RESET_ALL}\n"
@@ -90,6 +90,7 @@ def upload_and_analyze(language):
             result_file_path = save_results(file_path, result_message)
 
             # Display results
+            print("\n")
             print(result_message)
             print(f"\n{Fore.CYAN}Results have been saved to {result_file_path}{Style.RESET_ALL}")
 
@@ -106,20 +107,20 @@ def main():
             os.system('clear')  # Command for Unix-like systems
         
         
-        print(f"{Fore.GREEN}*****************************************")
-        print("*    Source Code Vulnerability Scanner  *")
-        print("*****************************************{Style.RESET_ALL}\n")
+        print(f"{Fore.GREEN}*****************************************{Style.RESET_ALL}")
+        print(f"{Fore.MAGENTA}    Source Code Vulnerability Scanner  {Style.RESET_ALL}")
+        print(f"{Fore.GREEN}*****************************************{Style.RESET_ALL}\n")
         print(f"{Fore.YELLOW}[1] Upload and Analyze Python Script{Style.RESET_ALL}")
         print(f"{Fore.YELLOW}[2] Upload and Analyze PHP Script{Style.RESET_ALL}")
         print(f"{Fore.YELLOW}[3] Upload and Analyze JavaScript Script{Style.RESET_ALL}")
         print(f"{Fore.YELLOW}[4] Upload and Analyze Java Script{Style.RESET_ALL}")
-        print(f"{Fore.RED}[5] Exit{Style.RESET_ALL}")
-        print(f"{Fore.GREEN}*****************************************{Style.RESET_ALL}")
+        print(f"\n{Fore.RED}[5] Exit{Style.RESET_ALL}")
+        print(f"\n{Fore.GREEN}*****************************************{Style.RESET_ALL}")
 
         choice = input(f"\n{Fore.BLUE}[+] Enter your choice (1-5): {Style.RESET_ALL}")
 
         if choice == '5':
-            print(f"{Fore.RED}[-] Exiting the program...{Style.RESET_ALL}")
+            print(f"\n{Fore.RED}[-] Exiting the program...{Style.RESET_ALL}")
             break
 
         language_map = {

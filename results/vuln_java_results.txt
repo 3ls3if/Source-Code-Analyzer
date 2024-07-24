@@ -1,0 +1,10 @@
+
+
+[33m[!] Unsafe Lines of Code with Vulnerability Types:[0m
+
+[31mimport java.util.Random; - Insecure Randomness[0m
+[31mFile file = new File("test.txt"); - File Creation[0m
+[31mConnection conn = DriverManager.getConnection("jdbc:mysql: - SQL Injection[0m
+[31mCipher cipher = Cipher.getInstance("DES"); - Insecure Encryption[0m
+[31mRandom rand = new Random(); - Insecure Randomness[0m
+[31mSystem.out.println("Hello World"); - Information Disclosure[0m
