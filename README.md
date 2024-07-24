@@ -86,5 +86,5 @@ To analyze a Python file named `example.py`:
 
 ### License
 
-- This project is licensed under the MIT License. Copyright (c) 2024 SwiftSafe. See the LICENSE file for details.
+- This project is licensed under the MIT License. See the LICENSE file for details.
 
