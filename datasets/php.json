@@ -1,0 +1,1003 @@
+[
+    {
+        "code": "public function onChannelPreDelete(ResourceControllerEvent $event): void { $channel = $event->getSubject(); if (!$channel instanceof ChannelInterface) { throw new UnexpectedTypeException( $channel, ChannelInterface::class ); } $results = $this->channelRepository->findBy(['enabled' => true]); if (!$results || (count($results) === 1 && current($results) === $channel)) { $event->stop('sylius.channel.delete_error'); } }",
+        "label": 0
+    },
+    {
+        "code": "public function getTaxTotal(): int { $taxTotal = 0; foreach ($this->getAdjustments(AdjustmentInterface::TAX_ADJUSTMENT) as $taxAdjustment) { $taxTotal += $taxAdjustment->getAmount(); } foreach ($this->units as $unit) { $taxTotal += $unit->getTaxTotal(); } return $taxTotal; }",
+        "label": 0
+    },
+    {
+        "code": "private function isLastEnabledEntity($result, $entity): bool { return !$result || 0 === count($result) || (1 === count($result) && $entity === ($result instanceof \\Iterator ? $result->current() : current($result))); }",
+        "label": 0
+    },
+    {
+        "code": "protected function recalculateTotal(): void { $this->total = $this->itemsTotal + $this->adjustmentsTotal; if ($this->total < 0) { $this->total = 0; } }",
+        "label": 0
+    },
+    {
+        "code": "public function loginAction(Request $request): Response { $authenticationUtils = $this->get('security.authentication_utils'); $error = $authenticationUtils->getLastAuthenticationError(); $lastUsername = $authenticationUtils->getLastUsername(); $options = $request->attributes->get('_sylius'); $template = $options['template'] ?? null; Assert::notNull($template, 'Template is not configured.'); $formType = $options['form'] ?? UserLoginType::class; $form = $this->get('form.factory')->createNamed('', $formType); return $this->render($template, [ 'form' => $form->createView(), 'last_username' => $lastUsername, 'error' => $error, ]); }",
+        "label": 0
+    },
+    {
+        "code": "public function getTaxTotal(): int { $taxTotal = 0; foreach ($this->getAdjustments(AdjustmentInterface::TAX_ADJUSTMENT) as $taxAdjustment) { $taxTotal += $taxAdjustment->getAmount(); } foreach ($this->items as $item) { $taxTotal += $item->getTaxTotal(); } return $taxTotal; }",
+        "label": 0
+    },
+    {
+        "code": "public function getShippingTotal(): int { $shippingTotal = $this->getAdjustmentsTotal(AdjustmentInterface::SHIPPING_ADJUSTMENT); $shippingTotal += $this->getAdjustmentsTotal(AdjustmentInterface::ORDER_SHIPPING_PROMOTION_ADJUSTMENT); $shippingTotal += $this->getAdjustmentsTotal(AdjustmentInterface::TAX_ADJUSTMENT); return $shippingTotal; }",
+        "label": 0
+    },
+    {
+        "code": "public function getOrderPromotionTotal(): int { $orderPromotionTotal = 0; foreach ($this->items as $item) { $orderPromotionTotal += $item->getAdjustmentsTotalRecursively(AdjustmentInterface::ORDER_PROMOTION_ADJUSTMENT); } return $orderPromotionTotal; }",
+        "label": 0
+    },
+    {
+        "code": "protected function recalculateTotal(): void { $this->total = $this->unitsTotal + $this->adjustmentsTotal; if ($this->total < 0) { $this->total = 0; } if (null !== $this->order) { $this->order->recalculateItemsTotal(); } }",
+        "label": 0
+    },
+    {
+        "code": "private function updateUserByOAuthUserResponse(UserInterface $user, UserResponseInterface $response): SyliusUserInterface { Assert::isInstanceOf($user, SyliusUserInterface::class); $oauth = $this->oauthFactory->createNew(); $oauth->setIdentifier($response->getUsername()); $oauth->setProvider($response->getResourceOwner()->getName()); $oauth->setAccessToken($response->getAccessToken()); $oauth->setRefreshToken($response->getRefreshToken()); $user->addOAuthAccount($oauth); $this->userManager->persist($user); $this->userManager->flush(); return $user; }",
+        "label": 0
+    },
+    {
+        "code": "public function serialize(): string { return serialize([ $this->password, $this->salt, $this->usernameCanonical, $this->username, $this->locked, $this->enabled, $this->id, $this->encoderName, ]); }",
+        "label": 0
+    },
+    {
+        "code": "public static function wrap( callable $credentialProvider, $options, $region, $service ) { return function (callable $handler) use ( $credentialProvider, $options, $region, $service ) { return new static( $handler, $credentialProvider, $options, $region, $service ); }; }",
+        "label": 0
+    },
+    {
+        "code": "public function getOperationDocs($operation) { return isset($this->docs['operations'][$operation]) ? $this->docs['operations'][$operation] : null; }",
+        "label": 0
+    },
+    {
+        "code": "public function getErrorDocs($error) { return isset($this->docs['shapes'][$error]['base']) ? $this->docs['shapes'][$error]['base'] : null; }",
+        "label": 0
+    },
+    {
+        "code": "public function getShapeDocs($shapeName, $parentName, $ref) { if (!isset($this->docs['shapes'][$shapeName])) { return ''; } $result = ''; $d = $this->docs['shapes'][$shapeName]; if (isset($d['refs'][\"{$parentName}\\$${ref}\"])) { $result = $d['refs'][\"{$parentName}\\$${ref}\"]; } elseif (isset($d['base'])) { $result = $d['base']; } if (isset($d['append'])) { $result .= $d['append']; } return $this->clean($result); }",
+        "label": 0
+    },
+    {
+        "code": "public function createToken($endpoint, $region, $username) { $uri = new Uri($endpoint); $uri = $uri->withPath('/'); $uri = $uri->withQuery('Action=connect&DBUser=' . $username); $request = new Request('GET', $uri); $signer = new SignatureV4('rds-db', $region); $provider = $this->credentialProvider; $url = (string) $signer->presign( $request, $provider()->wait(), '+15 minutes' )->getUri(); return substr($url, 2); }",
+        "label": 0
+    },
+    {
+        "code": "public static function resolve(callable $provider, array $args = []) { $result = $provider($args); if (is_array($result)) { return $result; } throw new UnresolvedEndpointException( 'Unable to resolve an endpoint using the provider arguments: ' . json_encode($args) . '. Note: you can provide an \"endpoint\" ' . 'option to a client constructor to bypass invoking an endpoint ' . 'provider.'); }",
+        "label": 0
+    },
+    {
+        "code": "public static function wrap($region, array $options) { return function (callable $handler) use ($region, $options) { return new self($handler, $region, $options); }; }",
+        "label": 0
+    },
+    {
+        "code": "public function save(MetadataEnvelope $envelope, array $args) { $this->client->putObject([ 'Bucket' => $args['Bucket'], 'Key' => $args['Key'] . $this->suffix, 'Body' => json_encode($envelope) ]); return $args; }",
+        "label": 0
+    },
+    {
+        "code": "public function load(array $args) { $result = $this->client->getObject([ 'Bucket' => $args['Bucket'], 'Key' => $args['Key'] . $this->suffix ]); $metadataHeaders = json_decode($result['Body'], true); $envelope = new MetadataEnvelope(); $constantValues = MetadataEnvelope::getConstantValues(); foreach ($constantValues as $constant) { if (!empty($metadataHeaders[$constant])) { $envelope[$constant] = $metadataHeaders[$constant]; } } return $envelope; }",
+        "label": 0
+    },
+    {
+        "code": "public static function createSerializer(Service $api, $endpoint) { static $mapping = [ 'json' => 'Aws\\Api\\Serializer\\JsonRpcSerializer', 'query' => 'Aws\\Api\\Serializer\\QuerySerializer', 'rest-json' => 'Aws\\Api\\Serializer\\RestJsonSerializer', 'rest-xml' => 'Aws\\Api\\Serializer\\RestXmlSerializer' ]; $proto = $api->getProtocol(); if (isset($mapping[$proto])) { return new $mapping[$proto]($api, $endpoint); } if ($proto == 'ec2') { return new QuerySerializer($api, $endpoint, new Ec2ParamBuilder()); } throw new \\UnexpectedValueException( 'Unknown protocol: ' . $api->getProtocol() ); }",
+        "label": 0
+    },
+    {
+        "code": "public function getOperation($name) { if (!isset($this->operations[$name])) { if (!isset($this->definition['operations'][$name])) { throw new \\InvalidArgumentException(\"Unknown operation: $name\"); } $this->operations[$name] = new Operation( $this->definition['operations'][$name], $this->shapeMap ); } return $this->operations[$name]; }",
+        "label": 0
+    },
+    {
+        "code": "public function getOperations() { $result = []; foreach ($this->definition['operations'] as $name => $definition) { $result[$name] = $this->getOperation($name); } return $result; }",
+        "label": 0
+    },
+    {
+        "code": "public function getMetadata($key = null) { if (!$key) { return $this['metadata']; } if (isset($this->definition['metadata'][$key])) { return $this->definition['metadata'][$key]; } return null; }",
+        "label": 0
+    },
+    {
+        "code": "public function getPaginators() { if (!isset($this->paginators)) { $res = call_user_func( $this->apiProvider, 'paginator', $this->serviceName, $this->apiVersion ); $this->paginators = isset($res['pagination']) ? $res['pagination'] : []; } return $this->paginators; }",
+        "label": 0
+    },
+    {
+        "code": "public function getPaginatorConfig($name) { static $defaults = [ 'input_token' => null, 'output_token' => null, 'limit_key' => null, 'result_key' => null, 'more_results' => null, ]; if ($this->hasPaginator($name)) { return $this->paginators[$name] + $defaults; } throw new \\UnexpectedValueException(\"There is no {$name} \" . \"paginator defined for the {$this->serviceName} service.\"); }",
+        "label": 0
+    },
+    {
+        "code": "public function getWaiters() { if (!isset($this->waiters)) { $res = call_user_func( $this->apiProvider, 'waiter', $this->serviceName, $this->apiVersion ); $this->waiters = isset($res['waiters']) ? $res['waiters'] : []; } return $this->waiters; }",
+        "label": 0
+    },
+    {
+        "code": "public function addChecksum($checksum, $inBinaryForm = false) { if ($this->hash) { throw new \\LogicException('You may not add more checksums to a ' . 'complete tree hash.'); } $this->checksums[] = $inBinaryForm ? $checksum : hex2bin($checksum); return $this; }",
+        "label": 0
+    },
+    {
+        "code": "private function getChecksumsMiddleware() { return function (callable $handler) { return function ( CommandInterface $command, RequestInterface $request = null ) use ($handler) { if (!$command['ContentSHA256'] && $command['contentSHA256']) { $command['ContentSHA256'] = $command['contentSHA256']; unset($command['contentSHA256']); } $name = $command->getName(); if (($name === 'UploadArchive' || $name === 'UploadMultipartPart') && (!$command['checksum'] || !$command['ContentSHA256']) ) { $body = $request->getBody(); if (!$body->isSeekable()) { throw new CouldNotCreateChecksumException('sha256'); } if (!$command['checksum']) { $body = new HashingStream( $body, new TreeHash(), function ($result) use ($command, &$request) { $request = $request->withHeader( 'x-amz-sha256-tree-hash', bin2hex($result) ); } ); } if (!$command['ContentSHA256']) { $body = new HashingStream( $body, new PhpHash('sha256'), function ($result) use ($command) { $command['ContentSHA256'] = bin2hex($result); } ); } while (!$body->eof()) { $body->read(1048576); } $body->seek(0); } if ($command['ContentSHA256']) { $request = $request->withHeader( 'x-amz-content-sha256', $command['ContentSHA256'] ); } return $handler($command, $request); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "private function getApiVersionMiddleware() { return function (callable $handler) { return function ( CommandInterface $command, RequestInterface $request = null ) use ($handler) { return $handler($command, $request->withHeader( 'x-amz-glacier-version', $this->getApi()->getMetadata('apiVersion') )); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "public function getDefaultCurlOptionsMiddleware() { return Middleware::mapCommand(function (CommandInterface $cmd) { $defaultCurlOptions = [ CURLOPT_TCP_KEEPALIVE => 1, ]; if (!isset($cmd['@http']['curl'])) { $cmd['@http']['curl'] = $defaultCurlOptions; } else { $cmd['@http']['curl'] += $defaultCurlOptions; } return $cmd; }); }",
+        "label": 0
+    },
+    {
+        "code": "public static function chain() { $links = func_get_args(); if (empty($links)) { throw new \\InvalidArgumentException('No providers in chain'); } return function () use ($links) { $parent = array_shift($links); $promise = $parent(); while ($next = array_shift($links)) { $promise = $promise->otherwise($next); } return $promise; }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function env() { return function () { $enabled = getenv(self::ENV_ENABLED); if ($enabled !== false) { return Promise\\promise_for( new Configuration( $enabled, getenv(self::ENV_PORT) ?: self::DEFAULT_PORT, getenv(self:: ENV_CLIENT_ID) ?: self::DEFAULT_CLIENT_ID ) ); } return self::reject('Could not find environment variable CSM config' . ' in ' . self::ENV_ENABLED. '/' . self::ENV_PORT . '/' . self::ENV_CLIENT_ID); }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function fallback() { return function() { return Promise\\promise_for( new Configuration( self::DEFAULT_ENABLED, self::DEFAULT_PORT, self::DEFAULT_CLIENT_ID ) ); }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function memoize(callable $provider) { return function () use ($provider) { static $result; static $isConstant; if ($isConstant) { return $result; } if (null === $result) { $result = $provider(); } return $result ->then(function (ConfigurationInterface $config) use (&$isConstant) { $isConstant = true; return $config; }); }; }",
+        "label": 0
+    },
+    {
+        "code": "public function getSignedCookie(array $options) { foreach (['key_pair_id', 'private_key'] as $required) { if (!isset($options[$required])) { throw new \\InvalidArgumentException(\"$required is required\"); } } $cookieSigner = new CookieSigner( $options['key_pair_id'], $options['private_key'] ); return $cookieSigner->getSignedCookie( isset($options['url']) ? $options['url'] : null, isset($options['expires']) ? $options['expires'] : null, isset($options['policy']) ? $options['policy'] : null ); }",
+        "label": 1
+    },
+    {
+        "code": "public function url_stat($path, $flags) { $this->initProtocol($path); $split = explode(': $path = strtolower($split[0]) . ': if ($value = $this->getCacheStorage()->get($path)) { return $value; } $stat = $this->createStat($path, $flags); if (is_array($stat)) { $this->getCacheStorage()->set($path, $stat); } return $stat; }",
+        "label": 0
+    },
+    {
+        "code": "private function validate($path, $mode) { $errors = []; if (!$this->getOption('Key')) { $errors[] = 'Cannot open a bucket. You must specify a path in the ' . 'form of s3: } if (!in_array($mode, ['r', 'w', 'a', 'x'])) { $errors[] = \"Mode not supported: {$mode}. \" . \"Use one 'r', 'w', 'a', or 'x'.\"; } if ($mode == 'x' && $this->getClient()->doesObjectExist( $this->getOption('Bucket'), $this->getOption('Key'), $this->getOptions(true) ) ) { $errors[] = \"{$path} already exists on Amazon S3\"; } return $errors; }",
+        "label": 0
+    },
+    {
+        "code": "private function getOptions($removeContextData = false) { if ($this->context === null) { $options = []; } else { $options = stream_context_get_options($this->context); $options = isset($options[$this->protocol]) ? $options[$this->protocol] : []; } $default = stream_context_get_options(stream_context_get_default()); $default = isset($default[$this->protocol]) ? $default[$this->protocol] : []; $result = $this->params + $options + $default; if ($removeContextData) { unset($result['client'], $result['seekable'], $result['cache']); } return $result; }",
+        "label": 0
+    },
+    {
+        "code": "private function triggerError($errors, $flags = null) { if ($flags & STREAM_URL_STAT_QUIET) { return $flags & STREAM_URL_STAT_LINK ? $this->formatUrlStat(false) : false; } trigger_error(implode(\"\\n\", (array) $errors), E_USER_WARNING); return false; }",
+        "label": 0
+    },
+    {
+        "code": "private function formatUrlStat($result = null) { $stat = $this->getStatTemplate(); switch (gettype($result)) { case 'NULL': case 'string': $stat['mode'] = $stat[2] = 0040777; break; case 'array': $stat['mode'] = $stat[2] = 0100777; if (isset($result['ContentLength'])) { $stat['size'] = $stat[7] = $result['ContentLength']; } elseif (isset($result['Size'])) { $stat['size'] = $stat[7] = $result['Size']; } if (isset($result['LastModified'])) { $stat['mtime'] = $stat[9] = $stat['ctime'] = $stat[10] = strtotime($result['LastModified']); } } return $stat; }",
+        "label": 0
+    },
+    {
+        "code": "private function createBucket($path, array $params) { if ($this->getClient()->doesBucketExist($params['Bucket'])) { return $this->triggerError(\"Bucket already exists: {$path}\"); } return $this->boolCall(function () use ($params, $path) { $this->getClient()->createBucket($params); $this->clearCacheKey($path); return true; }); }",
+        "label": 0
+    },
+    {
+        "code": "private function deleteSubfolder($path, $params) { $prefix = rtrim($params['Key'], '/') . '/'; $result = $this->getClient()->listObjects([ 'Bucket' => $params['Bucket'], 'Prefix' => $prefix, 'MaxKeys' => 1 ]); if ($contents = $result['Contents']) { return (count($contents) > 1 || $contents[0]['Key'] != $prefix) ? $this->triggerError('Subfolder is not empty') : $this->unlink(rtrim($path, '/') . '/'); } return $result['CommonPrefixes'] ? $this->triggerError('Subfolder contains nested folders') : true; }",
+        "label": 0
+    },
+    {
+        "code": "private function boolCall(callable $fn, $flags = null) { try { return $fn(); } catch (\\Exception $e) { return $this->triggerError($e->getMessage(), $flags); } }",
+        "label": 0
+    },
+    {
+        "code": "private function getSize() { $size = $this->body->getSize(); return $size !== null ? $size : $this->size; }",
+        "label": 0
+    },
+    {
+        "code": "public function getInput() { if (!$this->input) { if ($input = $this['input']) { $this->input = $this->shapeFor($input); } else { $this->input = new StructureShape([], $this->shapeMap); } } return $this->input; }",
+        "label": 0
+    },
+    {
+        "code": "public function getOutput() { if (!$this->output) { if ($output = $this['output']) { $this->output = $this->shapeFor($output); } else { $this->output = new StructureShape([], $this->shapeMap); } } return $this->output; }",
+        "label": 0
+    },
+    {
+        "code": "public function getErrors() { if ($this->errors === null) { if ($errors = $this['errors']) { foreach ($errors as $key => $error) { $errors[$key] = $this->shapeFor($error); } $this->errors = $errors; } else { $this->errors = []; } } return $this->errors; }",
+        "label": 0
+    },
+    {
+        "code": "public function start(CommandInterface $cmd, RequestInterface $req) { $ticket = uniqid(); $this->entries[$ticket] = [ 'command' => $cmd, 'request' => $req, 'result' => null, 'exception' => null, ]; return $ticket; }",
+        "label": 0
+    },
+    {
+        "code": "public function registerSessionHandler(array $config = []) { $handler = SessionHandler::fromClient($this, $config); $handler->register(); return $handler; }",
+        "label": 0
+    },
+    {
+        "code": "public function createCredentials(Result $result) { if (!$result->hasKey('Credentials')) { throw new \\InvalidArgumentException('Result contains no credentials'); } $c = $result['Credentials']; return new Credentials( $c['AccessKeyId'], $c['SecretAccessKey'], isset($c['SessionToken']) ? $c['SessionToken'] : null, isset($c['Expiration']) && $c['Expiration'] instanceof \\DateTimeInterface ? (int) $c['Expiration']->format('U') : null ); }",
+        "label": 0
+    },
+    {
+        "code": "private function extractHeader( $name, Shape $shape, ResponseInterface $response, &$result ) { $value = $response->getHeaderLine($shape['locationName'] ?: $name); switch ($shape->getType()) { case 'float': case 'double': $value = (float) $value; break; case 'long': $value = (int) $value; break; case 'boolean': $value = filter_var($value, FILTER_VALIDATE_BOOLEAN); break; case 'blob': $value = base64_decode($value); break; case 'timestamp': try { if (!empty($shape['timestampFormat']) && $shape['timestampFormat'] === 'unixTimestamp') { $value = DateTimeResult::fromEpoch($value); } $value = new DateTimeResult($value); break; } catch (\\Exception $e) { return; } case 'string': if ($shape['jsonvalue']) { $value = $this->parseJson(base64_decode($value), $response); } break; } $result[$name] = $value; }",
+        "label": 1
+    },
+    {
+        "code": "private function extractHeaders( $name, Shape $shape, ResponseInterface $response, &$result ) { $result[$name] = []; $prefix = $shape['locationName']; $prefixLen = strlen($prefix); foreach ($response->getHeaders() as $k => $values) { if (!$prefixLen) { $result[$name][$k] = implode(', ', $values); } elseif (stripos($k, $prefix) === 0) { $result[$name][substr($k, $prefixLen)] = implode(', ', $values); } } }",
+        "label": 0
+    },
+    {
+        "code": "private function extractStatus( $name, ResponseInterface $response, array &$result ) { $result[$name] = (int) $response->getStatusCode(); }",
+        "label": 0
+    },
+    {
+        "code": "private function getHeaderBlacklist() { return [ 'cache-control' => true, 'content-type' => true, 'content-length' => true, 'expect' => true, 'max-forwards' => true, 'pragma' => true, 'range' => true, 'te' => true, 'if-match' => true, 'if-none-match' => true, 'if-modified-since' => true, 'if-unmodified-since' => true, 'if-range' => true, 'accept' => true, 'authorization' => true, 'proxy-authorization' => true, 'from' => true, 'referer' => true, 'user-agent' => true, 'x-amzn-trace-id' => true, 'aws-sdk-invocation-id' => true, 'aws-sdk-retry' => true, ]; }",
+        "label": 0
+    },
+    {
+        "code": "private function getPresignHeaders(array $headers) { $presignHeaders = []; $blacklist = $this->getHeaderBlacklist(); foreach ($headers as $name => $value) { $lName = strtolower($name); if (!isset($blacklist[$lName]) && $name !== self::AMZ_CONTENT_SHA256_HEADER ) { $presignHeaders[] = $lName; } } return $presignHeaders; }",
+        "label": 0
+    },
+    {
+        "code": "public static function convertPostToGet(RequestInterface $request) { if ($request->getMethod() !== 'POST') { throw new \\InvalidArgumentException('Expected a POST request but ' . 'received a ' . $request->getMethod() . ' request.'); } $sr = $request->withMethod('GET') ->withBody(Psr7\\stream_for('')) ->withoutHeader('Content-Type') ->withoutHeader('Content-Length'); if ($request->getHeaderLine('Content-Type') === 'application/x-www-form-urlencoded') { $body = (string) $request->getBody(); $sr = $sr->withUri($sr->getUri()->withQuery($body)); } return $sr; }",
+        "label": 0
+    },
+    {
+        "code": "public static function env($cacheLimit = self::DEFAULT_CACHE_LIMIT) { return function () use ($cacheLimit) { $enabled = getenv(self::ENV_ENABLED); if ($enabled === false || $enabled === '') { $enabled = getenv(self::ENV_ENABLED_ALT); } if ($enabled !== false && $enabled !== '') { return Promise\\promise_for( new Configuration($enabled, $cacheLimit) ); } return self::reject('Could not find environment variable config' . ' in ' . self::ENV_ENABLED); }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function ini( $profile = null, $filename = null, $cacheLimit = self::DEFAULT_CACHE_LIMIT ) { $filename = $filename ?: (self::getHomeDir() . '/.aws/config'); $profile = $profile ?: (getenv(self::ENV_PROFILE) ?: 'default'); return function () use ($profile, $filename, $cacheLimit) { if (!is_readable($filename)) { return self::reject(\"Cannot read configuration from $filename\"); } $data = \\Aws\\parse_ini_file($filename, true); if ($data === false) { return self::reject(\"Invalid config file: $filename\"); } if (!isset($data[$profile])) { return self::reject(\"'$profile' not found in config file\"); } if (!isset($data[$profile]['endpoint_discovery_enabled'])) { return self::reject(\"Required endpoint discovery config values not present in INI profile '{$profile}' ({$filename})\"); } return Promise\\promise_for( new Configuration( $data[$profile]['endpoint_discovery_enabled'], $cacheLimit ) ); }; }",
+        "label": 0
+    },
+    {
+        "code": "public function appendException() { foreach (func_get_args() as $value) { if ($value instanceof \\Exception || $value instanceof \\Throwable) { $this->queue[] = $value; } else { throw new \\InvalidArgumentException('Expected an \\Exception or \\Throwable.'); } } }",
+        "label": 0
+    },
+    {
+        "code": "public function read($s3BucketName, $logFileKey) { $command = $this->s3Client->getCommand('GetObject', [ 'Bucket' => (string) $s3BucketName, 'Key' => (string) $logFileKey, 'ResponseContentEncoding' => 'x-gzip' ]); $command['@http']['headers']['Accept-Encoding'] = 'gzip'; $result = $this->s3Client->execute($command); $logData = json_decode($result['Body'], true); return isset($logData['Records']) ? $logData['Records'] : []; }",
+        "label": 1
+    },
+    {
+        "code": "private function parseError( array $err, RequestInterface $request, CommandInterface $command, array $stats ) { if (!isset($err['exception'])) { throw new \\RuntimeException('The HTTP handler was rejected without an \"exception\" key value pair.'); } $serviceError = \"AWS HTTP error: \" . $err['exception']->getMessage(); if (!isset($err['response'])) { $parts = ['response' => null]; } else { try { $parts = call_user_func($this->errorParser, $err['response']); $serviceError .= \" {$parts['code']} ({$parts['type']}): \" . \"{$parts['message']} - \" . $err['response']->getBody(); } catch (ParserException $e) { $parts = []; $serviceError .= ' Unable to parse error information from ' . \"response - {$e->getMessage()}\"; } $parts['response'] = $err['response']; } $parts['exception'] = $err['exception']; $parts['request'] = $request; $parts['connection_error'] = !empty($err['connection_error']); $parts['transfer_stats'] = $stats; return new $this->exceptionClass( sprintf( 'Error executing \"%s\" on \"%s\"; %s', $command->getName(), $request->getUri(), $serviceError ), $command, $parts, $err['exception'] ); }",
+        "label": 1
+    },
+    {
+        "code": "private function buildListObjectsIterator(array $options) { $startDate = isset($options[self::START_DATE]) ? $this->normalizeDateValue($options[self::START_DATE]) : null; $endDate = isset($options[self::END_DATE]) ? $this->normalizeDateValue($options[self::END_DATE]) : null; $parts = [ 'prefix' => isset($options[self::KEY_PREFIX]) ? $options[self::KEY_PREFIX] : null, 'account' => isset($options[self::ACCOUNT_ID]) ? $options[self::ACCOUNT_ID] : self::PREFIX_WILDCARD, 'region' => isset($options[self::LOG_REGION]) ? $options[self::LOG_REGION] : self::PREFIX_WILDCARD, 'date' => $this->determineDateForPrefix($startDate, $endDate), ]; $candidatePrefix = ltrim(strtr(self::PREFIX_TEMPLATE, $parts), '/'); $logKeyPrefix = $candidatePrefix; $index = strpos($candidatePrefix, self::PREFIX_WILDCARD); if ($index !== false) { $logKeyPrefix = substr($candidatePrefix, 0, $index); } $objectsIterator = $this->s3Client->getIterator('ListObjects', [ 'Bucket' => $this->s3BucketName, 'Prefix' => $logKeyPrefix, ]); $objectsIterator = $this->applyRegexFilter( $objectsIterator, $logKeyPrefix, $candidatePrefix ); $objectsIterator = $this->applyDateFilter( $objectsIterator, $startDate, $endDate ); return $objectsIterator; }",
+        "label": 0
+    },
+    {
+        "code": "private function normalizeDateValue($date) { if (is_string($date)) { $date = strtotime($date); } elseif ($date instanceof \\DateTime) { $date = $date->format('U'); } elseif (!is_int($date)) { throw new \\InvalidArgumentException('Date values must be a ' . 'string, an int, or a DateTime object.'); } return $date; }",
+        "label": 0
+    },
+    {
+        "code": "private function determineDateForPrefix($startDate, $endDate) { $dateParts = array_fill_keys(['Y', 'm', 'd'], self::PREFIX_WILDCARD); if ($startDate && $endDate) { foreach ($dateParts as $key => &$value) { $candidateValue = date($key, $startDate); if ($candidateValue === date($key, $endDate)) { $value = $candidateValue; } else { break; } } } return join('/', $dateParts); }",
+        "label": 0
+    },
+    {
+        "code": "private function applyRegexFilter( $objectsIterator, $logKeyPrefix, $candidatePrefix ) { if ($logKeyPrefix !== $candidatePrefix) { $regex = rtrim($candidatePrefix, '/' . self::PREFIX_WILDCARD) . '/'; $regex = strtr($regex, [self::PREFIX_WILDCARD => '[^/]+']); if ($logKeyPrefix !== $regex) { $objectsIterator = new \\CallbackFilterIterator( $objectsIterator, function ($object) use ($regex) { return preg_match(\" } ); } } return $objectsIterator; }",
+        "label": 0
+    },
+    {
+        "code": "private function applyDateFilter($objectsIterator, $startDate, $endDate) { if ($startDate || $endDate) { $fn = function ($object) use ($startDate, $endDate) { if (!preg_match('/[0-9]{8}T[0-9]{4}Z/', $object['Key'], $m)) { return false; } $date = strtotime($m[0]); return (!$startDate || $date >= $startDate) && (!$endDate || $date <= $endDate); }; $objectsIterator = new \\CallbackFilterIterator($objectsIterator, $fn); } return $objectsIterator; }",
+        "label": 0
+    },
+    {
+        "code": "public function getVersions($service) { if (!isset($this->manifest)) { $this->buildVersionsList($service); } if (!isset($this->manifest[$service]['versions'])) { return []; } return array_values(array_unique($this->manifest[$service]['versions'])); }",
+        "label": 0
+    },
+    {
+        "code": "private function buildVersionsList($service) { $dir = \"{$this->modelsDir}/{$service}/\"; if (!is_dir($dir)) { return; } $results = array_diff(scandir($dir, SCANDIR_SORT_DESCENDING), ['..', '.']); if (!$results) { $this->manifest[$service] = ['versions' => []]; } else { $this->manifest[$service] = [ 'versions' => [ 'latest' => $results[0] ] ]; $this->manifest[$service]['versions'] += array_combine($results, $results); } }",
+        "label": 0
+    },
+    {
+        "code": "private static function calculateMessageAttributesMd5($message) { if (empty($message['MessageAttributes']) || !is_array($message['MessageAttributes']) ) { return null; } ksort($message['MessageAttributes']); $attributeValues = \"\"; foreach ($message['MessageAttributes'] as $name => $details) { $attributeValues .= self::getEncodedStringPiece($name); $attributeValues .= self::getEncodedStringPiece($details['DataType']); if (substr($details['DataType'], 0, 6) === 'Binary') { $attributeValues .= pack('c', 0x02); $attributeValues .= self::getEncodedBinaryPiece( $details['BinaryValue'] ); } else { $attributeValues .= pack('c', 0x01); $attributeValues .= self::getEncodedStringPiece( $details['StringValue'] ); } } return md5($attributeValues); }",
+        "label": 0
+    },
+    {
+        "code": "private function validateMd5() { return static function (callable $handler) { return function ( CommandInterface $c, RequestInterface $r = null ) use ($handler) { if ($c->getName() !== 'ReceiveMessage') { return $handler($c, $r); } return $handler($c, $r) ->then( function ($result) use ($c, $r) { foreach ((array) $result['Messages'] as $msg) { $bodyMd5 = self::calculateBodyMd5($msg); if (isset($msg['MD5OfBody']) && $bodyMd5 !== $msg['MD5OfBody'] ) { throw new SqsException( sprintf( 'MD5 mismatch. Expected %s, found %s', $msg['MD5OfBody'], $bodyMd5 ), $c, [ 'code' => 'ClientChecksumMismatch', 'request' => $r ] ); } if (isset($msg['MD5OfMessageAttributes'])) { $messageAttributesMd5 = self::calculateMessageAttributesMd5($msg); if ($messageAttributesMd5 !== $msg['MD5OfMessageAttributes']) { throw new SqsException( sprintf( 'Attribute MD5 mismatch. Expected %s, found %s', $msg['MD5OfMessageAttributes'], $messageAttributesMd5 ? $messageAttributesMd5 : 'No Attributes' ), $c, [ 'code' => 'ClientChecksumMismatch', 'request' => $r ] ); } } else if (isset($msg['MessageAttributes'])) { throw new SqsException( sprintf( 'No Attribute MD5 found. Expected %s', self::calculateMessageAttributesMd5($msg) ), $c, [ 'code' => 'ClientChecksumMismatch', 'request' => $r ] ); } } return $result; } ); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "protected function decrypt( $cipherText, MaterialsProvider $provider, MetadataEnvelope $envelope, array $cipherOptions = [] ) { $cipherOptions['Iv'] = base64_decode( $envelope[MetadataEnvelope::IV_HEADER] ); $cipherOptions['TagLength'] = $envelope[MetadataEnvelope::CRYPTO_TAG_LENGTH_HEADER] / 8; $cek = $provider->decryptCek( base64_decode( $envelope[MetadataEnvelope::CONTENT_KEY_V2_HEADER] ), json_decode( $envelope[MetadataEnvelope::MATERIALS_DESCRIPTION_HEADER], true ) ); $cipherOptions['KeySize'] = strlen($cek) * 8; $cipherOptions['Cipher'] = $this->getCipherFromAesName( $envelope[MetadataEnvelope::CONTENT_CRYPTO_SCHEME_HEADER] ); $decryptionSteam = $this->getDecryptingStream( $cipherText, $cek, $cipherOptions ); unset($cek); return $decryptionSteam; }",
+        "label": 1
+    },
+    {
+        "code": "public function marshalJson($json) { $data = json_decode($json); if (!($data instanceof \\stdClass)) { throw new \\InvalidArgumentException( 'The JSON document must be valid and be an object at its root.' ); } return current($this->marshalValue($data)); }",
+        "label": 0
+    },
+    {
+        "code": "public function marshalValue($value) { $type = gettype($value); if ($type === 'string') { if ($value === '') { return $this->handleInvalid('empty strings are invalid'); } return ['S' => $value]; } if ($type === 'integer' || $type === 'double' || $value instanceof NumberValue ) { return ['N' => (string) $value]; } if ($type === 'boolean') { return ['BOOL' => $value]; } if ($type === 'NULL') { return ['NULL' => true]; } if ($value instanceof SetValue) { if (count($value) === 0) { return $this->handleInvalid('empty sets are invalid'); } $previousType = null; $data = []; foreach ($value as $v) { $marshaled = $this->marshalValue($v); $setType = key($marshaled); if (!$previousType) { $previousType = $setType; } elseif ($setType !== $previousType) { return $this->handleInvalid('sets must be uniform in type'); } $data[] = current($marshaled); } return [$previousType . 'S' => array_values(array_unique($data))]; } $dbType = 'L'; if ($value instanceof \\stdClass) { $type = 'array'; $dbType = 'M'; } if ($type === 'array' || $value instanceof \\Traversable) { $data = []; $index = 0; foreach ($value as $k => $v) { if ($v = $this->marshalValue($v)) { $data[$k] = $v; if ($dbType === 'L' && (!is_int($k) || $k != $index++)) { $dbType = 'M'; } } } return [$dbType => $data]; } if (is_resource($value) || $value instanceof StreamInterface) { $value = $this->binary($value); } if ($value instanceof BinaryValue) { return ['B' => (string) $value]; } return $this->handleInvalid('encountered unexpected value'); }",
+        "label": 0
+    },
+    {
+        "code": "public static function fromListObjects( AwsClientInterface $client, array $listObjectsParams, array $options = [] ) { $iter = $client->getPaginator('ListObjects', $listObjectsParams); $bucket = $listObjectsParams['Bucket']; $fn = function (BatchDelete $that) use ($iter) { return $iter->each(function ($result) use ($that) { $promises = []; if (is_array($result['Contents'])) { foreach ($result['Contents'] as $object) { if ($promise = $that->enqueue($object)) { $promises[] = $promise; } } } return $promises ? Promise\\all($promises) : null; }); }; return new self($client, $bucket, $fn, $options); }",
+        "label": 0
+    },
+    {
+        "code": "private function createPromise() { $promise = call_user_func($this->promiseCreator, $this); $this->promiseCreator = null; $cleanup = function () { $this->before = $this->client = $this->queue = null; }; return $promise->then( function () use ($cleanup) { return Promise\\promise_for($this->flushQueue()) ->then($cleanup); }, function ($reason) use ($cleanup) { $cleanup(); return Promise\\rejection_for($reason); } ); }",
+        "label": 0
+    },
+    {
+        "code": "public function getSignedCookie($url = null, $expires = null, $policy = null) { if ($url) { $this->validateUrl($url); } $cookieParameters = []; $signature = $this->signer->getSignature($url, $expires, $policy); foreach ($signature as $key => $value) { $cookieParameters[\"CloudFront-$key\"] = $value; } return $cookieParameters; }",
+        "label": 0
+    },
+    {
+        "code": "private function getExpired() { if (count($this->expired) < 1) { return null; } $expired = key($this->expired); $this->increment($this->expired); return $expired; }",
+        "label": 0
+    },
+    {
+        "code": "public function put(array $item, $table = null) { $this->queue[] = [ 'table' => $this->determineTable($table), 'data' => ['PutRequest' => ['Item' => $item]], ]; $this->autoFlush(); return $this; }",
+        "label": 0
+    },
+    {
+        "code": "public function delete(array $key, $table = null) { $this->queue[] = [ 'table' => $this->determineTable($table), 'data' => ['DeleteRequest' => ['Key' => $key]], ]; $this->autoFlush(); return $this; }",
+        "label": 0
+    },
+    {
+        "code": "public function flush($untilEmpty = true) { $keepFlushing = true; while ($this->queue && $keepFlushing) { $commands = $this->prepareCommands(); $pool = new CommandPool($this->client, $commands, [ 'before' => $this->config['before'], 'concurrency' => $this->config['pool_size'], 'fulfilled' => function (ResultInterface $result) { if ($result->hasKey('UnprocessedItems')) { $this->retryUnprocessed($result['UnprocessedItems']); } }, 'rejected' => function ($reason) { if ($reason instanceof AwsException) { $code = $reason->getAwsErrorCode(); if ($code === 'ProvisionedThroughputExceededException') { $this->retryUnprocessed($reason->getCommand()['RequestItems']); } elseif (is_callable($this->config['error'])) { $this->config['error']($reason); } } } ]); $pool->promise()->wait(); $keepFlushing = (bool) $untilEmpty; } return $this; }",
+        "label": 0
+    },
+    {
+        "code": "private function autoFlush() { if ($this->config['autoflush'] && count($this->queue) >= $this->config['threshold'] ) { $this->flush(false); } }",
+        "label": 0
+    },
+    {
+        "code": "public function save(MetadataEnvelope $envelope, array $args) { foreach ($envelope as $header=>$value) { $args['Metadata'][$header] = $value; } return $args; }",
+        "label": 0
+    },
+    {
+        "code": "public function load(array $args) { $envelope = new MetadataEnvelope(); $constantValues = MetadataEnvelope::getConstantValues(); foreach ($constantValues as $constant) { if (!empty($args['Metadata'][$constant])) { $envelope[$constant] = $args['Metadata'][$constant]; } } return $envelope; }",
+        "label": 0
+    },
+    {
+        "code": "public function build(Shape $shape, array $args) { $xml = new XMLWriter(); $xml->openMemory(); $xml->startDocument('1.0', 'UTF-8'); $this->format($shape, $shape['locationName'] ?: $shape['name'], $args, $xml); $xml->endDocument(); return $xml->outputMemory(); }",
+        "label": 0
+    },
+    {
+        "code": "public static function fromClient(DynamoDbClient $client, array $config = []) { $config += ['locking' => false]; if ($config['locking']) { $connection = new LockingSessionConnection($client, $config); } else { $connection = new StandardSessionConnection($client, $config); } return new static($connection); }",
+        "label": 0
+    },
+    {
+        "code": "public function close() { $id = session_id(); if ($this->openSessionId !== $id || !$this->sessionWritten) { $result = $this->connection->write($this->formatId($id), '', false); $this->sessionWritten = (bool) $result; } return $this->sessionWritten; }",
+        "label": 0
+    },
+    {
+        "code": "public function read($id) { $this->openSessionId = $id; $this->dataRead = ''; $item = $this->connection->read($this->formatId($id)); if (isset($item['expires']) && isset($item['data'])) { $this->dataRead = $item['data']; if ($item['expires'] <= time()) { $this->dataRead = ''; $this->destroy($id); } } return $this->dataRead; }",
+        "label": 0
+    },
+    {
+        "code": "public function write($id, $data) { $changed = $id !== $this->openSessionId || $data !== $this->dataRead; $this->openSessionId = $id; $this->sessionWritten = $this->connection ->write($this->formatId($id), $data, $changed); return $this->sessionWritten; }",
+        "label": 0
+    },
+    {
+        "code": "public function destroy($id) { $this->openSessionId = $id; $this->sessionWritten = $this->connection->delete($this->formatId($id)); return $this->sessionWritten; }",
+        "label": 0
+    },
+    {
+        "code": "private function isEof($seekable) { return $seekable ? $this->source->tell() < $this->source->getSize() : !$this->source->eof(); }",
+        "label": 0
+    },
+    {
+        "code": "private function determineSource($source) { if (is_string($source)) { $source = Psr7\\try_fopen($source, 'r'); } $stream = Psr7\\stream_for($source); if (!$stream->isReadable()) { throw new IAE('Source stream must be readable.'); } return $stream; }",
+        "label": 1
+    },
+    {
+        "code": "public function createSynthesizeSpeechPreSignedUrl(array $args) { $uri = new Uri($this->getEndpoint()); $uri = $uri->withPath('/v1/speech'); $this->formatter = $this->formatter ?: new JsonBody($this->getApi()); $queryArray = json_decode( $this->formatter->build( $this->getApi()->getOperation('SynthesizeSpeech')->getInput(), $args ), true ); $query = Psr7\\build_query($queryArray); $uri = $uri->withQuery($query); $request = new Request('GET', $uri); $request = $request->withBody(Psr7\\stream_for('')); $signer = new SignatureV4('polly', $this->getRegion()); return (string) $signer->presign( $request, $this->getCredentials()->wait(), '+15 minutes' )->getUri(); }",
+        "label": 0
+    },
+    {
+        "code": "public function update() { $backup = file($this->reflection->getFileName()); list($preamble, $class) = $this->splitClassFile($backup); $preamble = $this->stripOutExistingDocBlock($preamble); $preamble .= $this->buildUpdatedDocBlock(); if ($this->writeClassFile(implode(PHP_EOL, [$preamble, $class])) && $this->commandLineLint($this->reflection->getFileName()) ) { return true; } $this->writeClassFile(implode('', $backup)); return false; }",
+        "label": 0
+    },
+    {
+        "code": "public static function format($value, $format) { if ($value instanceof \\DateTime) { $value = $value->getTimestamp(); } elseif (is_string($value)) { $value = strtotime($value); } elseif (!is_int($value)) { throw new \\InvalidArgumentException('Unable to handle the provided' . ' timestamp type: ' . gettype($value)); } switch ($format) { case 'iso8601': return gmdate('Y-m-d\\TH:i:s\\Z', $value); case 'rfc822': return gmdate('D, d M Y H:i:s \\G\\M\\T', $value); case 'unixTimestamp': return $value; default: throw new \\UnexpectedValueException('Unknown timestamp format: ' . $format); } }",
+        "label": 0
+    },
+    {
+        "code": "public static function resolve(callable $provider, $version, $service, $region) { $result = $provider($version, $service, $region); if ($result instanceof SignatureInterface) { return $result; } throw new UnresolvedSignatureException( \"Unable to resolve a signature for $version/$service/$region.\\n\" . \"Valid signature versions include v4 and anonymous.\" ); }",
+        "label": 1
+    },
+    {
+        "code": "public static function memoize(callable $provider) { $cache = []; return function ($version, $service, $region) use (&$cache, $provider) { $key = \"($version)($service)($region)\"; if (!isset($cache[$key])) { $cache[$key] = $provider($version, $service, $region); } return $cache[$key]; }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function generateSmtpPassword(CredentialsInterface $creds) { static $version = \"\\x02\"; static $algo = 'sha256'; static $message = 'SendRawEmail'; $signature = hash_hmac($algo, $message, $creds->getSecretKey(), true); return base64_encode($version . $signature); }",
+        "label": 0
+    },
+    {
+        "code": "public static function batch( AwsClientInterface $client, $commands, array $config = [] ) { $results = []; self::cmpCallback($config, 'fulfilled', $results); self::cmpCallback($config, 'rejected', $results); return (new self($client, $commands, $config)) ->promise() ->then(static function () use (&$results) { ksort($results); return $results; }) ->wait(); }",
+        "label": 0
+    },
+    {
+        "code": "private static function cmpCallback(array &$config, $name, array &$results) { if (!isset($config[$name])) { $config[$name] = function ($v, $k) use (&$results) { $results[$k] = $v; }; } else { $currentFn = $config[$name]; $config[$name] = function ($v, $k) use (&$results, $currentFn) { $currentFn($v, $k); $results[$k] = $v; }; } }",
+        "label": 0
+    },
+    {
+        "code": "private function parseEndpoint($endpoint) { $parsed = parse_url($endpoint); if (isset($parsed['host'])) { return $parsed; } if (isset($parsed['path'])) { $split = explode('/', $parsed['path'], 2); $parsed['host'] = $split[0]; if (isset($split[1])) { $parsed['path'] = $split[1]; } else { $parsed['path'] = ''; } return $parsed; } throw new UnresolvedEndpointException(\"The supplied endpoint '\" . \"{$endpoint}' is invalid.\"); }",
+        "label": 0
+    },
+    {
+        "code": "private function predictEndpoint() { return static function (callable $handler) { return function ( CommandInterface $command, RequestInterface $request = null ) use ($handler) { if ($command->getName() === 'Predict') { $request = $request->withUri(new Uri($command['PredictEndpoint'])); } return $handler($command, $request); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function isBucketDnsCompatible($bucket) { $bucketLen = strlen($bucket); return ($bucketLen >= 3 && $bucketLen <= 63) && !filter_var($bucket, FILTER_VALIDATE_IP) && preg_match('/^[a-z0-9]([a-z0-9\\-\\.]*[a-z0-9])?$/', $bucket); }",
+        "label": 0
+    },
+    {
+        "code": "private function getLocationConstraintMiddleware() { $region = $this->getRegion(); return static function (callable $handler) use ($region) { return function (Command $command, $request = null) use ($handler, $region) { if ($command->getName() === 'CreateBucket') { $locationConstraint = isset($command['CreateBucketConfiguration']['LocationConstraint']) ? $command['CreateBucketConfiguration']['LocationConstraint'] : null; if ($locationConstraint === 'us-east-1') { unset($command['CreateBucketConfiguration']); } elseif ('us-east-1' !== $region && empty($locationConstraint)) { $command['CreateBucketConfiguration'] = ['LocationConstraint' => $region]; } } return $handler($command, $request); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "private function getSaveAsParameter() { return static function (callable $handler) { return function (Command $command, $request = null) use ($handler) { if ($command->getName() === 'GetObject' && isset($command['SaveAs'])) { $command['@http']['sink'] = $command['SaveAs']; unset($command['SaveAs']); } return $handler($command, $request); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "private function getHeadObjectMiddleware() { return static function (callable $handler) { return function ( CommandInterface $command, RequestInterface $request = null ) use ($handler) { if ($command->getName() === 'HeadObject' && !isset($command['@http']['decode_content']) ) { $command['@http']['decode_content'] = false; } return $handler($command, $request); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "private function decorateWithHashes(Stream $stream, array &$data) { $hash = new PhpHash('sha256'); return new HashingStream($stream, $hash, function ($result) use (&$data) { $data['ContentSHA256'] = bin2hex($result); }); }",
+        "label": 0
+    },
+    {
+        "code": "public function appendInit(callable $middleware, $name = null) { $this->add(self::INIT, $name, $middleware); }",
+        "label": 0
+    },
+    {
+        "code": "public function prependInit(callable $middleware, $name = null) { $this->add(self::INIT, $name, $middleware, true); }",
+        "label": 0
+    },
+    {
+        "code": "public function appendValidate(callable $middleware, $name = null) { $this->add(self::VALIDATE, $name, $middleware); }",
+        "label": 0
+    },
+    {
+        "code": "public function prependValidate(callable $middleware, $name = null) { $this->add(self::VALIDATE, $name, $middleware, true); }",
+        "label": 0
+    },
+    {
+        "code": "public function appendBuild(callable $middleware, $name = null) { $this->add(self::BUILD, $name, $middleware); }",
+        "label": 0
+    },
+    {
+        "code": "public function prependBuild(callable $middleware, $name = null) { $this->add(self::BUILD, $name, $middleware, true); }",
+        "label": 0
+    },
+    {
+        "code": "public function appendSign(callable $middleware, $name = null) { $this->add(self::SIGN, $name, $middleware); }",
+        "label": 0
+    },
+    {
+        "code": "public function prependSign(callable $middleware, $name = null) { $this->add(self::SIGN, $name, $middleware, true); }",
+        "label": 0
+    },
+    {
+        "code": "public function appendAttempt(callable $middleware, $name = null) { $this->add(self::ATTEMPT, $name, $middleware); }",
+        "label": 0
+    },
+    {
+        "code": "public function prependAttempt(callable $middleware, $name = null) { $this->add(self::ATTEMPT, $name, $middleware, true); }",
+        "label": 0
+    },
+    {
+        "code": "public function before($findName, $withName, callable $middleware) { $this->splice($findName, $withName, $middleware, true); }",
+        "label": 0
+    },
+    {
+        "code": "public function remove($nameOrInstance) { if (is_callable($nameOrInstance)) { $this->removeByInstance($nameOrInstance); } elseif (is_string($nameOrInstance)) { $this->removeByName($nameOrInstance); } }",
+        "label": 0
+    },
+    {
+        "code": "private function sortMiddleware() { $this->sorted = []; if (!$this->interposeFn) { foreach ($this->steps as $step) { foreach ($step as $fn) { $this->sorted[] = $fn[0]; } } return; } $ifn = $this->interposeFn; foreach ($this->steps as $stepName => $step) { foreach ($step as $fn) { $this->sorted[] = $ifn($stepName, $fn[1]); $this->sorted[] = $fn[0]; } } }",
+        "label": 0
+    },
+    {
+        "code": "private function add($step, $name, callable $middleware, $prepend = false) { $this->sorted = null; if ($prepend) { $this->steps[$step][] = [$middleware, $name]; } else { array_unshift($this->steps[$step], [$middleware, $name]); } if ($name) { $this->named[$name] = $step; } }",
+        "label": 0
+    },
+    {
+        "code": "public function each(callable $handleResult) { return Promise\\coroutine(function () use ($handleResult) { $nextToken = null; do { $command = $this->createNextCommand($this->args, $nextToken); $result = (yield $this->client->executeAsync($command)); $nextToken = $this->determineNextToken($result); $retVal = $handleResult($result); if ($retVal !== null) { yield Promise\\promise_for($retVal); } } while ($nextToken); }); }",
+        "label": 1
+    },
+    {
+        "code": "public function search($expression) { return flatmap($this, function (Result $result) use ($expression) { return (array) $result->search($expression); }); }",
+        "label": 0
+    },
+    {
+        "code": "public function resolve(array $shapeRef) { $shape = $shapeRef['shape']; if (!isset($this->definitions[$shape])) { throw new \\InvalidArgumentException('Shape not found: ' . $shape); } $isSimple = count($shapeRef) == 1; if ($isSimple && isset($this->simple[$shape])) { return $this->simple[$shape]; } $definition = $shapeRef + $this->definitions[$shape]; $definition['name'] = $definition['shape']; unset($definition['shape']); $result = Shape::create($definition, $this); if ($isSimple) { $this->simple[$shape] = $result; } return $result; }",
+        "label": 0
+    },
+    {
+        "code": "protected function encrypt( Stream $plaintext, array $cipherOptions, MaterialsProvider $provider, MetadataEnvelope $envelope ) { $materialsDescription = $provider->getMaterialsDescription(); $cipherOptions = array_intersect_key( $cipherOptions, self::$allowedOptions ); if (empty($cipherOptions['Cipher'])) { throw new \\InvalidArgumentException('An encryption cipher must be' . ' specified in the \"cipher_options\".'); } if (!self::isSupportedCipher($cipherOptions['Cipher'])) { throw new \\InvalidArgumentException('The cipher requested is not' . ' supported by the SDK.'); } if (empty($cipherOptions['KeySize'])) { $cipherOptions['KeySize'] = 256; } if (!is_int($cipherOptions['KeySize'])) { throw new \\InvalidArgumentException('The cipher \"KeySize\" must be' . ' an integer.'); } if (!MaterialsProvider::isSupportedKeySize( $cipherOptions['KeySize'] )) { throw new \\InvalidArgumentException('The cipher \"KeySize\" requested' . ' is not supported by AES (128, 192, or 256).'); } $cipherOptions['Iv'] = $provider->generateIv( $this->getCipherOpenSslName( $cipherOptions['Cipher'], $cipherOptions['KeySize'] ) ); $cek = $provider->generateCek($cipherOptions['KeySize']); list($encryptingStream, $aesName) = $this->getEncryptingStream( $plaintext, $cek, $cipherOptions ); $envelope[MetadataEnvelope::CONTENT_KEY_V2_HEADER] = $provider->encryptCek( $cek, $materialsDescription ); unset($cek); $envelope[MetadataEnvelope::IV_HEADER] = base64_encode($cipherOptions['Iv']); $envelope[MetadataEnvelope::KEY_WRAP_ALGORITHM_HEADER] = $provider->getWrapAlgorithmName(); $envelope[MetadataEnvelope::CONTENT_CRYPTO_SCHEME_HEADER] = $aesName; $envelope[MetadataEnvelope::UNENCRYPTED_CONTENT_LENGTH_HEADER] = strlen($plaintext); $envelope[MetadataEnvelope::UNENCRYPTED_CONTENT_MD5_HEADER] = base64_encode(md5($plaintext)); $envelope[MetadataEnvelope::MATERIALS_DESCRIPTION_HEADER] = json_encode($materialsDescription); if (!empty($cipherOptions['Tag'])) { $envelope[MetadataEnvelope::CRYPTO_TAG_LENGTH_HEADER] = strlen($cipherOptions['Tag']) * 8; } return $encryptingStream; }",
+        "label": 0
+    },
+    {
+        "code": "public function getPartition($region, $service) { foreach ($this->partitions as $partition) { if ($partition->isRegionMatch($region, $service)) { return $partition; } } return $this->getPartitionByName($this->defaultPartition); }",
+        "label": 0
+    },
+    {
+        "code": "public function getPartitionByName($name) { foreach ($this->partitions as $partition) { if ($name === $partition->getName()) { return $partition; } } }",
+        "label": 0
+    },
+    {
+        "code": "public static function mergePrefixData($data, $prefixData) { $prefixGroups = $prefixData['prefix-groups']; foreach ($data[\"partitions\"] as $index => $partition) { foreach ($prefixGroups as $current => $old) { $serviceData = Env::search(\"services.{$current}\", $partition); if (!empty($serviceData)) { foreach ($old as $prefix) { if (empty(Env::search(\"services.{$prefix}\", $partition))) { $data[\"partitions\"][$index][\"services\"][$prefix] = $serviceData; } } } } } return $data; }",
+        "label": 0
+    },
+    {
+        "code": "public static function env() { return function () { $key = getenv(self::ENV_KEY); $secret = getenv(self::ENV_SECRET); if ($key && $secret) { return Promise\\promise_for( new Credentials($key, $secret, getenv(self::ENV_SESSION) ?: NULL) ); } return self::reject('Could not find environment variable ' . 'credentials in ' . self::ENV_KEY . '/' . self::ENV_SECRET); }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function ini($profile = null, $filename = null) { $filename = $filename ?: (self::getHomeDir() . '/.aws/credentials'); $profile = $profile ?: (getenv(self::ENV_PROFILE) ?: 'default'); return function () use ($profile, $filename) { if (!is_readable($filename)) { return self::reject(\"Cannot read credentials from $filename\"); } $data = \\Aws\\parse_ini_file($filename, true, INI_SCANNER_RAW); if ($data === false) { return self::reject(\"Invalid credentials file: $filename\"); } if (!isset($data[$profile])) { return self::reject(\"'$profile' not found in credentials file\"); } if (!isset($data[$profile]['aws_access_key_id']) || !isset($data[$profile]['aws_secret_access_key']) ) { return self::reject(\"No credentials present in INI profile \" . \"'$profile' ($filename)\"); } if (empty($data[$profile]['aws_session_token'])) { $data[$profile]['aws_session_token'] = isset($data[$profile]['aws_security_token']) ? $data[$profile]['aws_security_token'] : null; } return Promise\\promise_for( new Credentials( $data[$profile]['aws_access_key_id'], $data[$profile]['aws_secret_access_key'], $data[$profile]['aws_session_token'] ) ); }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function process($profile = null, $filename = null) { $filename = $filename ?: (self::getHomeDir() . '/.aws/credentials'); $profile = $profile ?: (getenv(self::ENV_PROFILE) ?: 'default'); return function () use ($profile, $filename) { if (!is_readable($filename)) { return self::reject(\"Cannot read process credentials from $filename\"); } $data = \\Aws\\parse_ini_file($filename, true, INI_SCANNER_RAW); if ($data === false) { return self::reject(\"Invalid credentials file: $filename\"); } if (!isset($data[$profile])) { return self::reject(\"'$profile' not found in credentials file\"); } if (!isset($data[$profile]['credential_process']) ) { return self::reject(\"No credential_process present in INI profile \" . \"'$profile' ($filename)\"); } $credentialProcess = $data[$profile]['credential_process']; $json = shell_exec($credentialProcess); $processData = json_decode($json, true); if (isset($processData['Version'])) { if ($processData['Version'] !== 1) { return self::reject(\"credential_process does not return Version == 1\"); } } if (!isset($processData['AccessKeyId']) || !isset($processData['SecretAccessKey'])) { return self::reject(\"credential_process does not return valid credentials\"); } if (isset($processData['Expiration'])) { try { $expiration = new DateTimeResult($processData['Expiration']); } catch (\\Exception $e) { return self::reject(\"credential_process returned invalid expiration\"); } $now = new DateTimeResult(); if ($expiration < $now) { return self::reject(\"credential_process returned expired credentials\"); } } else { $processData['Expiration'] = null; } if (empty($processData['SessionToken'])) { $processData['SessionToken'] = null; } return Promise\\promise_for( new Credentials( $processData['AccessKeyId'], $processData['SecretAccessKey'], $processData['SessionToken'], $processData['Expiration'] ) ); }; }",
+        "label": 1
+    },
+    {
+        "code": "public static function requestBuilder(callable $serializer) { return function (callable $handler) use ($serializer) { return function (CommandInterface $command) use ($serializer, $handler) { return $handler($command, $serializer($command)); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function signer(callable $credProvider, callable $signatureFunction) { return function (callable $handler) use ($signatureFunction, $credProvider) { return function ( CommandInterface $command, RequestInterface $request ) use ($handler, $signatureFunction, $credProvider) { $signer = $signatureFunction($command); return $credProvider()->then( function (CredentialsInterface $creds) use ($handler, $command, $signer, $request) { return $handler( $command, $signer->signRequest($request, $creds) ); } ); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function tap(callable $fn) { return function (callable $handler) use ($fn) { return function ( CommandInterface $command, RequestInterface $request = null ) use ($handler, $fn) { $fn($command, $request); return $handler($command, $request); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function invocationId() { return function (callable $handler) { return function ( CommandInterface $command, RequestInterface $request ) use ($handler){ return $handler($command, $request->withHeader( 'aws-sdk-invocation-id', md5(uniqid(gethostname(), true)) )); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function contentType(array $operations) { return function (callable $handler) use ($operations) { return function ( CommandInterface $command, RequestInterface $request = null ) use ($handler, $operations) { if (!$request->hasHeader('Content-Type') && in_array($command->getName(), $operations, true) && ($uri = $request->getBody()->getMetadata('uri')) ) { $request = $request->withHeader( 'Content-Type', Psr7\\mimetype_from_filename($uri) ?: 'application/octet-stream' ); } return $handler($command, $request); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function history(History $history) { return function (callable $handler) use ($history) { return function ( CommandInterface $command, RequestInterface $request = null ) use ($handler, $history) { $ticket = $history->start($command, $request); return $handler($command, $request) ->then( function ($result) use ($history, $ticket) { $history->finish($ticket, $result); return $result; }, function ($reason) use ($history, $ticket) { $history->finish($ticket, $reason); return Promise\\rejection_for($reason); } ); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function mapRequest(callable $f) { return function (callable $handler) use ($f) { return function ( CommandInterface $command, RequestInterface $request = null ) use ($handler, $f) { return $handler($command, $f($request)); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function mapCommand(callable $f) { return function (callable $handler) use ($f) { return function ( CommandInterface $command, RequestInterface $request = null ) use ($handler, $f) { return $handler($f($command), $request); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function mapResult(callable $f) { return function (callable $handler) use ($f) { return function ( CommandInterface $command, RequestInterface $request = null ) use ($handler, $f) { return $handler($command, $request)->then($f); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "private function determineState() { if ($this->config['state'] instanceof UploadState) { return $this->config['state']; } $required = $this->info['id']; $id = [$required['upload_id'] => null]; unset($required['upload_id']); foreach ($required as $key => $param) { if (!$this->config[$key]) { throw new IAE('You must provide a value for \"' . $key . '\" in ' . 'your config for the MultipartUploader for ' . $this->client->getApi()->getServiceFullName() . '.'); } $id[$param] = $this->config[$key]; } $state = new UploadState($id); $state->setPartSize($this->determinePartSize()); return $state; }",
+        "label": 1
+    },
+    {
+        "code": "private function checkExistenceWithCommand(CommandInterface $command) { try { $this->execute($command); return true; } catch (S3Exception $e) { if ($e->getAwsErrorCode() == 'AccessDenied') { return true; } if ($e->getStatusCode() >= 500) { throw $e; } return false; } }",
+        "label": 1
+    },
+    {
+        "code": "private function decorateWithHashes(Stream $stream, array &$data) { $stream = new HashingStream($stream, new TreeHash(), function ($result) use (&$data) { $data['checksum'] = bin2hex($result); } ); $stream = new HashingStream($stream, new PhpHash('sha256'), function ($result) use (&$data) { $data['ContentSHA256'] = bin2hex($result); } ); return $stream; }",
+        "label": 0
+    },
+    {
+        "code": "private static function parseRange($range, $partSize) { if (strpos($range, 'bytes') !== false) { $range = substr($range, 6, -2); } list($firstByte, $lastByte) = explode('-', $range); return [ intval($firstByte / $partSize) + 1, $lastByte - $firstByte + 1, ]; }",
+        "label": 0
+    },
+    {
+        "code": "public function build(Shape $shape, array $args) { $result = json_encode($this->format($shape, $args)); return $result == '[]' ? '{}' : $result; }",
+        "label": 0
+    },
+    {
+        "code": "private function getContext() { if (!$this->context) { $key = isset($this->options['key']) ? $this->options['key'] : null; $this->context = hash_init( $this->algo, $key ? HASH_HMAC : 0, $key ); } return $this->context; }",
+        "label": 0
+    },
+    {
+        "code": "private function getArgsForAttempt($attempt) { $args = $this->args; $delay = ($attempt === 1) ? $this->config['initDelay'] : $this->config['delay']; if (is_callable($delay)) { $delay = $delay($attempt); } if (!isset($args['@http'])) { $args['@http'] = []; } $args['@http']['delay'] = $delay * 1000; return $args; }",
+        "label": 0
+    },
+    {
+        "code": "private function determineState($result) { foreach ($this->config['acceptors'] as $acceptor) { $matcher = 'matches' . ucfirst($acceptor['matcher']); if ($this->{$matcher}($result, $acceptor)) { return $acceptor['state']; } } return $result instanceof \\Exception ? 'failed' : 'retry'; }",
+        "label": 0
+    },
+    {
+        "code": "public function promise() { if (!$this->promise) { $this->promise = $this->sourceMetadata['scheme'] === 'file' ? $this->createUploadPromise() : $this->createDownloadPromise(); } return $this->promise; }",
+        "label": 0
+    },
+    {
+        "code": "private function getS3Args($path) { $parts = explode('/', str_replace('s3: $args = ['Bucket' => $parts[0]]; if (isset($parts[1])) { $args['Key'] = $parts[1]; } return $args; }",
+        "label": 0
+    },
+    {
+        "code": "public function resolve(array $args, HandlerList $list) { $args['config'] = []; foreach ($this->argDefinitions as $key => $a) { if (!isset($args[$key])) { if (isset($a['default'])) { if (is_callable($a['default']) && ( is_array($a['default']) || $a['default'] instanceof \\Closure ) ) { $args[$key] = $a['default']($args); } else { $args[$key] = $a['default']; } } elseif (empty($a['required'])) { continue; } else { $this->throwRequired($args); } } foreach ($a['valid'] as $check) { if (isset(self::$typeMap[$check])) { $fn = self::$typeMap[$check]; if ($fn($args[$key])) { goto is_valid; } } elseif ($args[$key] instanceof $check) { goto is_valid; } } $this->invalidType($key, $args[$key]); is_valid: if (isset($a['fn'])) { $a['fn']($args[$key], $args, $list); } if ($a['type'] === 'config') { $args['config'][$key] = $args[$key]; } } return $args; }",
+        "label": 1
+    },
+    {
+        "code": "private function getArgMessage($name, $args = [], $useRequired = false) { $arg = $this->argDefinitions[$name]; $msg = ''; $modifiers = []; if (isset($arg['valid'])) { $modifiers[] = implode('|', $arg['valid']); } if (isset($arg['choice'])) { $modifiers[] = 'One of ' . implode(', ', $arg['choice']); } if ($modifiers) { $msg .= '(' . implode('; ', $modifiers) . ')'; } $msg = wordwrap(\"{$name}: {$msg}\", 75, \"\\n \"); if ($useRequired && is_callable($arg['required'])) { $msg .= \"\\n\\n \"; $msg .= str_replace(\"\\n\", \"\\n \", call_user_func($arg['required'], $args)); } elseif (isset($arg['doc'])) { $msg .= wordwrap(\"\\n\\n {$arg['doc']}\", 75, \"\\n \"); } return $msg; }",
+        "label": 1
+    },
+    {
+        "code": "private function invalidType($name, $provided) { $expected = implode('|', $this->argDefinitions[$name]['valid']); $msg = \"Invalid configuration value \" . \"provided for \\\"{$name}\\\". Expected {$expected}, but got \" . describe_type($provided) . \"\\n\\n\" . $this->getArgMessage($name); throw new IAE($msg); }",
+        "label": 0
+    },
+    {
+        "code": "private function throwRequired(array $args) { $missing = []; foreach ($this->argDefinitions as $k => $a) { if (empty($a['required']) || isset($a['default']) || isset($args[$k]) ) { continue; } $missing[] = $this->getArgMessage($k, $args, true); } $msg = \"Missing required client configuration options: \\n\\n\"; $msg .= implode(\"\\n\\n\", $missing); throw new IAE($msg); }",
+        "label": 1
+    },
+    {
+        "code": "private function sendEventData(array $eventData) { $socket = $this->prepareSocket(); $datagram = json_encode($eventData); $result = socket_write($socket, $datagram, strlen($datagram)); if ($result === false) { $this->prepareSocket(true); } return $result; }",
+        "label": 0
+    },
+    {
+        "code": "private function unwrappedOptions() { if (!($this->options instanceof ConfigurationInterface)) { $this->options = ConfigurationProvider::unwrap($this->options); } return $this->options; }",
+        "label": 0
+    },
+    {
+        "code": "private function searchByPost() { return static function (callable $handler) { return function ( CommandInterface $c, RequestInterface $r = null ) use ($handler) { if ($c->getName() !== 'Search') { return $handler($c, $r); } return $handler($c, self::convertGetToPost($r)); }; }; }",
+        "label": 0
+    },
+    {
+        "code": "public static function convertGetToPost(RequestInterface $r) { if ($r->getMethod() === 'POST') { return $r; } $query = $r->getUri()->getQuery(); $req = $r->withMethod('POST') ->withBody(Psr7\\stream_for($query)) ->withHeader('Content-Length', strlen($query)) ->withHeader('Content-Type', 'application/x-www-form-urlencoded') ->withUri($r->getUri()->withQuery('')); return $req; }",
+        "label": 0
+    },
+    {
+        "code": "public function validate($name, Shape $shape, array $input) { $this->dispatch($shape, $input); if ($this->errors) { $message = sprintf( \"Found %d error%s while validating the input provided for the \" . \"%s operation:\\n%s\", count($this->errors), count($this->errors) > 1 ? 's' : '', $name, implode(\"\\n\", $this->errors) ); $this->errors = []; throw new \\InvalidArgumentException($message); } }",
+        "label": 0
+    },
+    {
+        "code": "public function getObjectAsync(array $args) { $provider = $this->getMaterialsProvider($args); unset($args['@MaterialsProvider']); $instructionFileSuffix = $this->getInstructionFileSuffix($args); unset($args['@InstructionFileSuffix']); $strategy = $this->getMetadataStrategy($args, $instructionFileSuffix); unset($args['@MetadataStrategy']); $saveAs = null; if (!empty($args['SaveAs'])) { $saveAs = $args['SaveAs']; } $promise = $this->client->getObjectAsync($args) ->then( function ($result) use ( $provider, $instructionFileSuffix, $strategy, $args ) { if ($strategy === null) { $strategy = $this->determineGetObjectStrategy( $result, $instructionFileSuffix ); } $envelope = $strategy->load($args + [ 'Metadata' => $result['Metadata'] ]); $provider = $provider->fromDecryptionEnvelope($envelope); $result['Body'] = $this->decrypt( $result['Body'], $provider, $envelope, isset($args['@CipherOptions']) ? $args['@CipherOptions'] : [] ); return $result; } )->then( function ($result) use ($saveAs) { if (!empty($saveAs)) { file_put_contents( $saveAs, (string)$result['Body'], LOCK_EX ); } return $result; } ); return $promise; }",
+        "label": 0
+    },
+    {
+        "code": "private function parseClass() { $klass = get_class($this); if ($klass === __CLASS__) { return ['', 'Aws\\Exception\\AwsException']; } $service = substr($klass, strrpos($klass, '\\\\') + 1, -6); return [ strtolower($service), \"Aws\\\\{$service}\\\\Exception\\\\{$service}Exception\" ]; }",
+        "label": 0
+    },
+    {
+        "code": "public function getMember($name) { $members = $this->getMembers(); if (!isset($members[$name])) { throw new \\InvalidArgumentException('Unknown member ' . $name); } return $members[$name]; }",
+        "label": 0
+    },
+    {
+        "code": "public static function wrap( Service $service, callable $bytesGenerator = null ) { return function (callable $handler) use ($service, $bytesGenerator) { return new self($handler, $service, $bytesGenerator); }; }",
+        "label": 0
+    },
+    {
+        "code": "private static function getUuidV4($bytes) { $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40); $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80); return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4)); }",
+        "label": 0
+    },
+    {
+        "code": "public function formatErrors( AnalysisResult $analysisResult, OutputStyle $style ): int { $style->writeln('<?xml version=\"1.0\" encoding=\"UTF-8\"?>'); $style->writeln('<checkstyle>'); foreach ($this->groupByFile($analysisResult) as $relativeFilePath => $errors) { $style->writeln(sprintf( '<file name=\"%s\">', $this->escape($relativeFilePath) )); foreach ($errors as $error) { $style->writeln(sprintf( ' <error line=\"%d\" column=\"1\" severity=\"error\" message=\"%s\" />', $this->escape((string) $error->getLine()), $this->escape((string) $error->getMessage()) )); } $style->writeln('</file>'); } $notFileSpecificErrors = $analysisResult->getNotFileSpecificErrors(); if (count($notFileSpecificErrors) > 0) { $style->writeln('<file>'); foreach ($notFileSpecificErrors as $error) { $style->writeln(sprintf(' <error severity=\"error\" message=\"%s\" />', $this->escape($error))); } $style->writeln('</file>'); } $style->writeln('</checkstyle>'); return $analysisResult->hasErrors() ? 1 : 0; }",
+        "label": 0
+    },
+    {
+        "code": "private function groupByFile(AnalysisResult $analysisResult): array { $files = []; foreach ($analysisResult->getFileSpecificErrors() as $fileSpecificError) { $relativeFilePath = $this->relativePathHelper->getRelativePath( $fileSpecificError->getFile() ); $files[$relativeFilePath][] = $fileSpecificError; } return $files; }",
+        "label": 0
+    },
+    {
+        "code": "protected function registerLogService() { $logger = Log::createLogger( $this->config->get('log.file'), 'yansongda.pay', $this->config->get('log.level', 'warning'), $this->config->get('log.type', 'daily'), $this->config->get('log.max_file', 30) ); Log::setLogger($logger); }",
+        "label": 0
+    },
+    {
+        "code": "public function refund($order): Collection { $this->payload = Support::filterPayload($this->payload, $order, true); Events::dispatch(Events::METHOD_CALLED, new Events\\MethodCalled('Wechat', 'Refund', $this->gateway, $this->payload)); return Support::requestApi( 'secapi/pay/refund', $this->payload, true ); }",
+        "label": 0
+    },
+    {
+        "code": "public function download(array $params): string { unset($this->payload['spbill_create_ip']); $this->payload = Support::filterPayload($this->payload, $params, true); Events::dispatch(Events::METHOD_CALLED, new Events\\MethodCalled('Wechat', 'Download', $this->gateway, $this->payload)); $result = Support::getInstance()->post( 'pay/downloadbill', Support::getInstance()->toXml($this->payload) ); if (is_array($result)) { throw new GatewayException('Get Wechat API Error: '.$result['return_msg'], $result); } return $result; }",
+        "label": 0
+    },
+    {
+        "code": "public static function getSignContent($data): string { $buff = ''; foreach ($data as $k => $v) { $buff .= ($k != 'sign' && $v != '' && !is_array($v)) ? $k.'='.$v.'&' : ''; } Log::debug('Wechat Generate Sign Content Before Trim', [$data, $buff]); return trim($buff, '&'); }",
+        "label": 0
+    },
+    {
+        "code": "public static function decryptRefundContents($contents): string { return openssl_decrypt( base64_decode($contents), 'AES-256-ECB', md5(self::$instance->key), OPENSSL_RAW_DATA ); }",
+        "label": 1
+    },
+    {
+        "code": "public static function toXml($data): string { if (!is_array($data) || count($data) <= 0) { throw new InvalidArgumentException('Convert To Xml Error! Invalid Array!'); } $xml = '<xml>'; foreach ($data as $key => $val) { $xml .= is_numeric($val) ? '<'.$key.'>'.$val.'</'.$key.'>' : '<'.$key.'><![CDATA['.$val.']]></'.$key.'>'; } $xml .= '</xml>'; return $xml; }",
+        "label": 0
+    },
+    {
+        "code": "public static function fromXml($xml): array { if (!$xml) { throw new InvalidArgumentException('Convert To Array Error! Invalid Xml!'); } libxml_disable_entity_loader(true); return json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA), JSON_UNESCAPED_UNICODE), true); }",
+        "label": 0
+    },
+    {
+        "code": "public function getConfig($key = null, $default = null) { if (is_null($key)) { return $this->config->all(); } if ($this->config->has($key)) { return $this->config[$key]; } return $default; }",
+        "label": 0
+    },
+    {
+        "code": "public function cancel($order): Collection { $this->payload['method'] = 'alipay.trade.cancel'; $this->payload['biz_content'] = json_encode(is_array($order) ? $order : ['out_trade_no' => $order]); $this->payload['sign'] = Support::generateSign($this->payload); Events::dispatch(Events::METHOD_CALLED, new Events\\MethodCalled('Alipay', 'Cancel', $this->gateway, $this->payload)); return Support::requestApi($this->payload); }",
+        "label": 0
+    },
+    {
+        "code": "public function success(): Response { Events::dispatch(Events::METHOD_CALLED, new Events\\MethodCalled('Alipay', 'Success', $this->gateway)); return Response::create('success'); }",
+        "label": 0
+    },
+    {
+        "code": "public static function getSignContent(array $data, $verify = false): string { $data = self::encoding($data, $data['charset'] ?? 'gb2312', 'utf-8'); ksort($data); $stringToBeSigned = ''; foreach ($data as $k => $v) { if ($verify && $k != 'sign' && $k != 'sign_type') { $stringToBeSigned .= $k.'='.$v.'&'; } if (!$verify && $v !== '' && !is_null($v) && $k != 'sign' && '@' != substr($v, 0, 1)) { $stringToBeSigned .= $k.'='.$v.'&'; } } Log::debug('Alipay Generate Sign Content Before Trim', [$data, $stringToBeSigned]); return trim($stringToBeSigned, '&'); }",
+        "label": 0
+    },
+    {
+        "code": "protected function setHttpOptions(): self { if ($this->config->has('http') && is_array($this->config->get('http'))) { $this->config->forget('http.base_uri'); $this->httpOptions = $this->config->get('http'); } return $this; }",
+        "label": 0
+    },
+    {
+        "code": "protected function preOrder($payload): Collection { $payload['sign'] = Support::generateSign($payload); Events::dispatch(Events::METHOD_CALLED, new Events\\MethodCalled('Wechat', 'PreOrder', '', $payload)); return Support::requestApi('pay/unifiedorder', $payload); }",
+        "label": 0
+    },
+    {
+        "code": "public function render() { $results = ''; foreach ($this->toArray() as $column => $attributes) { $results .= $this->createField($column, $attributes); } return $results; }",
+        "label": 0
+    },
+    {
+        "code": "public function parse($schema) { $this->schema = $schema; $parsed = []; foreach ($this->getSchemas() as $schemaArray) { $column = $this->getColumn($schemaArray); $attributes = $this->getAttributes($column, $schemaArray); $parsed[$column] = $attributes; } return $parsed; }",
+        "label": 0
+    },
+    {
+        "code": "public function getAttributes($column, $schema) { $fields = str_replace($column . ':', '', $schema); return $this->hasCustomAttribute($column) ? $this->getCustomAttribute($column) : explode(':', $fields); }",
+        "label": 0
+    },
+    {
+        "code": "public function down() { $results = ''; foreach ($this->toArray() as $column => $attributes) { $results .= $this->createField($column, $attributes, 'remove'); } return $results; }",
+        "label": 0
+    },
+    {
+        "code": "public function parse($rules) { $this->rules = $rules; $parsed = []; foreach ($this->getRules() as $rulesArray) { $column = $this->getColumn($rulesArray); $attributes = $this->getAttributes($column, $rulesArray); $parsed[$column] = $attributes; } return $parsed; }",
+        "label": 0
+    },
+    {
+        "code": "public function getFillable() { if (!$this->fillable) { return '[]'; } $results = '[' . PHP_EOL; foreach ($this->getSchemaParser()->toArray() as $column => $value) { $results .= \"\\t\\t'{$column}',\" . PHP_EOL; } return $results . \"\\t\" . ']'; }",
+        "label": 0
+    },
+    {
+        "code": "public function getCacheRepository() { if (is_null($this->cacheRepository)) { $this->cacheRepository = app(config('repository.cache.repository', 'cache')); } return $this->cacheRepository; }",
+        "label": 0
+    },
+    {
+        "code": "protected function serializeCriteria() { try { return serialize($this->getCriteria()); } catch (Exception $e) { return serialize($this->getCriteria()->map(function ($criterion) { return $this->serializeCriterion($criterion); })); } }",
+        "label": 0
+    },
+    {
+        "code": "protected function serializeCriterion($criterion) { try { serialize($criterion); return $criterion; } catch (Exception $e) { if ($e->getMessage() !== \"Serialization of 'Closure' is not allowed\") { throw $e; } $r = new ReflectionObject($criterion); return [ 'hash' => md5((string) $r), 'properties' => $r->getProperties(), ]; } }",
+        "label": 0
+    },
+    {
+        "code": "public function versionCompare($frameworkVersion, $compareVersion, $operator = null) { $lumenPattern = '/Lumen \\((\\d\\.\\d\\.[\\d|\\*])\\)( \\(Laravel Components (\\d\\.\\d\\.[\\d|\\*])\\))?/'; if (preg_match($lumenPattern, $frameworkVersion, $matches)) { $frameworkVersion = isset($matches[3]) ? $matches[3] : $matches[1]; } return version_compare($frameworkVersion, $compareVersion, $operator); }",
+        "label": 0
+    },
+    {
+        "code": "public function getRules() { if (!$this->rules) { return '[]'; } $results = '[' . PHP_EOL; foreach ($this->getSchemaParser()->toArray() as $column => $value) { $results .= \"\\t\\t'{$column}'\\t=>'\\t{$value}',\" . PHP_EOL; } return $results . \"\\t\" . ']'; }",
+        "label": 0
+    },
+    {
+        "code": "public function getValidator() { $validatorGenerator = new ValidatorGenerator([ 'name' => $this->name, ]); $validator = $validatorGenerator->getRootNamespace() . '\\\\' . $validatorGenerator->getName(); return 'use ' . str_replace([ \"\\\\\", '/' ], '\\\\', $validator) . 'Validator;'; }",
+        "label": 0
+    },
+    {
+        "code": "public function getRepository() { $repositoryGenerator = new RepositoryInterfaceGenerator([ 'name' => $this->name, ]); $repository = $repositoryGenerator->getRootNamespace() . '\\\\' . $repositoryGenerator->getName(); return 'use ' . str_replace([ \"\\\\\", '/' ], '\\\\', $repository) . 'Repository;'; }",
+        "label": 0
+    },
+    {
+        "code": "public function getEloquentRepository() { $repositoryGenerator = new RepositoryEloquentGenerator([ 'name' => $this->name, ]); $repository = $repositoryGenerator->getRootNamespace() . '\\\\' . $repositoryGenerator->getName(); return str_replace([ \"\\\\\", '/' ], '\\\\', $repository) . 'RepositoryEloquent'; }",
+        "label": 0
+    },
+    {
+        "code": "public function validator() { if (isset($this->rules) && !is_null($this->rules) && is_array($this->rules) && !empty($this->rules)) { if (class_exists('Prettus\\Validator\\LaravelValidator')) { $validator = app('Prettus\\Validator\\LaravelValidator'); if ($validator instanceof ValidatorInterface) { $validator->setRules($this->rules); return $validator; } } else { throw new Exception(trans('repository::packages.prettus_laravel_validation_required')); } } return null; }",
+        "label": 1
+    },
+    {
+        "code": "public function first($columns = ['*']) { $this->applyCriteria(); $this->applyScope(); $results = $this->model->first($columns); $this->resetModel(); return $this->parserResult($results); }",
+        "label": 0
+    },
+    {
+        "code": "public function find($id, $columns = ['*']) { $this->applyCriteria(); $this->applyScope(); $model = $this->model->findOrFail($id, $columns); $this->resetModel(); return $this->parserResult($model); }",
+        "label": 0
+    },
+    {
+        "code": "public function findWhereIn($field, array $values, $columns = ['*']) { $this->applyCriteria(); $this->applyScope(); $model = $this->model->whereIn($field, $values)->get($columns); $this->resetModel(); return $this->parserResult($model); }",
+        "label": 0
+    },
+    {
+        "code": "public function findWhereNotIn($field, array $values, $columns = ['*']) { $this->applyCriteria(); $this->applyScope(); $model = $this->model->whereNotIn($field, $values)->get($columns); $this->resetModel(); return $this->parserResult($model); }",
+        "label": 0
+    },
+    {
+        "code": "public function whereHas($relation, $closure) { $this->model = $this->model->whereHas($relation, $closure); return $this; }",
+        "label": 0
+    },
+    {
+        "code": "public function pushCriteria($criteria) { if (is_string($criteria)) { $criteria = new $criteria; } if (!$criteria instanceof CriteriaInterface) { throw new RepositoryException(\"Class \" . get_class($criteria) . \" must be an instance of Prettus\\\\Repository\\\\Contracts\\\\CriteriaInterface\"); } $this->criteria->push($criteria); return $this; }",
+        "label": 0
+    },
+    {
+        "code": "protected function applyConditions(array $where) { foreach ($where as $field => $value) { if (is_array($value)) { list($field, $condition, $val) = $value; $this->model = $this->model->where($field, $condition, $val); } else { $this->model = $this->model->where($field, '=', $value); } } }",
+        "label": 0
+    },
+    {
+        "code": "public function parserResult($result) { if ($this->presenter instanceof PresenterInterface) { if ($result instanceof Collection || $result instanceof LengthAwarePaginator) { $result->each(function ($model) { if ($model instanceof Presentable) { $model->setPresenter($this->presenter); } return $model; }); } elseif ($result instanceof Presentable) { $result = $result->setPresenter($this->presenter); } if (!$this->skipPresenter) { return $this->presenter->present($result); } } return $result; }",
+        "label": 0
+    },
+    {
+        "code": "public function getName() { $name = $this->name; if (str_contains($this->name, '\\\\')) { $name = str_replace('\\\\', '/', $this->name); } if (str_contains($this->name, '/')) { $name = str_replace('/', '/', $this->name); } return Str::studly(str_replace(' ', '/', ucwords(str_replace('/', ' ', $name)))); }",
+        "label": 0
+    },
+    {
+        "code": "public function getConfigGeneratorClassPath($class, $directoryPath = false) { switch ($class) { case ('models' === $class): $path = config('repository.generator.paths.models', 'Entities'); break; case ('repositories' === $class): $path = config('repository.generator.paths.repositories', 'Repositories'); break; case ('interfaces' === $class): $path = config('repository.generator.paths.interfaces', 'Repositories'); break; case ('presenters' === $class): $path = config('repository.generator.paths.presenters', 'Presenters'); break; case ('transformers' === $class): $path = config('repository.generator.paths.transformers', 'Transformers'); break; case ('validators' === $class): $path = config('repository.generator.paths.validators', 'Validators'); break; case ('controllers' === $class): $path = config('repository.generator.paths.controllers', 'Http\\Controllers'); break; case ('provider' === $class): $path = config('repository.generator.paths.provider', 'RepositoryServiceProvider'); break; case ('criteria' === $class): $path = config('repository.generator.paths.criteria', 'Criteria'); break; default: $path = ''; } if ($directoryPath) { $path = str_replace('\\\\', '/', $path); } else { $path = str_replace('/', '\\\\', $path); } return $path; }",
+        "label": 0
+    },
+    {
+        "code": "protected function dumpDatabases(): array { return $this->dbDumpers->map(function (DbDumper $dbDumper, $key) { consoleOutput()->info(\"Dumping database {$dbDumper->getDbName()}...\"); $dbType = mb_strtolower(basename(str_replace('\\\\', '/', get_class($dbDumper)))); $dbName = $dbDumper->getDbName(); if ($dbDumper instanceof Sqlite) { $dbName = $key.'-database'; } $fileName = \"{$dbType}-{$dbName}.{$this->getExtension($dbDumper)}\"; if (config('backup.backup.gzip_database_dump')) { $dbDumper->useCompressor(new GzipCompressor()); $fileName .= '.'.$dbDumper->getCompressorExtension(); } if ($compressor = config('backup.backup.database_dump_compressor')) { $dbDumper->useCompressor(new $compressor()); $fileName .= '.'.$dbDumper->getCompressorExtension(); } $temporaryFilePath = $this->temporaryDirectory->path('db-dumps'.DIRECTORY_SEPARATOR.$fileName); $dbDumper->dumpToFile($temporaryFilePath); return $temporaryFilePath; })->toArray(); }",
+        "label": 0
+    },
+    {
+        "code": "public function excludeFilesFrom($excludeFilesAndDirectories): self { $this->excludeFilesAndDirectories = $this->excludeFilesAndDirectories->merge($this->sanitize($excludeFilesAndDirectories)); return $this; }",
+        "label": 0
+    },
+    {
+        "code": "public function write_bits($bits) { $value = 0; foreach ($bits as $n => $bit) { $bit = $bit ? 1 : 0; $value |= ($bit << $n); } $this->out .= chr($value); return $this; }",
+        "label": 0
+    },
+    {
+        "code": "public function write_octet($n) { if ($n < 0 || $n > 255) { throw new AMQPInvalidArgumentException('Octet out of range: ' . $n); } $this->out .= chr($n); return $this; }",
+        "label": 0
+    },
+    {
+        "code": "public function write_short($n) { if ($n < 0 || $n > 65535) { throw new AMQPInvalidArgumentException('Short out of range: ' . $n); } $this->out .= pack('n', $n); return $this; }",
+        "label": 0
+    },
+    {
+        "code": "public function write_long($n) { if (($n < 0) || ($n > 4294967295)) { throw new AMQPInvalidArgumentException('Long out of range: ' . $n); } if (empty($this->is64bits) && is_string($n)) { $n = (float) $n; } $this->out .= pack('N', $n); return $this; }",
+        "label": 0
+    },
+    {
+        "code": "public function write_longlong($n) { if ($n < 0) { throw new AMQPInvalidArgumentException('Longlong out of range: ' . $n); } if (bcadd($n, -PHP_INT_MAX, 0) <= 0) { if ($this->is64bits) { list($hi, $lo) = $this->splitIntoQuads($n); } else { $hi = 0; $lo = $n; } $this->out .= pack('NN', $hi, $lo); } else { try { $this->out .= self::packBigEndian($n, 8); } catch (AMQPOutOfBoundsException $ex) { throw new AMQPInvalidArgumentException('Longlong out of range: ' . $n, 0, $ex); } } return $this; }",
+        "label": 0
+    },
+    {
+        "code": "public function write_shortstr($s) { $len = mb_strlen($s, 'ASCII'); if ($len > 255) { throw new AMQPInvalidArgumentException('String too long'); } $this->write_octet($len); $this->out .= $s; return $this; }",
+        "label": 0
+    },
+    {
+        "code": "protected function prepare_method_frame($method_sig, $args = '', $pkt = null) { return $this->connection->prepare_channel_method_frame($this->channel_id, $method_sig, $args, $pkt); }",
+        "label": 0
+    },
+    {
+        "code": "public function wait($allowed_methods = null, $non_blocking = false, $timeout = 0) { $this->debug->debug_allowed_methods($allowed_methods); $deferred = $this->process_deferred_methods($allowed_methods); if ($deferred['dispatch'] === true) { return $this->dispatch_deferred_method($deferred['queued_method']); } if (true === $non_blocking) { $timeout = null; } while (true) { try { list($frame_type, $payload) = $this->next_frame($timeout); } catch (AMQPNoDataException $e) { break; } catch (AMQPConnectionClosedException $exception) { if ($this instanceof AMQPChannel) { $this->do_close(); } throw $exception; } $this->validate_method_frame($frame_type); $this->validate_frame_payload($payload); $method_sig = $this->build_method_signature($payload); $args = $this->extract_args($payload); $this->debug->debug_method_signature('> %s', $method_sig); $amqpMessage = $this->maybe_wait_for_content($method_sig); if ($this->should_dispatch_method($allowed_methods, $method_sig)) { return $this->dispatch($method_sig, $args, $amqpMessage); } $this->debug->debug_method_signature('Queueing for later: %s', $method_sig); $this->method_queue[] = array($method_sig, $args, $amqpMessage); if ($non_blocking) { break; } } }",
+        "label": 0
+    },
+    {
+        "code": "public function has($name) { return isset($this->properties[$name]) || isset($this->delivery_info[$name]); }",
+        "label": 0
+    },
+    {
+        "code": "public function get($name) { if (isset($this->properties[$name])) { return $this->properties[$name]; } if (isset($this->delivery_info[$name])) { return $this->delivery_info[$name]; } throw new \\OutOfBoundsException(sprintf( 'No \"%s\" property', $name )); }",
+        "label": 0
+    },
+    {
+        "code": "protected function write_heartbeat() { $pkt = new AMQPWriter(); $pkt->write_octet(8); $pkt->write_short(0); $pkt->write_long(0); $pkt->write_octet(0xCE); $this->write($pkt->getvalue()); }",
+        "label": 0
+    },
+    {
+        "code": "protected function cleanup_error_handler() { restore_error_handler(); if ($this->last_error !== null) { throw new \\ErrorException( $this->last_error['errstr'], 0, $this->last_error['errno'], $this->last_error['errfile'], $this->last_error['errline'] ); } }",
+        "label": 0
+    },
+    {
+        "code": "public function error_handler($errno, $errstr, $errfile, $errline, $errcontext = null) { $this->last_error = compact('errno', 'errstr', 'errfile', 'errline', 'errcontext'); }",
+        "label": 0
+    },
+    {
+        "code": "public function reuse($str) { $this->str = $str; $this->str_length = mb_strlen($this->str, 'ASCII'); $this->offset = 0; $this->bitcount = $this->bits = 0; }",
+        "label": 0
+    },
+    {
+        "code": "protected function wait() { $timeout = $this->getTimeout(); if (null === $timeout) { $sec = 0; $usec = 0; } elseif ($timeout > 0) { list($sec, $usec) = MiscHelper::splitSecondsMicroseconds($this->getTimeout()); } else { $sec = null; $usec = 0; } $result = $this->io->select($sec, $usec); if ($result === false) { throw new AMQPIOWaitException('A network error occurred while awaiting for incoming data'); } if ($result === 0) { if ($timeout > 0) { throw new AMQPTimeoutException(sprintf( 'The connection timed out after %s sec while awaiting incoming data', $timeout )); } else { throw new AMQPNoDataException('No data is ready to read'); } } }",
+        "label": 0
+    },
+    {
+        "code": "public function read_longlong() { $this->bitcount = $this->bits = 0; list(, $hi, $lo) = unpack('N2', $this->rawread(8)); $msb = self::getLongMSB($hi); if (empty($this->is64bits)) { if ($msb) { $hi = sprintf('%u', $hi); } if (self::getLongMSB($lo)) { $lo = sprintf('%u', $lo); } } return bcadd($this->is64bits && !$msb ? $hi << 32 : bcmul($hi, '4294967296', 0), $lo, 0); }",
+        "label": 0
+    },
+    {
+        "code": "public function read_array($returnObject = false) { $this->bitcount = $this->bits = 0; $arrayLength = $this->read_php_int(); $endOffset = $this->offset + $arrayLength; $result = $returnObject ? new AMQPArray() : array(); while ($this->offset < $endOffset) { $fieldType = AMQPAbstractCollection::getDataTypeForSymbol($this->rawread(1)); $fieldValue = $this->read_value($fieldType, $returnObject); $returnObject ? $result->push($fieldValue, $fieldType) : $result[] = $fieldValue; } return $result; }",
+        "label": 0
+    },
+    {
+        "code": "public function read_value($fieldType, $collectionsAsObjects = false) { $this->bitcount = $this->bits = 0; switch ($fieldType) { case AMQPAbstractCollection::T_INT_SHORTSHORT: $val = $this->read_signed_octet(); break; case AMQPAbstractCollection::T_INT_SHORTSHORT_U: $val = $this->read_octet(); break; case AMQPAbstractCollection::T_INT_SHORT: $val = $this->read_signed_short(); break; case AMQPAbstractCollection::T_INT_SHORT_U: $val = $this->read_short(); break; case AMQPAbstractCollection::T_INT_LONG: $val = $this->read_signed_long(); break; case AMQPAbstractCollection::T_INT_LONG_U: $val = $this->read_long(); break; case AMQPAbstractCollection::T_INT_LONGLONG: $val = $this->read_signed_longlong(); break; case AMQPAbstractCollection::T_INT_LONGLONG_U: $val = $this->read_longlong(); break; case AMQPAbstractCollection::T_DECIMAL: $e = $this->read_octet(); $n = $this->read_signed_long(); $val = new AMQPDecimal($n, $e); break; case AMQPAbstractCollection::T_TIMESTAMP: $val = $this->read_timestamp(); break; case AMQPAbstractCollection::T_BOOL: $val = $this->read_octet(); break; case AMQPAbstractCollection::T_STRING_SHORT: $val = $this->read_shortstr(); break; case AMQPAbstractCollection::T_STRING_LONG: $val = $this->read_longstr(); break; case AMQPAbstractCollection::T_ARRAY: $val = $this->read_array($collectionsAsObjects); break; case AMQPAbstractCollection::T_TABLE: $val = $this->read_table($collectionsAsObjects); break; case AMQPAbstractCollection::T_VOID: $val = null; break; case AMQPAbstractCollection::T_BYTES: $val = $this->read_longstr(); break; default: throw new AMQPInvalidArgumentException(sprintf( 'Unsupported type \"%s\"', $fieldType )); } return isset($val) ? $val : null; }",
+        "label": 0
+    },
+    {
+        "code": "protected function connect() { try { while (!$this->isConnected()) { $this->setIsConnected(true); $this->io->connect(); $this->channels = array(); parent::__construct($this, 0); $this->input = new AMQPReader(null, $this->io); $this->write($this->amqp_protocol_header); $this->wait(array($this->waitHelper->get_wait('connection.start')),false,$this->connection_timeout); $this->x_start_ok( $this->getLibraryProperties(), $this->login_method, $this->login_response, $this->locale ); $this->wait_tune_ok = true; while ($this->wait_tune_ok) { $this->wait(array( $this->waitHelper->get_wait('connection.secure'), $this->waitHelper->get_wait('connection.tune') )); } $host = $this->x_open($this->vhost, '', $this->insist); if (!$host) { $this->io->reenableHeartbeat(); return null; } $this->setIsConnected(false); $this->closeChannels(); $this->close_socket(); } } catch (\\Exception $e) { $this->setIsConnected(false); $this->closeChannels(); $this->close_input(); $this->close_socket(); throw $e; } }",
+        "label": 0
+    },
+    {
+        "code": "public function reconnect() { $this->safeClose(); $this->io->close(); $this->setIsConnected(false); $this->connect(); }",
+        "label": 0
+    },
+    {
+        "code": "protected function safeClose() { try { if (isset($this->input) && $this->input) { $this->close(); } } catch (\\Exception $e) { } }",
+        "label": 0
+    },
+    {
+        "code": "protected function wait_frame($timeout = 0) { if (is_null($this->input)) { $this->setIsConnected(false); throw new AMQPConnectionClosedException('Broken pipe or closed connection'); } $currentTimeout = $this->input->getTimeout(); $this->input->setTimeout($timeout); try { $this->wait_frame_reader->reuse( $this->input->read(AMQPReader::OCTET + AMQPReader::SHORT + AMQPReader::LONG) ); $frame_type = $this->wait_frame_reader->read_octet(); $class = self::$PROTOCOL_CONSTANTS_CLASS; if (!array_key_exists($frame_type, $class::$FRAME_TYPES)) { throw new AMQPInvalidFrameException('Invalid frame type ' . $frame_type); } $channel = $this->wait_frame_reader->read_short(); $size = $this->wait_frame_reader->read_long(); $this->wait_frame_reader->reuse($this->input->read(AMQPReader::OCTET + (int) $size)); $payload = $this->wait_frame_reader->read($size); $ch = $this->wait_frame_reader->read_octet(); } catch (AMQPTimeoutException $e) { $this->input->setTimeout($currentTimeout); throw $e; } catch (AMQPNoDataException $e) { if ($this->input) { $this->input->setTimeout($currentTimeout); } throw $e; } catch (AMQPConnectionClosedException $exception) { $this->do_close(); throw $exception; } $this->input->setTimeout($currentTimeout); if ($ch != 0xCE) { throw new AMQPInvalidFrameException(sprintf( 'Framing error, unexpected byte: %x', $ch )); } return array($frame_type, $channel, $payload); }",
+        "label": 0
+    },
+    {
+        "code": "protected function wait_channel($channel_id, $timeout = 0) { $_timeout = $timeout; while (true) { $now = time(); try { list($frame_type, $frame_channel, $payload) = $this->wait_frame($_timeout); } catch (AMQPTimeoutException $e) { if ( $this->heartbeat && microtime(true) - ($this->heartbeat*2) > $this->last_frame ) { $this->debug->debug_msg(\"missed server heartbeat (at threshold * 2)\"); $this->setIsConnected(false); throw new AMQPHeartbeatMissedException(\"Missed server heartbeat\"); } throw $e; } $this->last_frame = microtime(true); if ($frame_channel === 0 && $frame_type === 8) { $this->debug->debug_msg(\"received server heartbeat\"); if($_timeout > 0) { $_timeout -= time() - $now; if($_timeout <= 0) { throw new AMQPTimeoutException(\"Timeout waiting on channel\"); } } continue; } else { if ($frame_channel == $channel_id) { return array($frame_type, $payload); } if (isset($this->channels[$frame_channel])) { array_push($this->channels[$frame_channel]->frame_queue, array($frame_type, $payload)); } if (($frame_type == 1) && ($frame_channel == 0)) { $this->wait(); } } } }",
+        "label": 0
+    },
+    {
+        "code": "public function close($reply_code = 0, $reply_text = '', $method_sig = array(0, 0)) { $result = null; $this->io->disableHeartbeat(); if (empty($this->protocolWriter) || !$this->isConnected()) { return $result; } try { $this->closeChannels(); list($class_id, $method_id, $args) = $this->protocolWriter->connectionClose( $reply_code, $reply_text, $method_sig[0], $method_sig[1] ); $this->send_method_frame(array($class_id, $method_id), $args); $result = $this->wait( array($this->waitHelper->get_wait('connection.close_ok')), false, $this->connection_timeout ); } catch (\\Exception $exception) { $this->do_close(); throw $exception; } $this->setIsConnected(false); return $result; }",
+        "label": 0
+    },
+    {
+        "code": "protected function connection_open_ok($args) { $this->known_hosts = $args->read_shortstr(); $this->debug->debug_msg('Open OK! known_hosts: ' . $this->known_hosts); }",
+        "label": 0
+    },
+    {
+        "code": "protected function connection_redirect($args) { $host = $args->read_shortstr(); $this->known_hosts = $args->read_shortstr(); $this->debug->debug_msg(sprintf( 'Redirected to [%s], known_hosts [%s]', $host, $this->known_hosts )); return $host; }",
+        "label": 0
+    },
+    {
+        "code": "protected function x_secure_ok($response) { $args = new AMQPWriter(); $args->write_longstr($response); $this->send_method_frame(array(10, 21), $args); }",
+        "label": 0
+    },
+    {
+        "code": "protected function connection_start($args) { $this->version_major = $args->read_octet(); $this->version_minor = $args->read_octet(); $this->server_properties = $args->read_table(); $this->mechanisms = explode(' ', $args->read_longstr()); $this->locales = explode(' ', $args->read_longstr()); $this->debug->debug_connection_start( $this->version_major, $this->version_minor, $this->server_properties, $this->mechanisms, $this->locales ); }",
+        "label": 0
+    },
+    {
+        "code": "protected function connection_tune($args) { $v = $args->read_short(); if ($v) { $this->channel_max = $v; } $v = $args->read_long(); if ($v) { $this->frame_max = $v; } if ($this->heartbeat === null) { $this->heartbeat = $args->read_short(); } $this->x_tune_ok($this->channel_max, $this->frame_max, $this->heartbeat); }",
+        "label": 0
+    },
+    {
+        "code": "protected function x_tune_ok($channel_max, $frame_max, $heartbeat) { $args = new AMQPWriter(); $args->write_short($channel_max); $args->write_long($frame_max); $args->write_short($heartbeat); $this->send_method_frame(array(10, 31), $args); $this->wait_tune_ok = false; }",
+        "label": 0
+    },
+    {
+        "code": "protected function closeChannels() { foreach ($this->channels as $key => $channel) { if ($key === 0) { continue; } try { $channel->close(); } catch (\\Exception $e) { } } }",
+        "label": 0
+    },
+    {
+        "code": "protected function channel_alert($reader) { $reply_code = $reader->read_short(); $reply_text = $reader->read_shortstr(); $details = $reader->read_table(); array_push($this->alerts, array($reply_code, $reply_text, $details)); }",
+        "label": 0
+    },
+    {
+        "code": "public function close($reply_code = 0, $reply_text = '', $method_sig = array(0, 0)) { $this->callbacks = array(); if ($this->is_open === false || $this->connection === null) { $this->do_close(); return null; } list($class_id, $method_id, $args) = $this->protocolWriter->channelClose( $reply_code, $reply_text, $method_sig[0], $method_sig[1] ); try { $this->send_method_frame(array($class_id, $method_id), $args); } catch (\\Exception $e) { $this->do_close(); throw $e; } return $this->wait(array( $this->waitHelper->get_wait('channel.close_ok') ), false, $this->channel_rpc_timeout ); }",
+        "label": 0
+    },
+    {
+        "code": "public function access_request( $realm, $exclusive = false, $passive = false, $active = false, $write = false, $read = false ) { list($class_id, $method_id, $args) = $this->protocolWriter->accessRequest( $realm, $exclusive, $passive, $active, $write, $read ); $this->send_method_frame(array($class_id, $method_id), $args); return $this->wait(array( $this->waitHelper->get_wait('access.request_ok') ), false, $this->channel_rpc_timeout); }",
+        "label": 0
+    },
+    {
+        "code": "public function exchange_delete( $exchange, $if_unused = false, $nowait = false, $ticket = null ) { $ticket = $this->getTicket($ticket); list($class_id, $method_id, $args) = $this->protocolWriter->exchangeDelete( $ticket, $exchange, $if_unused, $nowait ); $this->send_method_frame(array($class_id, $method_id), $args); if ($nowait) { return null; } return $this->wait(array( $this->waitHelper->get_wait('exchange.delete_ok') ), false, $this->channel_rpc_timeout); }",
+        "label": 0
+    },
+    {
+        "code": "public function exchange_bind( $destination, $source, $routing_key = '', $nowait = false, $arguments = array(), $ticket = null ) { $ticket = $this->getTicket($ticket); list($class_id, $method_id, $args) = $this->protocolWriter->exchangeBind( $ticket, $destination, $source, $routing_key, $nowait, $arguments ); $this->send_method_frame(array($class_id, $method_id), $args); if ($nowait) { return null; } return $this->wait(array( $this->waitHelper->get_wait('exchange.bind_ok') ), false, $this->channel_rpc_timeout); }",
+        "label": 0
+    },
+    {
+        "code": "public function queue_bind( $queue, $exchange, $routing_key = '', $nowait = false, $arguments = array(), $ticket = null ) { $ticket = $this->getTicket($ticket); list($class_id, $method_id, $args) = $this->protocolWriter->queueBind( $ticket, $queue, $exchange, $routing_key, $nowait, $arguments ); $this->send_method_frame(array($class_id, $method_id), $args); if ($nowait) { return null; } return $this->wait(array( $this->waitHelper->get_wait('queue.bind_ok') ), false, $this->channel_rpc_timeout); }",
+        "label": 0
+    },
+    {
+        "code": "public function queue_unbind( $queue, $exchange, $routing_key = '', $arguments = array(), $ticket = null ) { $ticket = $this->getTicket($ticket); list($class_id, $method_id, $args) = $this->protocolWriter->queueUnbind( $ticket, $queue, $exchange, $routing_key, $arguments ); $this->send_method_frame(array($class_id, $method_id), $args); return $this->wait(array( $this->waitHelper->get_wait('queue.unbind_ok') ), false, $this->channel_rpc_timeout); }",
+        "label": 0
+    },
+    {
+        "code": "protected function queue_declare_ok($reader) { $queue = $reader->read_shortstr(); $message_count = $reader->read_long(); $consumer_count = $reader->read_long(); return array($queue, $message_count, $consumer_count); }",
+        "label": 0
+    },
+    {
+        "code": "public function queue_delete($queue = '', $if_unused = false, $if_empty = false, $nowait = false, $ticket = null) { $ticket = $this->getTicket($ticket); list($class_id, $method_id, $args) = $this->protocolWriter->queueDelete( $ticket, $queue, $if_unused, $if_empty, $nowait ); $this->send_method_frame(array($class_id, $method_id), $args); if ($nowait) { return null; } return $this->wait(array( $this->waitHelper->get_wait('queue.delete_ok') ), false, $this->channel_rpc_timeout); }",
+        "label": 0
+    },
+    {
+        "code": "public function queue_purge($queue = '', $nowait = false, $ticket = null) { $ticket = $this->getTicket($ticket); list($class_id, $method_id, $args) = $this->protocolWriter->queuePurge($ticket, $queue, $nowait); $this->send_method_frame(array($class_id, $method_id), $args); if ($nowait) { return null; } return $this->wait(array( $this->waitHelper->get_wait('queue.purge_ok') ), false, $this->channel_rpc_timeout); }",
+        "label": 0
+    },
+    {
+        "code": "public function basic_ack($delivery_tag, $multiple = false) { list($class_id, $method_id, $args) = $this->protocolWriter->basicAck($delivery_tag, $multiple); $this->send_method_frame(array($class_id, $method_id), $args); }",
+        "label": 0
+    },
+    {
+        "code": "protected function basic_ack_from_server(AMQPReader $reader) { $delivery_tag = $reader->read_longlong(); $multiple = (bool) $reader->read_bit(); if (!isset($this->published_messages[$delivery_tag])) { throw new AMQPRuntimeException(sprintf( 'Server ack\\'ed unknown delivery_tag \"%s\"', $delivery_tag )); } $this->internal_ack_handler($delivery_tag, $multiple, $this->ack_handler); }",
+        "label": 0
+    },
+    {
+        "code": "protected function basic_nack_from_server($reader) { $delivery_tag = $reader->read_longlong(); $multiple = (bool) $reader->read_bit(); if (!isset($this->published_messages[$delivery_tag])) { throw new AMQPRuntimeException(sprintf( 'Server nack\\'ed unknown delivery_tag \"%s\"', $delivery_tag )); } $this->internal_ack_handler($delivery_tag, $multiple, $this->nack_handler); }",
+        "label": 0
+    }
+
+]

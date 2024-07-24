@@ -1,0 +1,1002 @@
+[
+    {
+        "code": "function (state, action) { return _.defaults({ isValidating: action.isValidating, lastAction: IS_VALIDATING }, state) }",
+        "label": 0
+    },
+    {
+        "code": "function addWidgetForFilter (view, filter, editModeHint) { var gridster = view._widgetsGridster; var row = filter.row || 1; var col = filter.col || 1; var sizeX = filter.size_x || 3; var sizeY = filter.size_y || 3; var el = gridster.add_widget('<div class=\"widgetOuterFrame\"></div>', sizeX, sizeY, col, row); var frameView = new WidgetFrameView({ model: filter }); view.renderSubview(frameView, el[0]); frameView.renderContent(); frameView.gridsterHook = el[0]; $(el[0]).data('spotWidgetFrameView', frameView); var chartView = frameView.widget; chartView.model.updateConfiguration(); if (chartView.model.isConfigured) { if (!filter.isInitialized) { filter.initDataFilter(); } if (!chartView.isInitialized) { chartView.initChart(); } chartView.update(); frameView.editMode = editModeHint; } else { frameView.editMode = true; } filter.on('newData', function () { chartView.update(); }); }",
+        "label": 0
+    },
+    {
+        "code": "function inRange (value, min, max) { const int = parseInt(value, 10) return ( `${int}` === `${value.replace(/^0/, '')}` && int >= min && int <= max ) }",
+        "label": 0
+    },
+    {
+        "code": "function markdown(options) { return new Remarkable(extend({ breaks: false, html: true, langPrefix: 'lang-', linkify: true, typographer: false, xhtmlOut: false }, options)); }",
+        "label": 0
+    },
+    {
+        "code": "function partitionValueToIndex (partition, value) { var group; if (!partition) { return 0; } group = partition.groups.get(value, 'value'); if (group) { return group.groupIndex; } else { return -1; } }",
+        "label": 0
+    },
+    {
+        "code": "function _validateArray (path, model, validateModelType) { const results = [] let subPath = `${path}/items` if (_.isPlainObject(model.items)) { if (model.items.type === 'object') { results.push(validateSubModel(subPath, model.items, validateModelType)) } } else if (Array.isArray(model.items)) { _.forEach(model.items, (item, index) => { const itemSubPath = `${subPath}/${index}` results.push(validateSubModel(itemSubPath, item, validateModelType)) }) } return aggregateResults(results) }",
+        "label": 0
+    },
+    {
+        "code": "function getDefaults (value, path, model, resolveRef) { const schema = findSchema(model, path, resolveRef) const schemaDefault = _.clone(schema.default) if (model.type === 'object') { const subSchemaDefaults = {} _.forIn(schema.properties, function (subSchema, propName) { const defaults = getDefaults( value && value[propName], null, subSchema, resolveRef ) if (defaults !== undefined) { subSchemaDefaults[propName] = defaults } }) if (Object.keys(subSchemaDefaults).length > 0) { return _.defaults({}, schemaDefault, subSchemaDefaults) } return schemaDefault } else if (value !== undefined) { return value } return schemaDefault }",
+        "label": 0
+    },
+    {
+        "code": "function getDefaultedValue ({inputValue, previousValue, bunsenId, renderModel, mergeDefaults}) { const isInputValueEmpty = isEmptyValue(inputValue) if (previousValue !== undefined) { return inputValue } const resolveRef = schemaFromRef(renderModel.definitions) const defaultValue = getDefaults(inputValue, bunsenId, renderModel, resolveRef) const hasDefaults = defaultValue !== undefined const isUpdatingAll = bunsenId === null const shouldApplyDefaults = isInputValueEmpty && hasDefaults || !isInputValueEmpty && hasDefaults && isUpdatingAll && mergeDefaults const shouldClear = isInputValueEmpty && isUpdatingAll && !hasDefaults if (shouldApplyDefaults) { const schema = findSchema(renderModel, bunsenId, resolveRef) return schema.type === 'object' ? _.defaults({}, inputValue, defaultValue) : defaultValue } else if (shouldClear) { return {} } return inputValue }",
+        "label": 0
+    },
+    {
+        "code": "function fieldValidation (dispatch, getState, fieldValidators, formValue, initialFormValue, all) { let fieldsBeingValidated = [] const allValidationPromises = [] fieldValidators.forEach(validator => { const {field, fields, validator: validatorFunc, validators: validatorFuncs} = validator const fieldsToValidate = fields || [field] fieldsBeingValidated = fieldsBeingValidated.concat(fieldsToValidate) fieldsToValidate.forEach((field) => { let fieldValidationPromises = [] const newValue = _.get(formValue, field) const oldValue = _.get(initialFormValue, field) if (!_.isEqual(newValue, oldValue) || !initialFormValue) { dispatchFieldIsValidating(dispatch, field, true) const validations = validatorFuncs || [validatorFunc] validations.forEach((validatorFunc, index) => { const fieldValidationPromise = validatorFunc(formValue, field, newValue) .then((result) => { const { fieldValidationResult: { errors: currentErrors = [], warnings: currentWarnings = [] } = {} } = getState() const validationId = `${field}-${index}` const filterOutValidationId = (item) => item.validationId !== validationId const filteredOutErrors = currentErrors.filter(filterOutValidationId) const filteredOutWarnings = currentWarnings.filter(filterOutValidationId) const { errors = [], warnings = [] } = result.value const attachValidationId = (item) => { return _.assign({ validationId, field }, item) } const newErrors = filteredOutErrors.concat(errors.map(attachValidationId)) const errorsMappedToDotNotation = mapErrorsFromValidation(newErrors) dispatch({ fieldErrors: errorsMappedToDotNotation, type: VALIDATION_RESOLVED, fieldValidationResult: { errors: newErrors, warnings: filteredOutWarnings.concat(warnings.map(attachValidationId)) } }) return result }) allValidationPromises.push(fieldValidationPromise) fieldValidationPromises.push(fieldValidationPromise) }) } if (fieldValidationPromises.length >= 1) { all(fieldValidationPromises).then(() => { dispatchFieldIsValidating(dispatch, field, false) }) } }) }) return allValidationPromises }",
+        "label": 0
+    },
+    {
+        "code": "function _guardPromiseAll (promises, all, callback) { if (promises.length === 0) { callback() } else { all(promises).then(() => { callback() }) } }",
+        "label": 0
+    },
+    {
+        "code": "function getPropertyOrder (properties) { const primitiveProps = [] const complexProps = [] _.forIn(properties, (prop, propName) => { if (prop.type === 'object' || prop.type === 'array') { complexProps.push(propName) } else { primitiveProps.push(propName) } }) return primitiveProps.concat(complexProps) }",
+        "label": 0
+    },
+    {
+        "code": "function addModelCell (propertyName, model, cellDefinitions) { const cell = {} var defName = propertyName var counter = 1 while (defName in cellDefinitions) { defName = `${propertyName}${counter}` counter++ } cellDefinitions[defName] = cell const props = getPropertyOrder(model.properties) const children = props.map((propName) => { return addModel(propName, model.properties[propName], cellDefinitions) }) if (model.dependencies) { _.forIn(model.dependencies, (dep, depName) => { const depProps = getPropertyOrder(dep.properties) const depChildren = depProps.map((propName) => { return addDependentModel(propName, depName, dep.properties[propName], cellDefinitions) }) children.push.apply(children, depChildren) }) } cell.children = children return defName }",
+        "label": 0
+    },
+    {
+        "code": "async function run() { const records = await BB.all(process.argv.slice(2).map(f => readAsync(f))) return BB.map(records, record => kinesis.putRecord({ Data: JSON.stringify(yaml.safeLoad(record)), PartitionKey: '0', StreamName: process.env.LAMBDA_KINESIS_STREAM_NAME }).promise()) }",
+        "label": 0
+    },
+    {
+        "code": "function appendModelPath (modelPath, id, internal) { const addedModelPath = getModelPath(id) if (internal) { if (modelPath === '') { return `properties._internal.${addedModelPath}` } return `${modelPath}.properties._internal.${addedModelPath}` } if (modelPath === '') { return addedModelPath } return `${modelPath}.${addedModelPath}` }",
+        "label": 0
+    },
+    {
+        "code": "function extendCell (cell, cellDefinitions) { cell = _.clone(cell) while (cell.extends) { const extendedCell = cellDefinitions[cell.extends] if (!_.isObject(extendedCell)) { throw new Error(`'${cell.extends}' is not a valid model definition`) } delete cell.extends cell = _.defaults(cell, extendedCell) } return cell }",
+        "label": 0
+    },
+    {
+        "code": "function normalizeArrayOptions (cell, cellDefinitions) { const arrayOptions = _.clone(cell.arrayOptions) if (arrayOptions.itemCell) { if (Array.isArray(arrayOptions.itemCell)) { arrayOptions.itemCell = arrayOptions.itemCell.map(cell => normalizeCell(cell, cellDefinitions)) } else { arrayOptions.itemCell = normalizeCell(arrayOptions.itemCell, cellDefinitions) } } if (arrayOptions.tupleCells) { arrayOptions.tupleCells = arrayOptions.tupleCells.map(cell => normalizeCell(cell, cellDefinitions)) } return arrayOptions }",
+        "label": 0
+    },
+    {
+        "code": "function pluckFromArrayOptions (cell, modelPath, models, cellDefinitions) { if (cell.arrayOptions.tupleCells) { cell.arrayOptions.tupleCells.forEach(function (cell, index) { pluckModels(cell, modelPath.concat(index), models, cellDefinitions) }) } if (cell.arrayOptions.itemCell) { const itemCell = cell.arrayOptions.itemCell if (Array.isArray(itemCell)) { itemCell.forEach(function (cell, index) { pluckModels(cell, modelPath.concat(index), models, cellDefinitions) }) } else { pluckModels(itemCell, modelPath.concat('0'), models, cellDefinitions) } } }",
+        "label": 0
+    },
+    {
+        "code": "function pluckModels (cell, modelPath, models, cellDefinitions) { cell = extendCell(cell, cellDefinitions) if (_.isObject(cell.model)) { const addedPath = appendModelPath(modelPath.modelPath(), cell.id, cell.internal) models[addedPath] = cell.model } else if (cell.children) { cell.children.forEach((cell) => { const newPath = typeof cell.model === 'string' ? modelPath.concat(cell.model) : modelPath pluckModels(cell, newPath, models, cellDefinitions) }) } else if (cell.arrayOptions) { pluckFromArrayOptions(cell, modelPath, models, cellDefinitions) } }",
+        "label": 0
+    },
+    {
+        "code": "function aggregateModels (view, modelPath) { const models = {} view.cells.forEach(function (cell) { const newPath = typeof cell.model === 'string' ? modelPath.concat(cell.model) : modelPath pluckModels(cell, newPath, models, view.cellDefinitions) }) return models }",
+        "label": 0
+    },
+    {
+        "code": "function expandModel (model, view) { const modelPath = new BunsenModelPath(model) const modelExpansions = aggregateModels(view, modelPath) let newModel = model _.forEach(modelExpansions, (propertyModel, path) => { newModel = addBunsenModelProperty(newModel, propertyModel, path) }) return newModel }",
+        "label": 0
+    },
+    {
+        "code": "function svgs(req, res) { const bundle = new Bundle( req.url.slice(1, -5).split('-').map(function map(name) { return assets[name]; }) ); bundle.run(function (err, output) { if (err) throw err; res.setHeader('Content-Length', Buffer(output).length); res.writeHead(200, { 'Content-Type': 'text/plain' }); res.end(output); }); }",
+        "label": 0
+    },
+    {
+        "code": "function html(req, res) { fs.readFile(path.join(__dirname, 'index.html'), function read(err, file) { if (err) throw err; res.setHeader('Content-Length', file.length); res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(file); }); }",
+        "label": 0
+    },
+    {
+        "code": "function client(req, res) { const compiler = webpack(config); compiler.outputFileSystem = fsys; compiler.run((err, stats) => { const file = fsys.readFileSync(path.join(__dirname, 'dist', 'client.js')); res.setHeader('Content-Length', file.length); res.writeHead(200, { 'Content-Type': 'text/javascript' }); res.end(file); }); }",
+        "label": 0
+    },
+    {
+        "code": "function convertObjectCell (cell) { return _.chain(cell.rows) .map(rowsToCells) .assign(_.pick(cell, CARRY_OVER_PROPERTIES)) .value() }",
+        "label": 0
+    },
+    {
+        "code": "function convertArrayCell (cell) { const {item} = cell const arrayOptions = _.chain(item) .pick(ARRAY_CELL_PROPERTIES) .assign({ itemCell: convertCell(item) }) .value() return { arrayOptions, model: cell.model } }",
+        "label": 0
+    },
+    {
+        "code": "function convertRenderer (cell) { const {renderer} = cell if (renderer === undefined) { return } const basicRenderers = [ 'boolean', 'string', 'number' ] if (basicRenderers.indexOf(renderer) >= 0) { return {name: renderer} } return customRenderer(renderer, cell.properties) }",
+        "label": 0
+    },
+    {
+        "code": "function grabClassNames (cell) { const classNames = _.pickBy({ cell: cell.className, value: cell.inputClassName, label: cell.labelClassName }) if (_.size(classNames) > 0) { return classNames } }",
+        "label": 0
+    },
+    {
+        "code": "function rowsToCells (rows) { if (!rows) { return {} } const children = rows .map((row) => { return { children: _.map(row, convertCell) } }) return { children } }",
+        "label": 0
+    },
+    {
+        "code": "function warning(lines) { lines.unshift(''); lines.push(''); lines.forEach(function each(line) { console.error('asset-bundle:warning', line); }); }",
+        "label": 0
+    },
+    {
+        "code": "function viewBox(details) { svg.viewBox = `${details.x || 0} ${details.y || 0} ${details.width} ${details.height}`; fn(null, svg); }",
+        "label": 0
+    },
+    {
+        "code": "function () { var filter = this.collection.parent.filter; if (!filter || !this.isFilled) { return false; } filter.releaseDataFilter(); if (this.type === 'partition') { var partition = filter.partitions.get(this.rank, 'rank'); filter.partitions.remove(partition); } else if (this.type === 'aggregate') { var aggregate = filter.aggregates.get(this.rank, 'rank'); filter.aggregates.remove(aggregate); } this.isFilled = false; return true; }",
+        "label": 0
+    },
+    {
+        "code": "function getWebpackRunnableLambda(slsWebpack, stats, functionName) { const handler = slsWebpack.loadHandler(stats, functionName, true) const context = slsWebpack.getContext(functionName) return wrapHandler(handler, context) }",
+        "label": 0
+    },
+    {
+        "code": "function onClick (ev, elements) { var model = this._Ampersandview.model; var partition = model.filter.partitions.get(1, 'rank'); if (elements.length > 0) { partition.updateSelection(partition.groups.models[elements[0]._index]); model.filter.updateDataFilter(); app.me.dataview.getData(); } }",
+        "label": 0
+    },
+    {
+        "code": "function getColor (i) { i = parseInt(i); if (i < 0 || i >= colors.length) { return scale(((i - colors.length) * (211 / 971)) % 1); } else { return chroma(colors[i]); } }",
+        "label": 0
+    },
+    {
+        "code": "function init(loader) { var loaderConfig = loaderUtils.getLoaderConfig(loader, 'web3Loader'); web3 = require('./lib/web3')(loaderConfig.provider); config = mergeConfig(loaderConfig); isDebug = loader.debug; }",
+        "label": 0
+    },
+    {
+        "code": "function mergeConfig(loaderConfig) { var defaultConfig = { provider: 'http: from: web3.eth.accounts[0], gasLimit: web3.eth.getBlock(web3.eth.defaultBlock).gasLimit, constructorParams: {}, deployedContracts: {} }; var mergedConfig = loaderConfig; for (var key in defaultConfig) { if (!mergedConfig.hasOwnProperty(key)) { mergedConfig[key] = defaultConfig[key]; } } return mergedConfig; }",
+        "label": 0
+    },
+    {
+        "code": "function deploy(contract, callback, contractMap) { if (config.deployedContracts.hasOwnProperty(contract.name)) { contract.address = config.deployedContracts[contract.name]; return callback(null, contract); } linkBytecode(contract, contractMap); var params = resolveConstructorParams(contract, contractMap); logDebug('Constructor params ' + contract.name + ':', params); if(contract.bytecode && !contract.bytecode.startsWith('0x')) { contract.bytecode = '0x' + contract.bytecode; } params.push({ from: config.from, data: contract.bytecode, gas: config.gasLimit, }); params.push(function (err, deployed) { if (err) { return callback(err); } if (typeof deployed.address !== 'undefined') { contract.address = deployed.address; return callback(null, contract); } }); var web3Contract = web3.eth.contract(contract.abi); web3Contract.new.apply(web3Contract, params); }",
+        "label": 0
+    },
+    {
+        "code": "function _validateRootAttributes (view, model, cellValidator) { const results = [ _validateCells(view, model, cellValidator) ] const knownAttributes = ['version', 'type', 'cells', 'cellDefinitions'] const unknownAttributes = _.difference(Object.keys(view), knownAttributes) results.push({ errors: [], warnings: _.map(unknownAttributes, (attr) => { return { path: ' message: `Unrecognized attribute \"${attr}\"` } }) }) return aggregateResults(results) }",
+        "label": 0
+    },
+    {
+        "code": "function () { this.mainView = new MainView({ model: this.me, el: document.body }); this.router.history.start({ root: '/', pushState: true }); }",
+        "label": 0
+    },
+    {
+        "code": "function (i) { if (i >= columns.length) { insertIntoDB(); return; } var dbField = columns[i]; var field = dbField.Field; if (dbField.Null === 'NO' && dbField.Default === '' && dbField.Extra !== 'auto_increment' && dbField.Extra.search('on update')===-1) { if (undefOrEmpty(req.body[field])) { return sendError(res,\"Field \" + field + \" is NOT NULL but not specified in this request\"); } else { value = checkIfSentvaluesAreSufficient(req,dbField); console.log(value); if(value !== false) { insertJson[field] = value; iterator(i + 1); } else { return sendError(res,'Value for field ' + field + ' is not sufficient. Expecting ' + dbField.Type + ' but got ' + typeof req.body[field] ); } } } else { if(dbField.Extra === 'auto_increment') { iterator(i + 1); } else { var defined = false; if(dbField.Default == \"FILE\") { if(req.files.hasOwnProperty(dbField.Field)) { defined = true; } } else { if(typeof req.body[field] !== \"undefined\") { defined = true; } } if(defined) { value = checkIfSentvaluesAreSufficient(req,dbField); if(value !== false) { insertJson[field] = value; iterator(i + 1); } else { if(dbField.Default == \"FILE\") { return sendError(res, 'Value for field ' + field + ' is not sufficient. Either the file is to large or an other error occured'); } else { return sendError(res, 'Value for field ' + field + ' is not sufficient. Expecting ' + dbField.Type + ' but got ' + typeof req.body[field]); } } } else { iterator(i + 1); } } } }",
+        "label": 0
+    },
+    {
+        "code": "function insertIntoDB() { lastQry = connection.query('INSERT INTO ?? SET ?', [req.params.table , insertJson] , function (err, rows) { if (err) { console.error(err); res.statusCode = 500; res.send({ result: 'error', err: err.code }); } else { sendSuccessAnswer(req.params.table , res, rows.insertId); } }); }",
+        "label": 0
+    },
+    {
+        "code": "function updateIntoDB() { lastQry = connection.query('UPDATE ?? SET ? WHERE ?? = ?', [req.params.table , updateJson, updateSelector.field, updateSelector.value] , function (err) { if (err) return sendError(res,err.code); sendSuccessAnswer(req.params.table , res, req.params.id, updateSelector.field); }); }",
+        "label": 0
+    },
+    {
+        "code": "function sendSuccessAnswer(table, res, id, field) { if(typeof field === \"undefined\") { if(id === 0) { res.send({ result: 'success', table: table }); return; } else { field = \"id\"; } } lastQry = connection.query('SELECT * FROM ?? WHERE ?? = ?', [table, field, id] , function (err, rows) { if (err) { sendError(res, err.code) } else { res.send({ result: 'success', json: rows, table: table }); } }); }",
+        "label": 0
+    },
+    {
+        "code": "function checkIfSentvaluesAreSufficient(req,dbField) { if(dbField.Default == 'FILE') { if(req.files.hasOwnProperty(dbField.Field)) { var file = req.files[dbField.Field].hasOwnProperty('name') ? req.files[dbField.Field] : req.files[dbField.Field][0]; if(settings.maxFileSize !== -1 && file.size > settings.maxFileSize) { return false; } return file.name; } else { return false; } } else { if (req.body[dbField.Field] === null || typeof req.body[dbField.Field] == \"undefined\") { return dbField.Null == \"YES\" ? null : false; } if((dbField.Type.indexOf(\"int\") != -1 || dbField.Type.indexOf(\"float\") != -1 || dbField.Type.indexOf(\"double\") != -1 )) { return !isNaN(req.body[dbField.Field]) ? req.body[dbField.Field] : false; } else if(typeof req.body[dbField.Field] === 'string') { return escape(req.body[dbField.Field]); } return false; } }",
+        "label": 0
+    },
+    {
+        "code": "function sendError(res,err) { console.error(err); console.error(lastQry.sql); res.statusCode = 500; res.send({ result: 'error', err: err }); }",
+        "label": 0
+    },
+    {
+        "code": "function findPrim(columns,field) { var primary_keys = columns.filter(function (r) {return r.Key === 'PRI';}); if(primary_keys.length > 0) { return primary_keys[0].Field; } if(typeof field === \"string\") { if(checkIfFieldsExist(field,columns)) { return escape(field); } } return \"id\"; }",
+        "label": 0
+    },
+    {
+        "code": "function checkRateRange(num) { var numString = num.substring(0, num.length - 1); var parseNum = parseInt(numString); if (parseNum < 20) { throw new Error(\"The minimum rate is twenty percentage. Received: \" + parseNum); } }",
+        "label": 0
+    },
+    {
+        "code": "function isInList(value, listOfValues, msg) { value = value.toLowerCase().trim(); if (listOfValues.indexOf(value) === -1) { throw new Error(msg); } }",
+        "label": 0
+    },
+    {
+        "code": "function equals(x, y) { var a = isFunction(x) ? x() : x; var b = isFunction(y) ? y() : y; var aKeys; if (a == b) return true; else if (a == _null || b == _null) return false; else if (isValue(a) || isValue(b)) return isDate(a) && isDate(b) && +a==+b; else if (isList(a)) { return (a.length == b.length) && !find(a, function(val, index) { if (!equals(val, b[index])) return true; }); } else { return !isList(b) && ((aKeys = keys(a)).length == keyCount(b)) && !find(aKeys, function(key) { if (!equals(a[key],b[key])) return true; }); } }",
+        "label": 1
+    },
+    {
+        "code": "function parseDate(fmt, date) { var indexMap = {}; var reIndex = 1; var timezoneOffsetMatch; var timezoneIndex; var match; var format = replace(fmt, /^\\?/); if (format!=fmt && !trim(date)) return _null; if (match = /^\\[([+-])(\\d\\d)(\\d\\d)\\]\\s*(.*)/.exec(format)) { timezoneOffsetMatch = match; format = match[4]; } var parser = new RegExp(format.replace(/(.)(\\1*)(?:\\[([^\\]]*)\\])?/g, function(wholeMatch, placeholderChar, placeholderDigits, param) { if (/[dmhkyhs]/i.test(placeholderChar)) { indexMap[reIndex++] = placeholderChar; var plen = placeholderDigits.length+1; return \"(\\\\d\"+(plen<2?\"+\":(\"{1,\"+plen+\"}\"))+\")\"; } else if (placeholderChar == 'z') { timezoneIndex = reIndex; reIndex += 3; return \"([+-])(\\\\d\\\\d)(\\\\d\\\\d)\"; } else if (/[Nna]/.test(placeholderChar)) { indexMap[reIndex++] = [placeholderChar, param && param.split(',')]; return \"([a-zA-Z\\\\u0080-\\\\u1fff]+)\"; } else if (/w/i.test(placeholderChar)) return \"[a-zA-Z\\\\u0080-\\\\u1fff]+\"; else if (/\\s/.test(placeholderChar)) return \"\\\\s+\"; else return escapeRegExp(wholeMatch); })); if (!(match = parser.exec(date))) return undef; var ctorArgs = [0, 0, 0, 0, 0, 0, 0]; for (var i = 1; i < reIndex; i++) { var matchVal = match[i]; var indexEntry = indexMap[i]; if (isList(indexEntry)) { var placeholderChar = indexEntry[0]; var mapEntry = PARSE_DATE_MAP[placeholderChar]; var ctorIndex = mapEntry[0]; var valList = indexEntry[1] || mapEntry[1]; var listValue = find(valList, function(v, index) { if (startsWith(matchVal.toLowerCase(), v.toLowerCase())) return index; }); if (listValue == _null) return undef; if (placeholderChar == 'a') ctorArgs[ctorIndex] += listValue * 12; else ctorArgs[ctorIndex] = listValue; } else if (indexEntry) { var value = parseFloat(matchVal); var mapEntry = PARSE_DATE_MAP[indexEntry]; if (isList(mapEntry)) ctorArgs[mapEntry[0]] += value - mapEntry[1]; else ctorArgs[mapEntry] += value; } } var d = new Date(ctorArgs[0], ctorArgs[1], ctorArgs[2], ctorArgs[3], ctorArgs[4], ctorArgs[5], ctorArgs[6]); return dateAdd(d, 'minutes', -getTimezone(timezoneOffsetMatch, 1, d) - getTimezone(match, timezoneIndex, d)); }",
+        "label": 0
+    },
+    {
+        "code": "function collectUniqNodes(list, func) { var result = []; var nodeIds = {}; var currentNodeId; flexiEach(list, function(value) { flexiEach(func(value), function(node) { if (!nodeIds[currentNodeId = getNodeId(node)]) { result.push(node); nodeIds[currentNodeId] = true; } }); }); return result; }",
+        "label": 0
+    },
+    {
+        "code": "function triggerHandler(eventName, event, target) { var match = !bubbleSelector; var el = bubbleSelector ? target : registeredOn; if (bubbleSelector) { var selectorFilter = getFilterFunc(bubbleSelector, registeredOn); while (el && el != registeredOn && !(match = selectorFilter(el))) el = el['parentNode']; } return (!match) || (name != eventName) || ((handler.apply($(el), args || [event, index]) && prefix=='?') || prefix == '|'); }",
+        "label": 0
+    },
+    {
+        "code": "function enrichMethodNode(methodNode, method) { method.description && (methodNode.description = method.description) if (method.tags.route) { let httpPath = method.tags.route let httpMethod = 'GET' const sepPos = httpPath.indexOf(' ') if (sepPos !== -1) { httpMethod = httpPath.substr(0, sepPos).toUpperCase() httpPath = httpPath.substr(sepPos + 1) if (!isValidHttpMethod(httpMethod)) { throw new Error(`Unsupported HTTP method [${httpMethod}] for ${method.name} method`) } } methodNode.method = httpMethod methodNode.path = httpPath } return methodNode }",
+        "label": 0
+    },
+    {
+        "code": "function refract(value) { if (value instanceof Element) { return value; } if (typeof value === 'string') { return new StringElement(value); } if (typeof value === 'number') { return new NumberElement(value); } if (typeof value === 'boolean') { return new BooleanElement(value); } if (value === null) { return new NullElement(); } if (Array.isArray(value)) { return new ArrayElement(value.map(refract)); } if (typeof value === 'object') { const element = new ObjectElement(value); return element; } return value; }",
+        "label": 0
+    },
+    {
+        "code": "function statusLog(file, data, time) { var msg = ''; var diff = (process.hrtime(time)[1] / 1000000000).toFixed(2); var adapters = Object.keys(data._adapterData).join(', '); msg += format('Supercollider: processed %s in %s', chalk.cyan(file), chalk.magenta(diff + ' s')); if (adapters.length) { msg += format(' with %s', chalk.yellow(adapters)); } log(msg); }",
+        "label": 0
+    },
+    {
+        "code": "function CodeMirror(place, options) { if (!(this instanceof CodeMirror)) return new CodeMirror(place, options); this.options = options = options ? copyObj(options) : {}; copyObj(defaults, options, false); setGuttersForLineNumbers(options); var doc = options.value; if (typeof doc == \"string\") doc = new Doc(doc, options.mode); this.doc = doc; var display = this.display = new Display(place, doc); display.wrapper.CodeMirror = this; updateGutters(this); themeChanged(this); if (options.lineWrapping) this.display.wrapper.className += \" CodeMirror-wrap\"; if (options.autofocus && !mobile) focusInput(this); initScrollbars(this); this.state = { keyMaps: [], overlays: [], modeGen: 0, overwrite: false, focused: false, suppressEdits: false, pasteIncoming: false, cutIncoming: false, draggingText: false, highlight: new Delayed(), keySeq: null }; if (ie && ie_version < 11) setTimeout(bind(resetInput, this, true), 20); registerEventHandlers(this); ensureGlobalHandlers(); startOperation(this); this.curOp.forceUpdate = true; attachDoc(this, doc); if ((options.autofocus && !mobile) || activeElt() == display.input) setTimeout(bind(onFocus, this), 20); else onBlur(this); for (var opt in optionHandlers) if (optionHandlers.hasOwnProperty(opt)) optionHandlers[opt](this, options[opt], Init); maybeUpdateLineNumberWidth(this); if (options.finishInit) options.finishInit(this); for (var i = 0; i < initHooks.length; ++i) initHooks[i](this); endOperation(this); if (webkit && options.lineWrapping && getComputedStyle(display.lineDiv).textRendering == \"optimizelegibility\") display.lineDiv.style.textRendering = \"auto\"; }",
+        "label": 1
+    },
+    {
+        "code": "function updateWidgetHeight(line) { if (line.widgets) for (var i = 0; i < line.widgets.length; ++i) line.widgets[i].height = line.widgets[i].node.offsetHeight; }",
+        "label": 0
+    },
+    {
+        "code": "function ensureLineWrapped(lineView) { if (lineView.node == lineView.text) { lineView.node = elt(\"div\", null, null, \"position: relative\"); if (lineView.text.parentNode) lineView.text.parentNode.replaceChild(lineView.node, lineView.text); lineView.node.appendChild(lineView.text); if (ie && ie_version < 8) lineView.node.style.zIndex = 2; } return lineView.node; }",
+        "label": 0
+    },
+    {
+        "code": "function extendSelection(doc, head, other, options) { setSelection(doc, new Selection([extendRange(doc, doc.sel.primary(), head, other)], 0), options); }",
+        "label": 0
+    },
+    {
+        "code": "function skipAtomic(doc, pos, bias, mayClear) { var flipped = false, curPos = pos; var dir = bias || 1; doc.cantEdit = false; search: for (;;) { var line = getLine(doc, curPos.line); if (line.markedSpans) { for (var i = 0; i < line.markedSpans.length; ++i) { var sp = line.markedSpans[i], m = sp.marker; if ((sp.from == null || (m.inclusiveLeft ? sp.from <= curPos.ch : sp.from < curPos.ch)) && (sp.to == null || (m.inclusiveRight ? sp.to >= curPos.ch : sp.to > curPos.ch))) { if (mayClear) { signal(m, \"beforeCursorEnter\"); if (m.explicitlyCleared) { if (!line.markedSpans) break; else {--i; continue;} } } if (!m.atomic) continue; var newPos = m.find(dir < 0 ? -1 : 1); if (cmp(newPos, curPos) == 0) { newPos.ch += dir; if (newPos.ch < 0) { if (newPos.line > doc.first) newPos = clipPos(doc, Pos(newPos.line - 1)); else newPos = null; } else if (newPos.ch > line.text.length) { if (newPos.line < doc.first + doc.size - 1) newPos = Pos(newPos.line + 1, 0); else newPos = null; } if (!newPos) { if (flipped) { if (!mayClear) return skipAtomic(doc, pos, bias, true); doc.cantEdit = true; return Pos(doc.first, 0); } flipped = true; newPos = pos; dir = -dir; } } curPos = newPos; continue search; } } } return curPos; } }",
+        "label": 0
+    },
+    {
+        "code": "function drawSelectionCursor(cm, range, output) { var pos = cursorCoords(cm, range.head, \"div\", null, null, !cm.options.singleCursorHeightPerLine); var cursor = output.appendChild(elt(\"div\", \"\\u00a0\", \"CodeMirror-cursor\")); cursor.style.left = pos.left + \"px\"; cursor.style.top = pos.top + \"px\"; cursor.style.height = Math.max(0, pos.bottom - pos.top) * cm.options.cursorHeight + \"px\"; if (pos.other) { var otherCursor = output.appendChild(elt(\"div\", \"\\u00a0\", \"CodeMirror-cursor CodeMirror-secondarycursor\")); otherCursor.style.display = \"\"; otherCursor.style.left = pos.other.left + \"px\"; otherCursor.style.top = pos.other.top + \"px\"; otherCursor.style.height = (pos.other.bottom - pos.other.top) * .85 + \"px\"; } }",
+        "label": 0
+    },
+    {
+        "code": "function findViewForLine(cm, lineN) { if (lineN >= cm.display.viewFrom && lineN < cm.display.viewTo) return cm.display.view[findViewIndex(cm, lineN)]; var ext = cm.display.externalMeasured; if (ext && lineN >= ext.lineN && lineN < ext.lineN + ext.size) return ext; }",
+        "label": 0
+    },
+    {
+        "code": "function prepareMeasureForLine(cm, line) { var lineN = lineNo(line); var view = findViewForLine(cm, lineN); if (view && !view.text) view = null; else if (view && view.changes) updateLineForChanges(cm, view, lineN, getDimensions(cm)); if (!view) view = updateExternalMeasurement(cm, line); var info = mapFromLineView(view, line, lineN); return { line: line, view: view, rect: null, map: info.map, cache: info.cache, before: info.before, hasHeights: false }; }",
+        "label": 0
+    },
+    {
+        "code": "function charWidth(display) { if (display.cachedCharWidth != null) return display.cachedCharWidth; var anchor = elt(\"span\", \"xxxxxxxxxx\"); var pre = elt(\"pre\", [anchor]); removeChildrenAndAdd(display.measure, pre); var rect = anchor.getBoundingClientRect(), width = (rect.right - rect.left) / 10; if (width > 2) display.cachedCharWidth = width; return width || 10; }",
+        "label": 0
+    },
+    {
+        "code": "function endOperation(cm) { var op = cm.curOp, group = op.ownsGroup; if (!group) return; try { fireCallbacksForOps(group); } finally { operationGroup = null; for (var i = 0; i < group.ops.length; i++) group.ops[i].cm.curOp = null; endOperations(group); } }",
+        "label": 0
+    },
+    {
+        "code": "function setScrollTop(cm, val) { if (Math.abs(cm.doc.scrollTop - val) < 2) return; cm.doc.scrollTop = val; if (!gecko) updateDisplaySimple(cm, {top: val}); if (cm.display.scroller.scrollTop != val) cm.display.scroller.scrollTop = val; cm.display.scrollbars.setScrollTop(val); if (gecko) updateDisplaySimple(cm); startWorker(cm, 100); }",
+        "label": 0
+    },
+    {
+        "code": "function ensureCursorVisible(cm) { resolveScrollToPos(cm); var cur = cm.getCursor(), from = cur, to = cur; if (!cm.options.lineWrapping) { from = cur.ch ? Pos(cur.line, cur.ch - 1) : cur; to = Pos(cur.line, cur.ch + 1); } cm.curOp.scrollToPos = {from: from, to: to, margin: cm.options.cursorScrollMargin, isCursor: true}; }",
+        "label": 0
+    },
+    {
+        "code": "function takeToken(cm, pos, precise, asArray) { function getObj(copy) { return {start: stream.start, end: stream.pos, string: stream.current(), type: style || null, state: copy ? copyState(doc.mode, state) : state}; } var doc = cm.doc, mode = doc.mode, style; pos = clipPos(doc, pos); var line = getLine(doc, pos.line), state = getStateBefore(cm, pos.line, precise); var stream = new StringStream(line.text, cm.options.tabSize), tokens; if (asArray) tokens = []; while ((asArray || stream.pos < pos.ch) && !stream.eol()) { stream.start = stream.pos; style = readToken(mode, stream, state); if (asArray) tokens.push(getObj(true)); } return asArray ? tokens : getObj(); }",
+        "label": 0
+    },
+    {
+        "code": "function buildLineContent(cm, lineView) { var content = elt(\"span\", null, null, webkit ? \"padding-right: .1px\" : null); var builder = {pre: elt(\"pre\", [content]), content: content, col: 0, pos: 0, cm: cm}; lineView.measure = {}; for (var i = 0; i <= (lineView.rest ? lineView.rest.length : 0); i++) { var line = i ? lineView.rest[i - 1] : lineView.line, order; builder.pos = 0; builder.addToken = buildToken; if ((ie || webkit) && cm.getOption(\"lineWrapping\")) builder.addToken = buildTokenSplitSpaces(builder.addToken); if (hasBadBidiRects(cm.display.measure) && (order = getOrder(line))) builder.addToken = buildTokenBadBidi(builder.addToken, order); builder.map = []; var allowFrontierUpdate = lineView != cm.display.externalMeasured && lineNo(line); insertLineContent(line, builder, getLineStyles(cm, line, allowFrontierUpdate)); if (line.styleClasses) { if (line.styleClasses.bgClass) builder.bgClass = joinClasses(line.styleClasses.bgClass, builder.bgClass || \"\"); if (line.styleClasses.textClass) builder.textClass = joinClasses(line.styleClasses.textClass, builder.textClass || \"\"); } if (builder.map.length == 0) builder.map.push(0, 0, builder.content.appendChild(zeroWidthElement(cm.display.measure))); if (i == 0) { lineView.measure.map = builder.map; lineView.measure.cache = {}; } else { (lineView.measure.maps || (lineView.measure.maps = [])).push(builder.map); (lineView.measure.caches || (lineView.measure.caches = [])).push({}); } } if (webkit && /\\bcm-tab\\b/.test(builder.content.lastChild.className)) builder.content.className = \"cm-tab-wrap-hack\"; signal(cm, \"renderLine\", cm, lineView.line, builder.pre); if (builder.pre.className) builder.textClass = joinClasses(builder.pre.className, builder.textClass || \"\"); return builder; }",
+        "label": 0
+    },
+    {
+        "code": "function buildToken(builder, text, style, startStyle, endStyle, title, css) { if (!text) return; var special = builder.cm.options.specialChars, mustWrap = false; if (!special.test(text)) { builder.col += text.length; var content = document.createTextNode(text); builder.map.push(builder.pos, builder.pos + text.length, content); if (ie && ie_version < 9) mustWrap = true; builder.pos += text.length; } else { var content = document.createDocumentFragment(), pos = 0; while (true) { special.lastIndex = pos; var m = special.exec(text); var skipped = m ? m.index - pos : text.length - pos; if (skipped) { var txt = document.createTextNode(text.slice(pos, pos + skipped)); if (ie && ie_version < 9) content.appendChild(elt(\"span\", [txt])); else content.appendChild(txt); builder.map.push(builder.pos, builder.pos + skipped, txt); builder.col += skipped; builder.pos += skipped; } if (!m) break; pos += skipped + 1; if (m[0] == \"\\t\") { var tabSize = builder.cm.options.tabSize, tabWidth = tabSize - builder.col % tabSize; var txt = content.appendChild(elt(\"span\", spaceStr(tabWidth), \"cm-tab\")); txt.setAttribute(\"role\", \"presentation\"); builder.col += tabWidth; } else { var txt = builder.cm.options.specialCharPlaceholder(m[0]); if (ie && ie_version < 9) content.appendChild(elt(\"span\", [txt])); else content.appendChild(txt); builder.col += 1; } builder.map.push(builder.pos, builder.pos + 1, txt); builder.pos++; } } if (style || startStyle || endStyle || mustWrap || css) { var fullStyle = style || \"\"; if (startStyle) fullStyle += startStyle; if (endStyle) fullStyle += endStyle; var token = elt(\"span\", [content], fullStyle, css); if (title) token.title = title; return builder.content.appendChild(token); } builder.content.appendChild(content); }",
+        "label": 0
+    },
+    {
+        "code": "function(at, lines, height) { this.height += height; this.lines = this.lines.slice(0, at).concat(lines).concat(this.lines.slice(at)); for (var i = 0; i < lines.length; ++i) lines[i].parent = this; }",
+        "label": 0
+    },
+    {
+        "code": "function clearSelectionEvents(array) { while (array.length) { var last = lst(array); if (last.ranges) array.pop(); else break; } }",
+        "label": 0
+    },
+    {
+        "code": "function() { if (blob_changed || !object_url) { object_url = get_URL().createObjectURL(blob); } if (target_view) { target_view.location.href = object_url; } else { var new_tab = view.open(object_url, \"_blank\"); if (new_tab == undefined && typeof safari !== \"undefined\") { view.location.href = object_url } } filesaver.readyState = filesaver.DONE; dispatch_all(); revoke(object_url); }",
+        "label": 1
+    },
+    {
+        "code": "function DOMMouseMoveTracker( onMove, onMoveEnd, domNode) { this.$DOMMouseMoveTracker_isDragging = false; this.$DOMMouseMoveTracker_animationFrameID = null; this.$DOMMouseMoveTracker_domNode = domNode; this.$DOMMouseMoveTracker_onMove = onMove; this.$DOMMouseMoveTracker_onMoveEnd = onMoveEnd; this.$DOMMouseMoveTracker_onMouseMove = this.$DOMMouseMoveTracker_onMouseMove.bind(this); this.$DOMMouseMoveTracker_onMouseUp = this.$DOMMouseMoveTracker_onMouseUp.bind(this); this.$DOMMouseMoveTracker_didMouseMove = this.$DOMMouseMoveTracker_didMouseMove.bind(this); }",
+        "label": 0
+    },
+    {
+        "code": "function(target, eventType, callback) { if (target.addEventListener) { target.addEventListener(eventType, callback, false); return { remove: function() { target.removeEventListener(eventType, callback, false); } }; } else if (target.attachEvent) { target.attachEvent('on' + eventType, callback); return { remove: function() { target.detachEvent('on' + eventType, callback); } }; } }",
+        "label": 0
+    },
+    {
+        "code": "function( combinedWidth, leftOffset, cellWidth, cellMinWidth, cellMaxWidth, columnKey, event) { if (Locale.isRTL()) { leftOffset = -leftOffset; } this.setState({ isColumnResizing: true, columnResizingData: { left: leftOffset + combinedWidth - cellWidth, width: cellWidth, minWidth: cellMinWidth, maxWidth: cellMaxWidth, initialEvent: { clientX: event.clientX, clientY: event.clientY, preventDefault: emptyFunction }, key: columnKey } }); }",
+        "label": 1
+    },
+    {
+        "code": "function forEachColumn(children, callback) { React.Children.forEach(children, function(child) { if (child.type === FixedDataTableColumnGroup.type) { forEachColumn(child.props.children, callback); } else if (child.type === FixedDataTableColumn.type) { callback(child); } }); }",
+        "label": 0
+    },
+    {
+        "code": "function mapColumns(children, callback) { var newChildren = []; React.Children.forEach(children, function(originalChild) { var newChild = originalChild; if (originalChild.type === FixedDataTableColumnGroup.type) { var haveColumnsChanged = false; var newColumns = []; forEachColumn(originalChild.props.children, function(originalcolumn) { var newColumn = callback(originalcolumn); if (newColumn !== originalcolumn) { haveColumnsChanged = true; } newColumns.push(newColumn); }); if (haveColumnsChanged) { newChild = cloneWithProps(originalChild, {children: newColumns}); } } else if (originalChild.type === FixedDataTableColumn.type) { newChild = callback(originalChild); } newChildren.push(newChild); }); return newChildren; }",
+        "label": 0
+    },
+    {
+        "code": "function FixedDataTableRowBuffer( rowsCount, defaultRowHeight, viewportHeight, rowHeightGetter) { invariant( defaultRowHeight !== 0, \"defaultRowHeight musn't be equal 0 in FixedDataTableRowBuffer\" ); this.$FixedDataTableRowBuffer_bufferSet = new IntegerBufferSet(); this.$FixedDataTableRowBuffer_defaultRowHeight = defaultRowHeight; this.$FixedDataTableRowBuffer_viewportRowsBegin = 0; this.$FixedDataTableRowBuffer_viewportRowsEnd = 0; this.$FixedDataTableRowBuffer_maxVisibleRowCount = Math.ceil(viewportHeight / defaultRowHeight) + 1; this.$FixedDataTableRowBuffer_bufferRowsCount = clamp( MIN_BUFFER_ROWS, Math.floor(this.$FixedDataTableRowBuffer_maxVisibleRowCount/2), MAX_BUFFER_ROWS ); this.$FixedDataTableRowBuffer_rowsCount = rowsCount; this.$FixedDataTableRowBuffer_rowHeightGetter = rowHeightGetter; this.$FixedDataTableRowBuffer_rows = []; this.$FixedDataTableRowBuffer_viewportHeight = viewportHeight; this.getRows = this.getRows.bind(this); this.getRowsWithUpdatedBuffer = this.getRowsWithUpdatedBuffer.bind(this); }",
+        "label": 0
+    },
+    {
+        "code": "function cx(classNames) { var classNamesArray; if (typeof classNames == 'object') { classNamesArray = Object.keys(classNames).filter(function(className) { return classNames[className]; }); } else { classNamesArray = Array.prototype.slice.call(arguments); } return classNamesArray.map(getClassName).join(' '); }",
+        "label": 0
+    },
+    {
+        "code": "function(obj) { var ret = {}; var key; invariant( obj instanceof Object && !Array.isArray(obj), 'keyMirror(...): Argument must be an object.' ); for (key in obj) { if (!obj.hasOwnProperty(key)) { continue; } ret[key] = key; } return ret; }",
+        "label": 0
+    },
+    {
+        "code": "function shallowEqual(objA, objB) { if (objA === objB) { return true; } var key; for (key in objA) { if (objA.hasOwnProperty(key) && (!objB.hasOwnProperty(key) || objA[key] !== objB[key])) { return false; } } for (key in objB) { if (objB.hasOwnProperty(key) && !objA.hasOwnProperty(key)) { return false; } } return true; }",
+        "label": 0
+    },
+    {
+        "code": "function(a){var b; if(arguments.length<7)throw new Error(\"markup() must be called from String.prototype.replace()\");return b=e.apply(null,arguments),'<span class=\"'+d[b]+'\">'+a+\"</span>\"}",
+        "label": 0
+    },
+    {
+        "code": "function FakeEvent(type, bubbles, cancelable, target) { this.initEvent(type, bubbles, cancelable, target); }",
+        "label": 0
+    },
+    {
+        "code": "function padcomments(str, num) { var nl = _str.repeat('\\n', (num || 1)); return str.replace(/(\\s*)(<!--.+)\\s*(===.+)?/g, nl + '$1$2$1$3'); }",
+        "label": 0
+    },
+    {
+        "code": "function(obj, cache) { cache[obj.cid] = obj; this.listenToOnce(obj, 'before-dispose', function() { delete cache[obj.cid]; }); }",
+        "label": 0
+    },
+    {
+        "code": "function hotswap(currentNode, newNode, ignoreElements) { var newNodeType = newNode.nodeType, currentNodeType = currentNode.nodeType, swapMethod; if(newNodeType !== currentNodeType) { $(currentNode).replaceWith(newNode); } else { swapMethod = swapMethods[newNodeType] || swapMethods['default']; swapMethod(currentNode, newNode, ignoreElements); } }",
+        "label": 0
+    },
+    {
+        "code": "function cleanupStickitData(node) { var $node = $(node); var stickitValue = $node.data('stickit-bind-val'); if (node.tagName === 'OPTION' && node.value !== undefined && stickitValue !== node.value) { $node.removeData('stickit-bind-val'); } }",
+        "label": 0
+    },
+    {
+        "code": "function($el, template, context, opts) { var newDOM, newHTML, el = $el.get(0); opts = opts || {}; newHTML = opts.newHTML || template(context); if (opts.force) { $el.html(newHTML); } else { newDOM = this.copyTopElement(el); $(newDOM).html(newHTML); this.hotswapKeepCaret(el, newDOM, opts.ignoreElements); } }",
+        "label": 0
+    },
+    {
+        "code": "function(currentNode, newNode, ignoreElements) { var currentCaret, activeElement, currentNodeContainsActiveElement = false; try { activeElement = document.activeElement; } catch (error) { activeElement = null; } if (activeElement && currentNode && $.contains(activeElement, currentNode)) { currentNodeContainsActiveElement = true; } if (currentNodeContainsActiveElement && this.supportsSelection(activeElement)) { currentCaret = this.getCaretPosition(activeElement); } this.hotswap(currentNode, newNode, ignoreElements); if (currentNodeContainsActiveElement && this.supportsSelection(activeElement)) { this.setCaretPosition(activeElement, currentCaret); } }",
+        "label": 0
+    },
+    {
+        "code": "function(el) { var newDOM = document.createElement(el.tagName); _.each(el.attributes, function(attrib) { newDOM.setAttribute(attrib.name, attrib.value); }); return newDOM; }",
+        "label": 0
+    },
+    {
+        "code": "function(options) { options = options || {}; options.idsToFetch = options.idsToFetch || this.trackedIds; options.setOptions = options.setOptions || {remove: false}; return this.__loadWrapper(function() { if (options.idsToFetch && options.idsToFetch.length) { return parentInstance.fetchByIds(options); } else { return $.Deferred().resolve().promise(); } }); }",
+        "label": 0
+    },
+    {
+        "code": "function(ids, options) { options = options || {}; options.idsToFetch = _.intersection(ids, this.getTrackedIds()); return this.fetch(options); }",
+        "label": 0
+    },
+    {
+        "code": "function(ids) { this.remove(_.difference(this.trackedIds, ids)); parentInstance.registerIds(ids, ownerKey); this.trackedIds = ids; }",
+        "label": 0
+    },
+    {
+        "code": "function(options) { options = options || {}; var idsNotInCache = _.difference(this.getTrackedIds(), _.pluck(parentInstance.models, 'id')); var idsWithPromises = _.pick(parentInstance.idPromises, idsNotInCache); options.idsToFetch = _.difference(idsNotInCache, _.uniq(_.flatten(_.keys(idsWithPromises)))); var thisFetchPromise = this.fetch(options); var allPromisesToWaitFor = _.flatten(_.values(idsWithPromises)); allPromisesToWaitFor.push(thisFetchPromise); var allUniquePromisesToWaitFor = _.uniq(allPromisesToWaitFor); return $.when.apply($, allUniquePromisesToWaitFor) .then(function() { var result = _.zip(arguments); var resultData = result[0]; var flattenedResultData = _.flatten(resultData); return flattenedResultData; }); }",
+        "label": 0
+    },
+    {
+        "code": "function(modelIdentifier) { var model = this.get(modelIdentifier); parentClass.remove.apply(this, arguments); if (model) { var trackedIdsWithoutModel = this.getTrackedIds(); trackedIdsWithoutModel = _.without(trackedIdsWithoutModel, model.id); this.trackIds(trackedIdsWithoutModel); } }",
+        "label": 0
+    },
+    {
+        "code": "function(args) { base.call(this, args); this.loadedOnceDeferred = new $.Deferred(); this.loadedOnce = false; this.loadingCount = 0; this.loading = false; }",
+        "label": 0
+    },
+    {
+        "code": "function(fetchMethod, options) { var object = this; this.loadingCount++; this.loading = true; this.trigger('load-begin'); return $.when(fetchMethod.call(object, options)).always(function() { if (!object.loadedOnce) { object.loadedOnce = true; object.loadedOnceDeferred.resolve(); } object.loadingCount--; if (object.loadingCount <= 0) { object.loadingCount = 0; object.loading = false; } }).done(function(data, textStatus, jqXHR) { object.trigger('load-complete', {success: true, data: data, textStatus: textStatus, jqXHR: jqXHR}); }).fail(function(jqXHR, textStatus, errorThrown) { object.trigger('load-complete', {success: false, jqXHR: jqXHR, textStatus: textStatus, errorThrown: errorThrown}); }); }",
+        "label": 0
+    },
+    {
+        "code": "function(viewPrepare) { var viewContext = viewPrepare() || {}; var behaviorContext = _.omit(this.toJSON(), 'view'); _.extend(behaviorContext, this.prepare()); viewContext[this.alias] = behaviorContext; return viewContext; }",
+        "label": 0
+    },
+    {
+        "code": "function() { this.listenTo(this.view, 'initialize:complete', this.__augmentViewPrepare); this.listenTo(this.view, 'before-dispose-callback', this.__dispose); _.each(eventMap, function(callback, event) { this.listenTo(this.view, event, this[callback]); }, this); }",
+        "label": 0
+    },
+    {
+        "code": "function() { var behaviorEvents = _.result(this, 'events'); var viewEvents = this.view.events; if (!viewEvents) { if (!behaviorEvents) { return; } else { viewEvents = {}; } } var namespacedEvents = this.__namespaceEvents(behaviorEvents); var boundBehaviorEvents = this.__bindEventCallbacksToBehavior(namespacedEvents); if (_.isFunction(viewEvents)) { this.view.events = _.wrap(_.bind(viewEvents, this.view), function(viewEventFunction) { return _.extend(boundBehaviorEvents, viewEventFunction()); }); } else if (_.isObject(viewEvents)) { this.view.events = _.extend(boundBehaviorEvents, viewEvents); } }",
+        "label": 1
+    },
+    {
+        "code": "function(eventHash) { var delegateEventSplitter = /^(\\S+)\\s*(.*)$/; var namespacedEvents = {}; var behaviorId = this.cid; _.each(eventHash, function(value, key) { var splitEventKey = key.match(delegateEventSplitter); var eventName = splitEventKey[1]; var selector = splitEventKey[2]; var namespacedEventName = eventName + '.behavior.' + behaviorId; namespacedEvents[[namespacedEventName, selector].join(' ')] = value; }); return namespacedEvents; }",
+        "label": 0
+    },
+    {
+        "code": "function(name) { if (name === 'change' || name.indexOf('change:') === 0) { View.prototype.trigger.apply(this.view, arguments); } if (name.indexOf('change:hide:') === 0) { this.view.render(); } NestedCell.prototype.trigger.apply(this, arguments); }",
+        "label": 0
+    },
+    {
+        "code": "function(el, template, context, opts) { opts = opts || {}; if (_.isString(template)) { opts.newHTML = template; } templateRenderer.render(el, template, context, opts); }",
+        "label": 0
+    },
+    {
+        "code": "function() { this.undelegateEvents(); Backbone.View.prototype.delegateEvents.call(this); this.__generateFeedbackBindings(); this.__generateFeedbackCellCallbacks(); _.each(this.getTrackedViews(), function(view) { if (view.isAttachedToParent()) { view.delegateEvents(); } }); }",
+        "label": 0
+    },
+    {
+        "code": "function() { Backbone.View.prototype.undelegateEvents.call(this); _.each(this.getTrackedViews(), function(view) { view.undelegateEvents(); }); }",
+        "label": 0
+    },
+    {
+        "code": "function($el, options) { options = options || {}; var view = this; if (!this.isAttachedToParent()) { this.__pendingAttachInfo = { $el: $el, options: options }; return this.render().done(function() { if (!view.__attachedCallbackInvoked && view.isAttached()) { view.__invokeAttached(); } view.__isAttachedToParent = true; }); } return $.Deferred().resolve().promise(); }",
+        "label": 0
+    },
+    {
+        "code": "function() { var wasAttached; if (this.isAttachedToParent()) { wasAttached = this.isAttached(); this.trigger('before-dom-detach'); if (this.injectionSite) { this.$el.replaceWith(this.injectionSite); this.injectionSite = undefined; } else { this.$el.detach(); } if (wasAttached) { this.__invokeDetached(); } this.undelegateEvents(); this.__isAttachedToParent = false; } }",
+        "label": 0
+    },
+    {
+        "code": "function() { this.trigger('before-dispose'); this.trigger('before-dispose-callback'); this._dispose(); this.detach(); this.deactivate(); this.__disposeChildViews(); if (this.$el) { this.remove(); } this.off(); this.stopListening(); if (this.viewState) { this.viewState.off(); this.viewState.stopListening(); } if (this.feedbackCell) { this.feedbackCell.off(); this.feedbackCell.stopListening(); } delete this.$el; delete this.el; this.__isDisposed = true; this.trigger('after-dispose'); }",
+        "label": 0
+    },
+    {
+        "code": "function(view, options) { options = options || {}; this.unregisterTrackedView(view); if (options.child || !options.shared) { this.__childViews[view.cid] = view; } else { this.__sharedViews[view.cid] = view; } return view; }",
+        "label": 0
+    },
+    {
+        "code": "function(options) { var trackedViewsHash = this.getTrackedViews(options); _.each(trackedViewsHash, function(view) { this.unregisterTrackedView(view, options); }, this); }",
+        "label": 0
+    },
+    {
+        "code": "function(to, evt, indexMap) { var result, feedbackToInvoke = _.find(this.feedback, function(feedback) { var toToCheck = feedback.to; if (_.isArray(toToCheck)) { return _.contains(toToCheck, to); } else { return to === toToCheck; } }), feedbackCellField = to; if (feedbackToInvoke) { if (indexMap) { feedbackCellField = this.__substituteIndicesUsingMap(to, indexMap); } result = feedbackToInvoke.then.call(this, evt, indexMap); this.__processFeedbackThenResult(result, feedbackCellField); } }",
+        "label": 0
+    },
+    {
+        "code": "function(viewOptions) { var view = this; if (!_.isEmpty(this.behaviors)) { view.__behaviorInstances = {}; _.each(this.behaviors, function(behaviorDefinition, alias) { if (!_.has(behaviorDefinition, 'behavior')) { behaviorDefinition = {behavior: behaviorDefinition}; } var BehaviorClass = behaviorDefinition.behavior; if (!(BehaviorClass && _.isFunction(BehaviorClass))) { throw new Error('Incorrect behavior definition. Expected key \"behavior\" to be a class but instead got ' + String(BehaviorClass)); } var behaviorOptions = _.pick(behaviorDefinition, function(value, key) { return key !== 'behavior'; }); behaviorOptions.view = view; behaviorOptions.alias = alias; var behaviorAttributes = behaviorDefinition.attributes || {}; var behaviorInstance = view.__behaviorInstances[alias] = new BehaviorClass(behaviorAttributes, behaviorOptions, viewOptions); if (behaviorInstance.mixin) { var mixin = _.result(behaviorInstance, 'mixin'); _.each(mixin, function(field, fieldName) { if (_.isUndefined(view[fieldName])) { if (_.isFunction(field)) { view[fieldName] = _.bind(field, behaviorInstance); } else { view[fieldName] = field; } } }); } }); } }",
+        "label": 1
+    },
+    {
+        "code": "function(injectionSiteName, previousView, newView, options) { var newInjectionSite, currentPromise, previousDeferred = $.Deferred(); this.attachView(injectionSiteName, previousView, options); options.cachedInjectionSite = previousView.injectionSite; newInjectionSite = options.newInjectionSite = $('<span inject=\"' + injectionSiteName + '\">'); if (options.addBefore) { previousView.$el.before(newInjectionSite); } else { previousView.$el.after(newInjectionSite); } previousView.injectionSite = undefined; previousView.transitionOut(previousDeferred.resolve, options); currentPromise = this.__transitionInView(newInjectionSite, newView, options); return $.when(previousDeferred.promise(), currentPromise); }",
+        "label": 0
+    },
+    {
+        "code": "function($el, newView, options) { var currentDeferred = $.Deferred(), parentView = this; options = _.extend({}, options); _.defaults(options, { parentView: this, newView: newView }); newView.transitionIn(function() { parentView.attachView($el, newView, options); }, currentDeferred.resolve, options); return currentDeferred.promise(); }",
+        "label": 0
+    },
+    {
+        "code": "function() { var parentView = this; this.__injectionSiteMap = {}; this.__lastTrackedViews = {}; _.each(this.getTrackedViews(), function(view) { if (view.isAttachedToParent() && view.injectionSite) { parentView.__injectionSiteMap[view.injectionSite.attr('inject')] = view; } parentView.__lastTrackedViews[view.cid] = view; }); }",
+        "label": 0
+    },
+    {
+        "code": "function() { if (!this.__attachedCallbackInvoked) { this.trigger('before-attached-callback'); this._attached(); this.__attachedCallbackInvoked = true; _.each(this.getTrackedViews(), function(view) { if (view.isAttachedToParent()) { view.__invokeAttached(); } }); } }",
+        "label": 0
+    },
+    {
+        "code": "function() { if (this.__attachedCallbackInvoked) { this.trigger('before-detached-callback'); this._detached(); this.__attachedCallbackInvoked = false; } _.each(this.getTrackedViews(), function(view) { if (view.isAttachedToParent()) { view.__invokeDetached(); } }); }",
+        "label": 0
+    },
+    {
+        "code": "function(result, feedbackCellField) { var newState = $.extend({}, result); this.feedbackCell.set(feedbackCellField, newState, {silent: true}); this.feedbackCell.trigger('change:' + feedbackCellField); }",
+        "label": 0
+    },
+    {
+        "code": "function(bindInfo, eventKey) { return function() { var result, args = [{ args: arguments, type: eventKey }]; args.push(bindInfo.indices); result = bindInfo.fn.apply(this, args); this.__processFeedbackThenResult(result, bindInfo.feedbackCellField); }; }",
+        "label": 0
+    },
+    {
+        "code": "function(whenMap, indexMap) { var self = this, events = []; _.each(whenMap, function(whenEvents, whenField) { var substitutedWhenField, qualifiedFields = [whenField], useAtNotation = (whenField.charAt(0) === '@'); if (whenField !== 'on' || whenField !== 'listenTo') { if (useAtNotation) { whenField = whenField.substring(1); substitutedWhenField = self.__substituteIndicesUsingMap(whenField, indexMap); qualifiedFields = _.flatten(self.__generateSubAttributes(substitutedWhenField, self.model)); } _.each(qualifiedFields, function(qualifiedField) { _.each(whenEvents, function(eventType) { var backboneEvent = eventType + ' ' + qualifiedField; if (useAtNotation) { backboneEvent = eventType + ' [data-model=\"' + qualifiedField + '\"]'; } events.push(backboneEvent); }); }); } }); return events; }",
+        "label": 0
+    },
+    {
+        "code": "function(model, attr) { var attrValidationSet = model.validation ? _.result(model, 'validation')[attr] || {} : {}; if (_.isFunction(attrValidationSet) || _.isString(attrValidationSet)) { attrValidationSet = { fn: attrValidationSet }; } if(!_.isArray(attrValidationSet)) { attrValidationSet = [attrValidationSet]; } return _.reduce(attrValidationSet, function(memo, attrValidation) { _.each(_.without(_.keys(attrValidation), 'msg', 'msgKey'), function(validator) { memo.push({ fn: defaultValidators[validator], val: attrValidation[validator], msg: attrValidation.msg, msgKey: attrValidation.msgKey }); }); return memo; }, []); }",
+        "label": 1
+    },
+    {
+        "code": "function(model, attrs, validatedAttrs) { var error, invalidAttrs = {}, isValid = true, computed = _.clone(attrs); _.each(validatedAttrs, function(val, attr) { error = validateAttrWithOpenArray(model, attr, val, computed); if (error) { invalidAttrs[attr] = error; isValid = false; } }); return { invalidAttrs: invalidAttrs, isValid: isValid }; }",
+        "label": 0
+    },
+    {
+        "code": "function(model, value, attr) { var indices, validators, validations = model.validation ? _.result(model, 'validation') || {} : {}; if (_.contains(_.keys(validations), attr)) { return validateAttrWithOpenArray(model, attr, value, _.extend({}, model.attributes)); } else { indices = extractIndices(attr); attr = stripIndices(attr); validators = getValidators(model, attr); return invokeValidator(validators, model, value, attr, _.extend({}, model.attributes), indices); } }",
+        "label": 0
+    },
+    {
+        "code": "function(attr, value) { var self = this, result = {}, error; if (_.isArray(attr)) { _.each(attr, function(attr) { error = self.preValidate(attr); if (error) { result[attr] = error; } }); return _.isEmpty(result) ? undefined : result; } else if (_.isObject(attr)) { _.each(attr, function(value, key) { error = self.preValidate(key, value); if (error) { result[key] = error; } }); return _.isEmpty(result) ? undefined : result; } else { if (_.isUndefined(value) && isNestedModel(this)) { value = this.get(attr); } return validateAttr(this, value, attr); } }",
+        "label": 0
+    },
+    {
+        "code": "function(value, attr, fn, model, computed, indices) { return fn.call(this, value, attr, model, computed, indices); }",
+        "label": 0
+    },
+    {
+        "code": "function(value, attr, required, model, computed) { var isRequired = _.isFunction(required) ? required.call(model, value, attr, computed) : required; if(!isRequired && !hasValue(value)) { return false; } if (isRequired && !hasValue(value)) { return this.format(getMessageKey(this.msgKey, defaultMessages.required), this.formatLabel(attr, model)); } }",
+        "label": 1
+    },
+    {
+        "code": "function(value, attr, maxValue, model) { if (!isNumber(value) || value > maxValue) { return this.format(getMessageKey(this.msgKey, defaultMessages.max), this.formatLabel(attr, model), maxValue); } }",
+        "label": 0
+    },
+    {
+        "code": "function(value, attr, range, model) { if(!isNumber(value) || value < range[0] || value > range[1]) { return this.format(getMessageKey(this.msgKey, defaultMessages.range), this.formatLabel(attr, model), range[0], range[1]); } }",
+        "label": 0
+    },
+    {
+        "code": "function(value, attr, minLength, model) { if (!_.isString(value) || value.length < minLength) { return this.format(getMessageKey(this.msgKey, defaultMessages.minLength), this.formatLabel(attr, model), minLength); } }",
+        "label": 0
+    },
+    {
+        "code": "function(value, attr, maxLength, model) { if (!_.isString(value) || value.length > maxLength) { return this.format(getMessageKey(this.msgKey, defaultMessages.maxLength), this.formatLabel(attr, model), maxLength); } }",
+        "label": 0
+    },
+    {
+        "code": "function(value, attr, range, model) { if (!_.isString(value) || value.length < range[0] || value.length > range[1]) { return this.format(getMessageKey(this.msgKey, defaultMessages.rangeLength), this.formatLabel(attr, model), range[0], range[1]); } }",
+        "label": 0
+    },
+    {
+        "code": "function(value, attr, pattern, model) { if (!hasValue(value) || !value.toString().match(defaultPatterns[pattern] || pattern)) { return this.format(getMessageKey(this.msgKey, defaultMessages[pattern]) || defaultMessages.inlinePattern, this.formatLabel(attr, model), pattern); } }",
+        "label": 0
+    },
+    {
+        "code": "function(alias, model, copy) { this.__currentObjectModels[alias] = model; this.__updateCache(model); this.resetUpdating(); if (copy) { _.each(this.getMappings(), function(config, mappingAlias) { var modelAliases; if (alias === mappingAlias) { this.__pull(mappingAlias); } if (config.computed) { modelAliases = this.__getModelAliases(mappingAlias); if (_.contains(modelAliases, alias)) { this.__pull(mappingAlias); } } }, this); } }",
+        "label": 0
+    },
+    {
+        "code": "function(models, copy) { _.each(models, function(instance, alias) { this.trackModel(alias, instance, copy); }, this); }",
+        "label": 0
+    },
+    {
+        "code": "function(aliasOrModel) { var model, alias = this.__findAlias(aliasOrModel); if (alias) { model = this.__currentObjectModels[alias]; delete this.__currentObjectModels[alias]; this.__updateCache(model); } this.resetUpdating(); }",
+        "label": 0
+    },
+    {
+        "code": "function() { _.each(this.__currentUpdateEvents, function(eventConfig) { this.stopListening(eventConfig.model, eventConfig.eventName); }, this); this.__currentUpdateEvents = []; }",
+        "label": 0
+    },
+    {
+        "code": "function(computedAlias) { var hasAllModels = true, config = this.getMapping(computedAlias), modelConfigs = []; _.each(this.__getModelAliases(computedAlias), function(modelAlias) { var modelConfig = this.__createModelConfig(modelAlias, config.mapping[modelAlias]); if (modelConfig) { modelConfigs.push(modelConfig); } else { hasAllModels = false; } }, this); return hasAllModels ? modelConfigs : undefined; }",
+        "label": 0
+    },
+    {
+        "code": "function(deferred, options) { var staleModels, formModel = this, responsesSucceeded = 0, responsesFailed = 0, responses = {}, oldValues = {}, models = formModel.getTrackedModels(), numberOfSaves = models.length; if (!options.force) { staleModels = formModel.checkIfModelsAreStale(); if (staleModels.length > 0) { throw { name: 'Stale data', staleModels: staleModels }; } } function responseCallback(response, model, success) { responses[model.cid] = { success: success, response: response }; if (responsesFailed + responsesSucceeded === numberOfSaves) { if (responsesFailed > 0) { if (options.rollback) { _.each(formModel.getTrackedModels(), function(model) { model.set(oldValues[model.cid]); if (responses[model.cid].success) { model.save(); } }); } formModel.trigger('save-fail', responses); deferred.reject(responses); } else { formModel.trigger('save-success', responses); deferred.resolve(responses); } } } _.each(models, function(model) { oldValues[model.cid] = formModel.__getTrackedModelFields(model); }); formModel.push(); _.each(models, function(model) { model.save().fail(function() { responsesFailed++; responseCallback(arguments, model, false); }).done(function() { responsesSucceeded++; responseCallback(arguments, model, true); }); }); }",
+        "label": 0
+    },
+    {
+        "code": "function responseCallback(response, model, success) { responses[model.cid] = { success: success, response: response }; if (responsesFailed + responsesSucceeded === numberOfSaves) { if (responsesFailed > 0) { if (options.rollback) { _.each(formModel.getTrackedModels(), function(model) { model.set(oldValues[model.cid]); if (responses[model.cid].success) { model.save(); } }); } formModel.trigger('save-fail', responses); deferred.reject(responses); } else { formModel.trigger('save-success', responses); deferred.resolve(responses); } } }",
+        "label": 0
+    },
+    {
+        "code": "function(alias) { var config = this.getMapping(alias); if (config.computed && config.mapping.pull) { this.__invokeComputedPull.call({formModel: this, alias: alias}); } else if (config.computed) { var modelAliases = this.__getModelAliases(alias); _.each(modelAliases, function(modelAlias) { var model = this.getTrackedModel(modelAlias); if (model) { this.__copyFields(config.mapping[modelAlias], this, model); } }, this); } else { var model = this.getTrackedModel(alias); if (model) { this.__copyFields(config.mapping, this, model); } } }",
+        "label": 0
+    },
+    {
+        "code": "function(alias) { var config = this.getMapping(alias); if (config.computed && config.mapping.push) { var models = this.__getComputedModels(alias); if (models) { config.mapping.push.call(this, models); } } else if (config.computed) { var modelAliases = this.__getModelAliases(alias); _.each(modelAliases, function(modelAlias) { var model = this.getTrackedModel(modelAlias); if (model) { this.__copyFields(config.mapping[modelAlias], model, this); } }, this); } else { var model = this.getTrackedModel(alias); if (model) { this.__copyFields(config.mapping, model, this); } } }",
+        "label": 0
+    },
+    {
+        "code": "function(model) { if (!model) { this.__cache = {}; _.each(this.getTrackedModels(), function(model) { if (model) { this.__updateCache(model); } }, this); } else { this.__cache[model.cid] = this.__generateHashValue(model); } }",
+        "label": 0
+    },
+    {
+        "code": "function(val) { var seed; if (_.isArray(val)) { seed = []; } else if (_.isObject(val)) { seed = {}; } else { return val; } return $.extend(true, seed, val); }",
+        "label": 0
+    },
+    {
+        "code": "function(options) { var mapping, models, defaultMapping = _.result(this, 'mapping'), defaultModels = _.result(this, 'models'); mapping = options.mapping || defaultMapping; models = options.models || defaultModels; if (mapping) { this.setMappings(mapping, models); } }",
+        "label": 0
+    },
+    {
+        "code": "function(model) { var allFields, fieldsUsed = {}, modelFields = {}, modelConfigs = []; _.each(this.__getAllModelConfigs(), function(modelConfig) { if (modelConfig.model && modelConfig.model.cid === model.cid) { modelConfigs.push(modelConfig); } }); allFields = _.reduce(modelConfigs, function(result, modelConfig) { return result || !modelConfig.fields; }, false); if (allFields) { modelFields = this.__cloneVal(model.attributes); } else { _.each(modelConfigs, function(modelConfig) { _.each(modelConfig.fields, function(field) { if (!fieldsUsed[field]) { fieldsUsed[field] = true; modelFields[field] = this.__cloneVal(model.get(field)); } }, this); }, this); } return modelFields; }",
+        "label": 0
+    },
+    {
+        "code": "function(modelAlias, fields) { var model = this.getTrackedModel(modelAlias); if (model) { return { fields: fields, model: model }; } }",
+        "label": 0
+    },
+    {
+        "code": "function() { var modelConfigs = []; _.each(this.getMappings(), function(config, alias) { if (config.computed) { var computedModelConfigs = this.__getComputedModelConfigs(alias); if (computedModelConfigs) { modelConfigs = modelConfigs.concat(computedModelConfigs); } } else { var modelConfig = this.__createModelConfig(alias, config.mapping); if (modelConfig) { modelConfigs.push(modelConfig); } } }, this); return modelConfigs; }",
+        "label": 0
+    },
+    {
+        "code": "function(args) { View.apply(this, arguments); args = args || {}; var collection = args.collection || this.collection; this.template = args.template || this.template; this.emptyTemplate = args.emptyTemplate || this.emptyTemplate; this.itemView = args.itemView || this.itemView; this.itemContainer = args.itemContainer || this.itemContainer; if (this.template && !this.itemContainer) { throw 'Item container is required when using a template'; } this.modelsToRender = args.modelsToRender || this.modelsToRender; this.__itemContext = args.itemContext || this.__itemContext; this.__modelToViewMap = {}; this.__renderWait = args.renderWait || this.__renderWait; this.__modelId = args.modelId || this.modelId || 'cid'; this.__modelName = args.modelName || this.modelName || 'model'; this.__orderedModelIdList = []; this.__createItemViews(); this.__delayedRender = aggregateRenders(this.__renderWait, this); if (collection) { this.setCollection(collection, true); } this.on('render:after-dom-update', this.__cleanupItemViewsAfterAttachedToParent); }",
+        "label": 0
+    },
+    {
+        "code": "function(collection, preventUpdate) { this.stopListening(this.collection, 'remove', removeItemView); this.stopListening(this.collection, 'add', addItemView); this.stopListening(this.collection, 'sort', this.reorder); this.stopListening(this.collection, 'reset', this.update); this.collection = collection; this.listenTo(this.collection, 'remove', removeItemView); this.listenTo(this.collection, 'add', addItemView); this.listenTo(this.collection, 'sort', this.reorder); this.listenTo(this.collection, 'reset', this.update); if (!preventUpdate) { this.update(); } }",
+        "label": 0
+    },
+    {
+        "code": "function() { _.each(this.modelsToRender(), function(model) { var itemView = this.getItemViewFromModel(model); if (itemView) { itemView.delegateEvents(); if (!itemView.__attachedCallbackInvoked && itemView.isAttached()) { itemView.__invokeAttached(); } itemView.activate(); } else { } }, this); }",
+        "label": 0
+    },
+    {
+        "code": "function() { var oldViews = this.getItemViews(); var newViews = this.__createItemViews(); var staleViews = this.__getStaleItemViews(); var sizeOfOldViews = _.size(oldViews); var sizeOfNewViews = _.size(newViews); var sizeOfStaleViews = _.size(staleViews); var sizeOfFinalViews = sizeOfOldViews - sizeOfStaleViews + sizeOfNewViews; var changes = sizeOfNewViews + sizeOfStaleViews; var percentChange = changes / Math.max(sizeOfFinalViews, 1); var fromEmptyToNotEmpty = !sizeOfOldViews && sizeOfNewViews; var fromNotEmptyToEmpty = sizeOfOldViews && sizeOfOldViews === sizeOfStaleViews && !sizeOfNewViews; var threshold = this.updateThreshold || 0.5; var signficantChanges = percentChange >= threshold; if (changes <= 0) { return this.reorder(); } var renderNeeded = fromEmptyToNotEmpty || fromNotEmptyToEmpty || signficantChanges; if (renderNeeded) { this.__removeStaleItemViews(staleViews); this.__delayedRender(); } else { this.__updateByAddingRemoving(oldViews, newViews, staleViews); } }",
+        "label": 0
+    },
+    {
+        "code": "function(model, noUpdateToIdList) { var itemView, ItemViewClass = this.itemView; if (!_.isFunction(this.itemView.extend)) { ItemViewClass = this.itemView(model); } itemView = new ItemViewClass(this.__generateItemViewArgs(model)); this.registerTrackedView(itemView, { shared: false }); this.__modelToViewMap[model[this.__modelId]] = itemView.cid; if (!noUpdateToIdList) { this.__updateOrderedModelIdList(); } this.trigger('child-view-added', {model: model, view: itemView}); this.trigger('item-view-added', {model: model, view: itemView}); return itemView; }",
+        "label": 1
+    },
+    {
+        "code": "function() { var staleItemViews = []; var modelsWithViews = _.clone(this.__modelToViewMap); _.each(this.modelsToRender(), function(model) { var itemView = this.getItemViewFromModel(model); if (itemView) { delete modelsWithViews[model[this.__modelId]]; } }, this); _.each(modelsWithViews, function(viewId, modelId) { var itemView = this.getTrackedView(viewId); if (itemView) { staleItemViews.push({ view: itemView, modelId: modelId }); } }, this); return staleItemViews; }",
+        "label": 0
+    },
+    {
+        "code": "function(oldViews, newViews, staleViews) { var firstItemViewLeft, injectionSite, view = this, sizeOfOldViews = _.size(oldViews), sizeOfNewViews = _.size(newViews), sizeOfStaleViews = _.size(staleViews); if (view.itemContainer && sizeOfOldViews && sizeOfOldViews == sizeOfStaleViews) { injectionSite = $('<span>'); _.first(oldViews).$el.before(injectionSite); } view.__removeStaleItemViews(staleViews); _.each(newViews, function(createdViewInfo, indexOfView) { if (createdViewInfo.indexOfModel === 0) { var replaceMethod; if (!view.itemContainer) { replaceMethod = _.bind(view.$el.prepend, view.$el); } else { if (injectionSite) { replaceMethod = _.bind(injectionSite.replaceWith, injectionSite); } else { var staleModelIdMap = _.indexBy(staleViews, 'modelId'); var firstModelIdLeft = _.find(view.__orderedModelIdList, function(modelId) { return !staleModelIdMap[modelId]; }); firstItemViewLeft = view.getTrackedView(view.__modelToViewMap[firstModelIdLeft]); replaceMethod = _.bind(firstItemViewLeft.$el.prepend, firstItemViewLeft.$el); } } view.attachView(null, createdViewInfo.view, { replaceMethod: replaceMethod, discardInjectionSite: true }); } else { _addItemView.call(view, createdViewInfo.view, createdViewInfo.indexOfModel); } }); this.reorder(); }",
+        "label": 0
+    },
+    {
+        "code": "function normalizeIds(ids) { if (_.isArray(ids)) { ids = _.flatten(ids); return _.uniq(ids); } else if (_.isString(ids) || _.isNumber(ids)) { return [ids]; } else if (ids && ids.skipObjectRetrieval) { return ids; } }",
+        "label": 1
+    },
+    {
+        "code": "function undefinedOrNullToEmptyArray(valueToConvert) { if (_.isUndefined(valueToConvert) || _.isNull(valueToConvert)) { valueToConvert = []; } return valueToConvert; }",
+        "label": 0
+    },
+    {
+        "code": "function getNestedProperty(rootObject, propertyString) { propertyString = propertyString.replace(/\\[(\\w+)\\]/g, '.$1'); propertyString = propertyString.replace(/^\\./, ''); var propertyStringParts = propertyString.split(PROPERTY_SEPARATOR); return _.reduce(propertyStringParts, function(currentBaseObject, currentPropertyName) { return _.isUndefined(currentBaseObject) ? undefined : currentBaseObject[currentPropertyName]; }, rootObject); }",
+        "label": 0
+    },
+    {
+        "code": "function() { var behaviorContext = Behavior.prototype.prepare.apply(this) || {}; behaviorContext.data = this.data.toJSON(); behaviorContext.loading = this.isLoading(); behaviorContext.loadingIds = this.isLoadingIds(); behaviorContext.loadingObjects = this.isLoadingObjects(); return behaviorContext; }",
+        "label": 0
+    },
+    {
+        "code": "function() { if (!_.isUndefined(this.ids.property)) { this.stopListeningToIdsPropertyChangeEvent(); var idsPropertyNameAndContext = this.__parseIdsPropertyNameAndIdContainer(); var idContainer = idsPropertyNameAndContext.idContainer; var canListenToEvents = idContainer && _.isFunction(idContainer.on); if (canListenToEvents) { this.__currentContextWithListener = idContainer; this.__currentContextEventName = 'change:' + idsPropertyNameAndContext.idsPropertyName; this.listenTo(this.__currentContextWithListener, this.__currentContextEventName, this.retrieve); this.listenTo(this.__currentContextWithListener, 'fetched:ids', this.retrieve); } } }",
+        "label": 1
+    },
+    {
+        "code": "function() { this._undelegateUpdateEvents(); var updateEvents = this.__parseUpdateEvents(); _.each(updateEvents, function(parsedUpdateEvent) { this.listenTo(parsedUpdateEvent.idContainer, parsedUpdateEvent.eventName, this.retrieve); }, this); }",
+        "label": 0
+    },
+    {
+        "code": "function() { var updateEvents = this.__parseUpdateEvents(); _.each(updateEvents, function(parsedUpdateEvent) { this.stopListening(parsedUpdateEvent.idContainer, parsedUpdateEvent.eventName, this.retrieve); }, this); }",
+        "label": 0
+    },
+    {
+        "code": "function() { this.__normalizeAndValidateUpdateEvents(); var updateEvents = _.flatten(_.map(this.updateEvents, this.__parseUpdateEvent, this)); return _.compact(updateEvents); }",
+        "label": 0
+    },
+    {
+        "code": "function() { var updateEventsIsArray = _.isArray(this.updateEvents); var updateEventsIsSingleValue = !updateEventsIsArray && (_.isObject(this.updateEvents) || _.isString(this.updateEvents)); var updateEventsIsUndefined = _.isUndefined(this.updateEvents); var updateEventsIsValidType = updateEventsIsArray || updateEventsIsSingleValue || updateEventsIsUndefined; if (updateEventsIsSingleValue) { this.updateEvents = [this.updateEvents]; } if (!updateEventsIsValidType) { throw new Error('Update events are not an array, string or object. Please see parameters for examples of how to define updateEvents. Configured UpdateEvents: ', this.updateEvents); } this.updateEvents = _.compact(this.updateEvents); _.each(this.updateEvents, this.__validUpdateEvent); }",
+        "label": 0
+    },
+    {
+        "code": "function(updateEventConfiguration) { var validStringConfig = _.isString(updateEventConfiguration); var validObjectConfig = _.isObject(updateEventConfiguration) && _.keys(updateEventConfiguration).length > 0; if (!validStringConfig && !validObjectConfig) { throw new Error('Not a valid updateEvent configuration. Update events need to either be strings or objects with a single property: ' + JSON.stringify(updateEventConfiguration)); } }",
+        "label": 0
+    },
+    {
+        "code": "function() { var propertyName = this.ids.property; var propertyNameContainsIdContainer = containsContainerDefinition(propertyName); var hasIdContainerProperty = !_.isUndefined(this.ids.idContainer); var idContainer; if (hasIdContainerProperty) { idContainer = this.__parseIdContainer(); } if (propertyNameContainsIdContainer) { var containerAndDetail = this.__parseContainerDetailString(propertyName); propertyName = containerAndDetail.detail; idContainer = containerAndDetail.idContainer; } if (_.isUndefined(idContainer)) { idContainer = this.view; } return { idsPropertyName: propertyName, idContainer: idContainer }; }",
+        "label": 0
+    },
+    {
+        "code": "function() { var idContainerDefinition = this.ids.idContainer; var idContainer; if (_.isUndefined(idContainerDefinition)) { idContainer = undefined; } else if (_.isFunction(idContainerDefinition)) { var idContainerFxn = _.bind(idContainerDefinition, this); idContainer = idContainerFxn(); } else if (_.isObject(idContainerDefinition)) { idContainer = idContainerDefinition; } else { throw new Error('Invalid idContainer. Not an object or function: ' + JSON.stringify(this.ids)); } return idContainer; }",
+        "label": 1
+    },
+    {
+        "code": "function() { var resultDeferred = $.Deferred(); if (this.isDisposed()) { var rejectArguments = Array.prototype.slice.call(arguments); rejectArguments.push('Data Behavior disposed, aborting.'); resultDeferred.reject.apply(resultDeferred, rejectArguments); } else { resultDeferred.resolve.apply(resultDeferred, arguments); } return resultDeferred.promise(); }",
+        "label": 0
+    },
+    {
+        "code": "function(idsResult) { if (_.isEmpty(idsResult) && _.isEmpty(this.data.privateCollection.getTrackedIds())) { return { skipObjectRetrieval: true, forceFetchedEvent: true }; } else { return idsResult; } }",
+        "label": 1
+    },
+    {
+        "code": "function() { var privateCollection = this.privateCollection; if (!this.parentBehavior.returnSingleResult) { return privateCollection.toJSON(); } if (privateCollection.length === 0) { return undefined; } else if (privateCollection.length === 1) { var singleResultModel = privateCollection.at(0); return singleResultModel.toJSON(); } else { throw new Error('Multiple results found, but single result expected: ' + JSON.stringify(privateCollection.toJSON())); } }",
+        "label": 0
+    },
+    {
+        "code": "function(args) { args = args || {}; var FormModelClass = args.FormModelClass || this.FormModelClass || FormModel; this.model = args.model || this.model || (new FormModelClass()); this.template = args.template || this.template; this.events = _.extend({}, this.events || {}, args.events || {}); this.fields = _.extend({}, this.fields || {}, args.fields || {}); this._errors = []; this._success = false; this._bindings = _.extend({}, this.bindings || {}, args.bindings || {}); View.apply(this, arguments); this.resetModelListeners(this.model); }",
+        "label": 0
+    },
+    {
+        "code": "function() { var templateContext = View.prototype.prepare.apply(this); templateContext.formErrors = (_.size(this._errors) !== 0) ? this._errors : null; templateContext.formSuccess = this._success; return templateContext; }",
+        "label": 0
+    },
+    {
+        "code": "function(model, stopListening) { if (this.model && stopListening) { this.stopListening(this.model); } this.model = model; this.listenTo(this.model, 'validated:valid', this.valid); this.listenTo(this.model, 'validated:invalid', this.invalid); }",
+        "label": 0
+    },
+    {
+        "code": "function deltaE(labA, labB) { var deltaL = labA[0] - labB[0]; var deltaA = labA[1] - labB[1]; var deltaB = labA[2] - labB[2]; return Math.sqrt(Math.pow(deltaL, 2) + Math.pow(deltaA, 2) + Math.pow(deltaB, 2)); }",
+        "label": 0
+    },
+    {
+        "code": "function autoLayout() { if (!clay.meta.activeWatchInfo || clay.meta.activeWatchInfo.firmware.major === 2 || ['aplite', 'diorite'].indexOf(clay.meta.activeWatchInfo.platform) > -1 && !self.config.allowGray) { return standardLayouts.BLACK_WHITE; } if (['aplite', 'diorite'].indexOf(clay.meta.activeWatchInfo.platform) > -1 && self.config.allowGray) { return standardLayouts.GRAY; } return standardLayouts.COLOR; }",
+        "label": 0
+    },
+    {
+        "code": "function sources(k) { (src[k] || []).forEach(function(s) { deps[s] = k; sources(s); }); }",
+        "label": 0
+    },
+    {
+        "code": "function lib(val) { var p = path.join(process.cwd(), val); return require(p); }",
+        "label": 0
+    },
+    {
+        "code": "function highlight(value) { var html = ngPrettyJsonFunctions.syntaxHighlight(value) || \"\"; html = html .replace(/\\{/g, \"<span class='sep'>{</span>\") .replace(/\\}/g, \"<span class='sep'>}</span>\") .replace(/\\[/g, \"<span class='sep'>[</span>\") .replace(/\\]/g, \"<span class='sep'>]</span>\") .replace(/\\,/g, \"<span class='sep'>,</span>\"); return isDefined(value) ? scope.tmplElt.find('pre').html(html) : scope.tmplElt.find('pre').empty(); }",
+        "label": 1
+    },
+    {
+        "code": "function _populateMeta() { self.meta = { activeWatchInfo: Pebble.getActiveWatchInfo && Pebble.getActiveWatchInfo(), accountToken: Pebble.getAccountToken(), watchToken: Pebble.getWatchToken(), userData: deepcopy(options.userData || {}) }; }",
+        "label": 0
+    },
+    {
+        "code": "function initCasperCli(casperArgs) { var baseTestsPath = fs.pathJoin(phantom.casperPath, 'tests'); if (!!casperArgs.options.version) { return __terminate(phantom.casperVersion.toString()) } else if (casperArgs.get(0) === \"test\") { phantom.casperScript = fs.absolute(fs.pathJoin(baseTestsPath, 'run.js')); phantom.casperTest = true; casperArgs.drop(\"test\"); phantom.casperScriptBaseDir = fs.dirname(casperArgs.get(0)); } else if (casperArgs.get(0) === \"selftest\") { phantom.casperScript = fs.absolute(fs.pathJoin(baseTestsPath, 'run.js')); phantom.casperSelfTest = phantom.casperTest = true; casperArgs.options.includes = fs.pathJoin(baseTestsPath, 'selftest.js'); if (casperArgs.args.length <= 1) { casperArgs.args.push(fs.pathJoin(baseTestsPath, 'suites')); } casperArgs.drop(\"selftest\"); phantom.casperScriptBaseDir = fs.dirname(casperArgs.get(1) || fs.dirname(phantom.casperScript)); } else if (casperArgs.args.length === 0 || !!casperArgs.options.help) { return printHelp(); } if (!phantom.casperScript) { phantom.casperScript = casperArgs.get(0); } if (!fs.isFile(phantom.casperScript)) { return __die('Unable to open file: ' + phantom.casperScript); } if (!phantom.casperScriptBaseDir) { var scriptDir = fs.dirname(phantom.casperScript); if (scriptDir === phantom.casperScript) { scriptDir = '.'; } phantom.casperScriptBaseDir = fs.absolute(scriptDir); } casperArgs.drop(phantom.casperScript); }",
+        "label": 0
+    },
+    {
+        "code": "function setValueDisplay() { var value = self.get().toFixed(self.precision); $value.set('value', value); $valuePad.set('innerHTML', value); }",
+        "label": 1
+    },
+    {
+        "code": "function keysInObject(obj, keys) { for (var i in keys) { if (keys[i] in obj) return true; } return false; }",
+        "label": 0
+    },
+    {
+        "code": "function setValueDisplay() { var selectedIndex = self.$manipulatorTarget.get('selectedIndex'); var $options = self.$manipulatorTarget.select('option'); var value = $options[selectedIndex] && $options[selectedIndex].innerHTML; $value.set('innerHTML', value); }",
+        "label": 1
+    },
+    {
+        "code": "function coerceElementMatchingCallback(value) { if (typeof value === 'string') { return element => element.element === value; } if (value.constructor && value.extend) { return element => element instanceof value; } return value; }",
+        "label": 0
+    },
+    {
+        "code": "function inFromVoid(from, to) { return to !== null && to !== 'nofx' && from === 'void' && to !== 'void' ? true : false; }",
+        "label": 0
+    },
+    {
+        "code": "function(event_type) { var rest_args = arguments.length > 1 ? rest(arguments) : root, event = new CJSEvent(false, false, function(transition) { var targets = [], timeout_id = false, event_type_val = [], listener = bind(this._fire, this), fsm = transition.getFSM(), from = transition.getFrom(), state_selector = new StateSelector(from), from_state_selector = new TransitionSelector(true, state_selector, new AnyStateSelector()), on_listener = function() { each(event_type_val, function(event_type) { if(event_type === timeout_event_type) { if(timeout_id) { cTO(timeout_id); timeout_id = false; } var delay = cjs.get(rest_args[0]); if(!isNumber(delay) || delay < 0) { delay = 0; } timeout_id = sTO(listener, delay); } else { each(targets, function(target) { aEL(target, event_type, listener); }); } }); }, off_listener = function() { each(event_type_val, function(event_type) { each(targets, function(target) { if(event_type === timeout_event_type) { if(timeout_id) { cTO(timeout_id); timeout_id = false; } } else { rEL(target, event_type, listener); } }); }); }, live_fn = cjs.liven(function() { off_listener(); event_type_val = split_and_trim(cjs.get(event_type)); targets = flatten(map(filter(get_dom_array(rest_args), isElementOrWindow), getDOMChildren , true)); fsm .on(state_selector, on_listener) .on(from_state_selector, off_listener); if(fsm.is(from)) { on_listener(); } }); return live_fn; }); return event; }",
+        "label": 0
+    },
+    {
+        "code": "function () { var args = slice.call(arguments), constraint = options.args_map.getOrPut(args, function() { return new Constraint(function () { return getter_fn.apply(options.context, args); }); }); return constraint.get(); }",
+        "label": 0
+    },
+    {
+        "code": "function (silent) { if(options.on_destroy) { options.on_destroy.call(options.context, silent); } node.destroy(silent); }",
+        "label": 0
+    },
+    {
+        "code": "function () { if(paused === true) { paused = false; node.onChangeWithPriority(options.priority, do_get); if(options.run_on_create !== false) { if (constraint_solver.semaphore >= 0) { node.get(false); } else { each(node._changeListeners, constraint_solver.add_in_call_stack, constraint_solver); } } return true; } return false; }",
+        "label": 0
+    },
+    {
+        "code": "function(options) { this.options = options; this.targets = options.targets; var setter = options.setter, getter = options.getter, init_val = options.init_val, curr_value, last_value, old_targets = [], do_update = function() { this._timeout_id = false; var new_targets = filter(get_dom_array(this.targets), isAnyElement); if(has(options, \"onChange\")) { options.onChange.call(this, curr_value, last_value); } each(new_targets, function(target) { setter.call(this, target, curr_value, last_value); }, this); last_value = curr_value; }; this._throttle_delay = false; this._timeout_id = false; if(isFunction(init_val)) { last_value = init_val(get_dom_array(this.targets[0])); } else { last_value = init_val; } this.$live_fn = cjs.liven(function() { curr_value = getter(); if(this._throttle_delay) { if(!this._timeout_id) { this._timeout_id = sTO(bind(do_update, this), this._throttle_delay); } } else { do_update.call(this); } }, { context: this }); }",
+        "label": 1
+    },
+    {
+        "code": "function() { this._timeout_id = false; var new_targets = filter(get_dom_array(this.targets), isAnyElement); if(has(options, \"onChange\")) { options.onChange.call(this, curr_value, last_value); } each(new_targets, function(target) { setter.call(this, target, curr_value, last_value); }, this); last_value = curr_value; }",
+        "label": 0
+    },
+    {
+        "code": "function (infos, silent) { each(infos, function (info) { info.key.destroy(silent); info.value.destroy(silent); info.index.destroy(silent); }); }",
+        "label": 0
+    },
+    {
+        "code": "function (index, silent) { var info = this._ordered_values[index]; _destroy_info(this._ordered_values.splice(index, 1), silent); if(silent !== true) { this.$size.invalidate(); } }",
+        "label": 0
+    },
+    {
+        "code": "function(dom_node) { var index = get_template_instance_index(getFirstDOMChild(dom_node)), instance = index >= 0 ? template_instances[index] : false; if(instance) { delete template_instances[index]; instance.destroy(); } return this; }",
+        "label": 0
+    },
+    {
+        "code": "function(str, context) { return cjs(function() { try { var node = jsep(cjs.get(str)); if(node.type === LITERAL) { return node.value; } else { return get_node_value(node, context, [context]); } } catch(e) { console.error(e); } }); }",
+        "label": 0
+    },
+    {
+        "code": "function promisify(f, args) { return new Promise((resolve, reject) => f.apply(this, args.concat((err, x) => err ? reject(err) : resolve(x)))); }",
+        "label": 0
+    },
+    {
+        "code": "function getKernelResources(kernelInfo) { return promisify(fs.readdir, [kernelInfo.resourceDir]).then(files => { const kernelJSONIndex = files.indexOf('kernel.json'); if (kernelJSONIndex === -1) { throw new Error('kernel.json not found'); } return promisify(fs.readFile, [path.join(kernelInfo.resourceDir, 'kernel.json')]).then(data => ({ name: kernelInfo.name, files: files.map(x => path.join(kernelInfo.resourceDir, x)), resources_dir: kernelInfo.resourceDir, spec: JSON.parse(data), })); }); }",
+        "label": 0
+    },
+    {
+        "code": "function getKernelInfos(directory) { return promisify(fs.readdir, [directory]).then(files => files.map(fileName => ({ name: fileName, resourceDir: path.join(directory, fileName), })) ); }",
+        "label": 0
+    },
+    {
+        "code": "function find(kernelName) { return jp.dataDirs({ withSysPrefix: true }).then(dirs => { const kernelInfos = dirs.map(dir => ({ name: kernelName, resourceDir: path.join(dir, 'kernels', kernelName), })) return extractKernelResources(kernelInfos); }).then(kernelResource => kernelResource[kernelName]) }",
+        "label": 0
+    },
+    {
+        "code": "function findAll() { return jp.dataDirs({ withSysPrefix: true }).then(dirs => { return Promise.all(dirs .map(dir => getKernelInfos(path.join(dir, 'kernels')).catch(() => {})) ).then(extractKernelResources) }); }",
+        "label": 0
+    },
+    {
+        "code": "function extendedCallback(res) { timeline.mark(`end:${id}`); moduleData[id].response = getResDataObject(res); moduleData[id] = flatten(moduleData[id], { maxDepth: 5 }); moduleData[id] = filterData(config, moduleData[id]); if (typeof moduleData[id] !== 'object') { timeline.data = timeline.data.filter( d => !new RegExp(id).test(d.name) ); delete moduleData[id]; } if (typeof originalCallback === 'function') { return originalCallback.apply(this, [res]); } return true; }",
+        "label": 0
+    },
+    {
+        "code": "function(func, scope, args) { var fixedArgs = Array.prototype.slice.call(arguments, 2); return function() { var args = fixedArgs.concat(Array.prototype.slice.call(arguments, 0)); ( func).apply(scope, args); }; }",
+        "label": 0
+    },
+    {
+        "code": "function(args) { var i, max, match, log; args = Array.prototype.slice.call(arguments, 0); log = args.shift(); max = args.length; if (max > 1 && window[\"__consoleShimTest__\"] !== false) { if (typeof(args[0]) != \"string\") { args.unshift(\"%o\"); max += 1; } match = args[0].match(/%[a-z]/g); for (i = match ? match.length + 1 : 1; i < max; i += 1) { args[0] += \" %o\"; } } Function.apply.call(log, console, args); }",
+        "label": 1
+    },
+    {
+        "code": "function parseOptions(options) { let separator let transformer if (2 === options.length) { [separator, transformer] = options if (defaultTransformers[transformer]) { transformer = defaultTransformers[transformer] validate({ separator }) } else { validate({ separator, transformer }) } } else if (1 === options.length) { const option = options[0] if (false === option || 'function' === typeof option) { transformer = option } else if (defaultTransformers[option]) { transformer = defaultTransformers[option] } else { separator = option validate({ separator }) } } return { separator, transformer } }",
+        "label": 0
+    },
+    {
+        "code": "function getWeight(labels, labelWeight) { const places = labels.map(label => labelWeight.indexOf(label.name)); let binary = ''; for (let i = 0; i < labelWeight.length; i++) { binary += places.includes(i) ? '1' : '0'; } return parseInt(binary, 2); }",
+        "label": 0
+    },
+    {
+        "code": "async function getReleaseInfo(context, childTags) { const tagShas = []; const releasesBySha = await fetchAllReleases(context, release => { if (childTags.has(release.tag_name)) { tagShas.unshift(release.target_commitish); } }); return {releasesBySha, tagShas}; }",
+        "label": 0
+    },
+    {
+        "code": "function getType(value) { if (value === null) { return 'null'; } if (value && (value.nodeType === 1 || value.nodeType === 9)) { return 'element'; } var s = Object.prototype.toString.call(value); var type = s.match(/\\[object (.*?)\\]/)[1].toLowerCase(); if (type === 'number') { if (isNaN(value)) { return 'nan'; } if (!isFinite(value)) { return 'infinity'; } } return type; }",
+        "label": 0
+    },
+    {
+        "code": "function extendFormatExtensions (extensionName, extensionValue) { if (typeof extensionName !== 'string' || !(extensionValue instanceof RegExp)) { throw new Error('extensionName or extensionValue undefined or not correct type'); } if (revalidator.validate.formats.hasOwnProperty(extensionName) || revalidator.validate.formats.hasOwnProperty(extensionName)) { var msg = 'extensionName: ' + extensionName + ' already exists in formatExtensions.'; throw new Error(msg); } revalidator.validate.formatExtensions[extensionName] = extensionValue; }",
+        "label": 1
+    },
+    {
+        "code": "function getError (type, expected, actual) { return { attribute: type, expected: expected, actual: actual, message: getMsg(type, expected) }; }",
+        "label": 0
+    },
+    {
+        "code": "function getResult (err) { var res = { valid: true, errors: [] }; if (err !== null) { res.valid = false; res.errors.push(err); } return res; }",
+        "label": 0
+    },
+    {
+        "code": "function uniqueArrayHelper (val) { var h = {}; for (var i = 0, l = val.length; i < l; i++) { var key = JSON.stringify(val[i]); if (h[key]) { return false; } h[key] = true; } return true; }",
+        "label": 0
+    },
+    {
+        "code": "function getValidationFunction (validationOptions) { validationOptions = validationOptions || {}; return function (doc, schema, options) { doc = doc || {}; options = options || {}; options.isUpdate = options.isUpdate || false; if (options.isUpdate) { var i, keys = Object.keys(schema.properties), length = keys.length; for (i = 0; i < length; i++) { if (!doc.hasOwnProperty(keys[i])) { schema.properties[keys[i]].required = false; if (Array.isArray(schema.required) && schema.required.indexOf(keys[i]) > -1) { schema.required.splice(schema.required.indexOf(keys[i]), 1); } } } } for (var key in validationOptions) { if (validationOptions.hasOwnProperty(key) && !options.hasOwnProperty(key)) { options[key] = validationOptions[key]; } } return exports.validate(doc, schema, options); }; }",
+        "label": 1
+    },
+    {
+        "code": "function componentExists(componentPath) { const existsInExtensions = fs.existsSync(path.resolve(EXTENSIONS_PATH, componentPath)); const existsInWidgets = fs.existsSync(path.resolve(themes.getPath(), 'widgets', componentPath)); return !(!existsInExtensions && !existsInWidgets); }",
+        "label": 0
+    },
+    {
+        "code": "function readConfig(options) { return new Promise((resolve, reject) => { const { type, config, importsStart = null, importsEnd = null, exportsStart = 'export default {', exportsEnd = '};', isArray = false, } = options; if (!config || !isPlainObject(config)) { return reject(new TypeError(t('SUPPLIED_CONFIG_IS_NOT_AN_OBJECT', { typeofConfig: typeof config, }))); } const imports = importsStart ? [importsStart] : []; const exports = [exportsStart]; const themePackage = require(`${themes.getPath()}/package.json`); if ( (type === TYPE_PORTALS || type === TYPE_WIDGETS) && has(themePackage.dependencies, 'react-loadable') ) { imports.push('import Loadable from \\'react-loadable\\';'); imports.push('import Loading from \\'@shopgate/pwa-common/components/Loading\\';'); imports.push(''); } try { Object.keys(config).forEach((id) => { const component = config[id]; const componentPath = isDev ? component.path.replace('/dist/', '/src/') : component.path; if (!componentExists(componentPath)) { return; } const variableName = getVariableName(id); const isPortalsOrWidgets = ( (type === TYPE_PORTALS && component.target !== 'app.routes') || type === TYPE_WIDGETS ); if (isPortalsOrWidgets && has(themePackage.dependencies, 'react-loadable')) { imports.push(`const ${variableName} = Loadable({\\n loader: () => import('${componentPath}'),\\n loading: Loading,\\n});\\n`); } else { imports.push(`import ${variableName} from '${componentPath}';`); } if (isArray) { exports.push(` ${variableName},`); return; } exports.push(` '${id}': ${variableName},`); }); } catch (e) { return reject(e); } if (importsEnd) { imports.push(importsEnd); } exports.push(exportsEnd); return resolve({ imports, exports, }); }); }",
+        "label": 0
+    },
+    {
+        "code": "function getIndexLogTranslations(type = TYPE_WIDGETS) { const params = { type: t(`TYPE_${type}`) }; return { logStart: ` ${t('INDEXING_TYPE', params)}`, logEnd: ` ${t('INDEXED_TYPE', params)}`, logNotFound: ` ${t('NO_EXTENSIONS_FOUND_FOR_TYPE', params)}`, }; }",
+        "label": 0
+    },
+    {
+        "code": "function validateExtensions(input) { return new Promise((resolve, reject) => { try { const extensionPath = getExtensionsPath(); if (!fs.existsSync(extensionPath)) { fs.mkdirSync(extensionPath); } if (!input.imports.length) { return resolve(null); } return resolve(input); } catch (e) { return reject(new Error(t('EXTENSION_COULD_NOT_BE_VALIDATED'))); } }); }",
+        "label": 0
+    },
+    {
+        "code": "function createStrings(input) { return new Promise((resolve, reject) => { try { if (!input) { return resolve(null); } const importsString = input.imports.length ? `${input.imports.join('\\n')}\\n\\n` : ''; const exportsString = input.exports.length ? `${input.exports.join('\\n')}\\n` : ''; const indexString = `${importsString}${exportsString}`.replace('\\n\\n\\n', '\\n\\n'); return resolve(indexString.length ? indexString : null); } catch (e) { return reject(new Error(t('STRINGS_COULD_NOT_BE_CREATED'))); } }); }",
+        "label": 0
+    },
+    {
+        "code": "function writeExtensionFile(options) { return new Promise((resolve, reject) => { try { const { file, input, defaultContent, logNotFound, logEnd, } = options; const filePath = path.resolve(getExtensionsPath(), file); if (!input) { logger.warn(logNotFound); fs.writeFileSync(filePath, defaultContent, { flag: 'w+' }); return resolve(); } fs.writeFileSync(filePath, input, { flag: 'w+' }); logger.log(logEnd); return resolve(); } catch (e) { return reject(e); } }); }",
+        "label": 0
+    },
+    {
+        "code": "function index(options) { const { file, config, logStart, logNotFound, logEnd, defaultContent = defaultFileContent, } = options; logger.log(logStart); return readConfig(config) .then(input => validateExtensions(input)) .then(input => createStrings(input)) .then(input => writeExtensionFile({ input, file, defaultContent, logNotFound, logEnd, })); }",
+        "label": 0
+    },
+    {
+        "code": "function indexWidgets() { const { widgets = {} } = getComponentsSettings(); return index({ file: 'widgets.js', config: { type: TYPE_WIDGETS, config: widgets, }, ...getIndexLogTranslations(TYPE_WIDGETS), }); }",
+        "label": 0
+    },
+    {
+        "code": "function indexTracking() { const { tracking = {} } = getComponentsSettings(); return index({ file: 'tracking.js', config: { type: TYPE_TRACKERS, config: tracking, }, ...getIndexLogTranslations(TYPE_TRACKERS), }); }",
+        "label": 0
+    },
+    {
+        "code": "function indexPortals() { const { portals = {} } = getComponentsSettings(); return index({ file: 'portals.js', config: { type: TYPE_PORTALS, config: portals, importsStart: 'import portalCollection from \\'@shopgate/pwa-common/helpers/portals/portalCollection\\';', exportsStart: 'portalCollection.registerPortals({', exportsEnd: '});', }, ...getIndexLogTranslations(TYPE_PORTALS), }); }",
+        "label": 0
+    },
+    {
+        "code": "function indexReducers() { const { reducers = {} } = getComponentsSettings(); return index({ file: 'reducers.js', config: { type: TYPE_REDUCERS, config: reducers, }, defaultContent: 'export default null;\\n', ...getIndexLogTranslations(TYPE_REDUCERS), }); }",
+        "label": 0
+    },
+    {
+        "code": "function indexSubscribers() { const { subscribers = {} } = getComponentsSettings(); return index({ file: 'subscribers.js', config: { type: TYPE_SUBSCRIBERS, config: subscribers, exportsStart: 'export default [', exportsEnd: '];', isArray: true, }, defaultContent: 'export default [];\\n', ...getIndexLogTranslations(TYPE_SUBSCRIBERS), }); }",
+        "label": 0
+    },
+    {
+        "code": "function indexTranslations() { const { translations = {} } = getComponentsSettings(); return index({ file: 'translations.js', config: { type: TYPE_TRANSLATIONS, config: translations, }, defaultContent: 'export default null;\\n', ...getIndexLogTranslations(TYPE_TRANSLATIONS), }); }",
+        "label": 0
+    },
+    {
+        "code": "function search(query, options = {}) { const { format = 'idCode', mode = 'substructure', flattenResult = true, keepMolecule = false, limit = Number.MAX_SAFE_INTEGER } = options; if (typeof query === 'string') { const getMoleculeCreators = require('./moleculeCreators'); const moleculeCreators = getMoleculeCreators(this.OCL.Molecule); query = moleculeCreators.get(format.toLowerCase())(query); } else if (!(query instanceof this.OCL.Molecule)) { throw new TypeError('toSearch must be a Molecule or string'); } let result; switch (mode.toLowerCase()) { case 'exact': result = exactSearch(this.moleculeDB.db, query, limit); break; case 'substructure': result = subStructureSearch(this.moleculeDB, query, limit); break; case 'similarity': result = similaritySearch(this.moleculeDB, this.OCL, query, limit); break; default: throw new Error(`unknown search mode: ${options.mode}`); } return processResult(result, { flattenResult, keepMolecule, limit }); }",
+        "label": 0
+    },
+    {
+        "code": "async function maybeApi ({ apiAddress, apiOpts, ipfsConnectionTest, IpfsApi }) { try { const ipfs = new IpfsApi(apiAddress, apiOpts) await ipfsConnectionTest(ipfs) return { ipfs, provider, apiAddress } } catch (error) { console.log('Failed to connect to ipfs-api', apiAddress) } }",
+        "label": 0
+    },
+    {
+        "code": "function addMissingChirality(molecule, esrType = Molecule.cESRTypeAnd) { for (let iAtom = 0; iAtom < molecule.getAllAtoms(); iAtom++) { let tempMolecule = molecule.getCompactCopy(); changeAtomForStereo(tempMolecule, iAtom); tempMolecule.ensureHelperArrays(Molecule.cHelperParities); for (let i = 0; i < tempMolecule.getAtoms(); i++) { if ( tempMolecule.isAtomStereoCenter(i) && tempMolecule.getStereoBond(i) === -1 ) { let stereoBond = tempMolecule.getAtomPreferredStereoBond(i); if (stereoBond !== -1) { molecule.setBondType(stereoBond, Molecule.cBondTypeUp); if (molecule.getBondAtom(1, stereoBond) === i) { let connAtom = molecule.getBondAtom(0, stereoBond); molecule.setBondAtom(0, stereoBond, i); molecule.setBondAtom(1, stereoBond, connAtom); } molecule.setAtomESR(i, esrType, 0); } } } } }",
+        "label": 0
+    },
+    {
+        "code": "function markDiastereotopicAtoms(molecule) { let ids = getAtomIDs(molecule); let analyzed = {}; let group = 0; for (let id of ids) { console.log(`${id} - ${group}`); if (!analyzed.contains(id)) { analyzed[id] = true; for (let iAtom = 0; iAtom < ids.length; iAtom++) { if (id.equals(ids[iAtom])) { molecule.setAtomCustomLabel(iAtom, group); } } group++; } } }",
+        "label": 0
+    },
+    {
+        "code": "function getContrastColor(bgColor, colors) { const cutoff = 0.74; const perceivedLuminosity = Color(bgColor).luminosity(); return perceivedLuminosity >= cutoff ? colors.dark : colors.light; }",
+        "label": 0
+    },
+    {
+        "code": "function getFocusColor(colors) { if (Color(colors.primary).luminosity() >= 0.8) { return colors.accent; } return colors.primary; }",
+        "label": 0
+    },
+    {
+        "code": "function applyContrastColors(config) { const { colors } = config; return { ...config, colors: { ...colors, primaryContrast: getContrastColor(colors.primary, colors), accentContrast: getContrastColor(colors.accent, colors), focus: getFocusColor(colors), }, }; }",
+        "label": 0
+    },
+    {
+        "code": "function applyCustomColors(config) { const { colors } = getAppSettings(); if (!config.hasOwnProperty('colors')) { return { ...config, colors, }; } return { ...config, colors: { ...config.colors, ...colors, }, }; }",
+        "label": 0
+    },
+    {
+        "code": "function module(filename) { return function () { if (verbose.local) console.log(filename); response.write(fs.readFileSync(filename) + '\\n\\n'); }; }",
+        "label": 0
+    },
+    {
+        "code": "async function collecticonsBundle (params) { const { dirPath, destFile } = params; await validateDirPath(dirPath); const resultFiles = await collecticonsCompile({ dirPath, styleFormats: ['css'], styleDest: './styles', fontDest: './', fontTypes: ['woff', 'woff2'], previewDest: './', noFileOutput: true }); if (resultFiles === null) return; let zip = new JSZip(); resultFiles.forEach(file => { zip.file(file.path, file.contents); }); const dir = await fs.readdir(dirPath); const svgs = await Promise.all(dir.map(async file => { return file.endsWith('.svg') ? ( { path: `icons/${file}`, contents: await fs.readFile(path.resolve(dirPath, file)) } ) : null; })); svgs.forEach(file => { zip.file(file.path, file.contents); }); await fs.ensureDir(path.dirname(destFile)); await fs.writeFile(destFile, zip.generate({ base64: false, compression: 'DEFLATE' }), 'binary'); }",
+        "label": 0
+    },
+    {
+        "code": "function(errors) { if (process.env.NODE_ENV !== 'production') { clearTimeout(asyncTimer); } var stub = error && error.call(self, errors); if (stub !== false) { mapEventsMixin.dispatch.call(self, 'error', [ prop, errors ], true); } return false; }",
+        "label": 0
+    },
+    {
+        "code": "function(map, attr, val) { var serializer = attr === \"*\" ? false : getPropDefineBehavior(\"serialize\", attr, map.define); if (serializer === undefined) { return oldSingleSerialize.call(map, attr, val); } else if (serializer !== false) { return typeof serializer === \"function\" ? serializer.call(map, val, attr) : oldSingleSerialize.call(map, attr, val); } }",
+        "label": 0
+    },
+    {
+        "code": "async function generateFonts (options = {}) { if (!options.fontName) throw new TypeError('Missing fontName argument'); if (!options.icons || !Array.isArray(options.icons) || !options.icons.length) { throw new TypeError('Invalid or empty icons argument'); } let genTasks = {}; const makeGenTask = type => { if (genTasks[type]) return genTasks[type]; const gen = generators[type]; const depsTasks = (gen.deps || []).map(depType => makeGenTask(depType)); const task = Promise.all(depsTasks).then(results => gen.fn(options, results) ); genTasks[type] = task; return task; }; const types = ['svg', 'ttf', 'woff', 'woff2']; const tasks = types.map(type => { return makeGenTask(type); }); const results = await Promise.all(tasks); return zipObject(types, results); }",
+        "label": 0
+    },
+    {
+        "code": "async function renderSass (opts = {}) { const tpl = await fs.readFile(path.resolve(__dirname, 'sass.ejs'), 'utf8'); return ejs.render(tpl, opts); }",
+        "label": 0
+    },
+    {
+        "code": "async function renderCatalog (opts = {}) { if (!opts.fontName) throw new ReferenceError('fontName is undefined'); if (!opts.className) throw new ReferenceError('className is undefined'); if (!opts.icons || !opts.icons.length) throw new ReferenceError('icons is undefined or empty'); const fonts = opts.fonts ? Object.keys(opts.fonts).reduce((acc, name) => { return { ...acc, [name]: opts.fonts[name].contents.toString('base64') }; }, {}) : undefined; return JSON.stringify({ name: opts.fontName, className: opts.className, fonts, icons: opts.icons.map(i => ({ icon: `${opts.className}-${i.name}`, charCode: `${i.codepoint.toString(16).toUpperCase()}` })) }); }",
+        "label": 0
+    },
+    {
+        "code": "function Logger () { const levels = [ 'fatal', 'error', 'warn', 'info', 'debug' ]; let verbosity = 3; levels.forEach((level, idx) => { this[level] = (...params) => { if (idx + 1 <= verbosity) console.log(...params); }; }); this.setLevel = (_) => { verbosity = _; }; return this; }",
+        "label": 0
+    },
+    {
+        "code": "function userError (details = [], code) { const err = new Error('User error'); err.userError = true; err.code = code; err.details = details; return err; }",
+        "label": 0
+    },
+    {
+        "code": "function time (name) { const t = timers[name]; if (t) { let elapsed = Date.now() - t; if (elapsed < 1000) return `${elapsed}ms`; if (elapsed < 60 * 1000) return `${elapsed / 1000}s`; elapsed /= 1000; const h = Math.floor(elapsed / 3600); const m = Math.floor((elapsed % 3600) / 60); const s = Math.floor((elapsed % 3600) % 60); delete timers[name]; return `${h}h ${m}m ${s}s`; } else { timers[name] = Date.now(); } }",
+        "label": 0
+    },
+    {
+        "code": "async function validateDirPath (dirPath) { try { const stats = await fs.lstat(dirPath); if (!stats.isDirectory()) { throw userError([ 'Source path must be a directory', '' ]); } } catch (error) { if (error.code === 'ENOENT') { throw userError([ 'No files or directories found at ' + dirPath, '' ]); } throw error; } }",
+        "label": 0
+    },
+    {
+        "code": "async function validateDirPathForCLI (dirPath) { try { await validateDirPath(dirPath); } catch (error) { if (!error.userError) throw error; if (error.details[0].startsWith('Source path must be a directory')) { const args = process.argv.reduce((acc, o, idx) => { if (idx < 1) return acc; if (o === dirPath) return acc.concat(path.dirname(dirPath)); return acc.concat(o); }, []); throw userError([ 'Source path must be a directory. Try running with the following instead:', '', ` node ${args.join(' ')}`, '' ]); } throw error; } }",
+        "label": 0
+    },
+    {
+        "code": "async function compileProgram (dirPath, command) { await validateDirPathForCLI(dirPath); const params = pick(command, [ 'fontName', 'sassPlaceholder', 'cssClass', 'fontTypes', 'styleFormats', 'styleDest', 'styleName', 'fontDest', 'authorName', 'authorUrl', 'className', 'previewDest', 'preview', 'catalogDest', 'experimentalFontOnCatalog', 'experimentalDisableStyles' ]); try { return collecticonsCompile({ dirPath, ...params }); } catch (error) { if (!error.userError) throw error; const code = error.code; if (code === 'PLC_CLASS_EXC') { error.details = ['Error: --no-sass-placeholder and --no-css-class are mutually exclusive']; } else if (code === 'FONT_TYPE') { error.details = ['Error: invalid font type value passed to --font-types']; } else if (code === 'CLASS_CSS_FORMAT') { error.details = ['Error: \"--no-css-class\" and \"--style-formats css\" are not compatible']; } else if (code === 'STYLE_TYPE') { error.details = ['Error: invalid style format value passed to --style-format']; } throw error; } }",
+        "label": 0
+    },
+    {
+        "code": "async function bundleProgram (dirPath, destFile) { await validateDirPathForCLI(dirPath); return collecticonsBundle({ dirPath, destFile }); }",
+        "label": 0
+    },
+    {
+        "code": "function Connection (options, clientOptions, label) { this.options = options; this.clientOptions = clientOptions; this.label = label; this.initialConnection = false; this.initialConnectionRetries = 0; this.maxConnectionRetries = 60; Object.defineProperty(this, 'exchanges', { get: function () { if (this.connection) { return this.connection.exchanges; } } }); Object.defineProperty(this, 'connected', { get: function () { return this.connection !== undefined; } }); }",
+        "label": 0
+    },
+    {
+        "code": "function resolveRef(schemaObj, resolvedValues) { var refVal = schemaObj.refVal; var refs = schemaObj.refs; var subRefs = {}; _.forEach(refs, function (index, refId) { if (refId in resolvedValues) { return true; } var refValue = refVal[index]; if (_.isEmpty(refValue.refs)) { resolvedValues[refId] = refValue; return true; } subRefs[refId] = refValue; }); _.forEach(subRefs, function (subRef, refId) { resolvedValues[refId] = 1; resolvedValues[refId] = resolveRef(subRef, resolvedValues); }); return schemaObj.schema; }",
+        "label": 0
+    },
+    {
+        "code": "function assetFingerprint(label, fingerprint, cacheInfo) { if(arguments.length > 1) { var labelInfo = labels[label] = {\"fingerprint\": fingerprint}; if(cacheInfo) for(var i in cacheInfo) labelInfo[i] = cacheInfo[i]; } else { var info = labels[label]; if(info) { fingerprints[info.fingerprint] = info; return info.fingerprint; } else { info = {}; var fullPath = path.resolve(rootPath + \"/\" + (label || this.url) ); if(!fs.existsSync(fullPath) ) return label; if(strategy.lastModified) { var mdate = info.lastModified = strategy.lastModified(fullPath); mdate.setMilliseconds(0); } if(strategy.etag) info.etag = strategy.etag(fullPath); if(strategy.expires) info.expires = strategy.expires(fullPath); if(strategy.fileFingerprint) { var fingerprint = strategy.fileFingerprint(label, fullPath); fingerprints[fingerprint] = info; return fingerprint; } else return label; } } }",
+        "label": 0
+    }
+]

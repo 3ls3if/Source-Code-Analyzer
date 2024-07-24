@@ -1,0 +1,5 @@
+[33mUnsafe Lines of Code with Vulnerability Types:[0m
+[31m$file = fopen('test.txt', 'w'); - File Handling[0m
+[31m$content = file_get_contents('http: - File Handling[0m
+[31m$result = system('ls -la'); - Command Injection[0m
+[31m$data = unserialize($_POST['data']); - Deserialization Vulnerability[0m

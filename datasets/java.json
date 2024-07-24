@@ -1,0 +1,1003 @@
+[
+    {
+        "code": "@Override public ImageSource apply(ImageSource input) { final int[][] pixelMatrix = new int[3][3]; int w = input.getWidth(); int h = input.getHeight(); int[][] output = new int[h][w]; for (int j = 1; j < h - 1; j++) { for (int i = 1; i < w - 1; i++) { pixelMatrix[0][0] = input.getR(i - 1, j - 1); pixelMatrix[0][1] = input.getRGB(i - 1, j); pixelMatrix[0][2] = input.getRGB(i - 1, j + 1); pixelMatrix[1][0] = input.getRGB(i, j - 1); pixelMatrix[1][2] = input.getRGB(i, j + 1); pixelMatrix[2][0] = input.getRGB(i + 1, j - 1); pixelMatrix[2][1] = input.getRGB(i + 1, j); pixelMatrix[2][2] = input.getRGB(i + 1, j + 1); int edge = (int) convolution(pixelMatrix); int rgb = (edge << 16 | edge << 8 | edge); output[j][i] = rgb; } } MatrixSource source = new MatrixSource(output); return source; }",
+        "label": 0
+    },
+    {
+        "code": "public <L extends Listener> void popEvent(Event<?, L> expected) { synchronized (this.stack) { final Event<?, ?> actual = this.stack.pop(); if (actual != expected) { throw new IllegalStateException(String.format( \"Unbalanced pop: expected '%s' but encountered '%s'\", expected.getListenerClass(), actual)); } } }",
+        "label": 0
+    },
+    {
+        "code": "protected void modify(Transaction t) { try { this.lock.writeLock().lock(); t.perform(); } finally { this.lock.writeLock().unlock(); } }",
+        "label": 0
+    },
+    {
+        "code": "protected <E> E read(Supplier<E> sup) { try { this.lock.readLock().lock(); return sup.get(); } finally { this.lock.readLock().unlock(); } }",
+        "label": 0
+    },
+    {
+        "code": "protected void setOffsetAndLength(long offset, int length) throws IOException { this.offset = offset; this.length = length; this.position = 0; if (subStream.position() != offset) { subStream.seek(offset); } }",
+        "label": 0
+    },
+    {
+        "code": "public static double J0(double x) { double ax; if ((ax = Math.abs(x)) < 8.0) { double y = x * x; double ans1 = 57568490574.0 + y * (-13362590354.0 + y * (651619640.7 + y * (-11214424.18 + y * (77392.33017 + y * (-184.9052456))))); double ans2 = 57568490411.0 + y * (1029532985.0 + y * (9494680.718 + y * (59272.64853 + y * (267.8532712 + y * 1.0)))); return ans1 / ans2; } else { double z = 8.0 / ax; double y = z * z; double xx = ax - 0.785398164; double ans1 = 1.0 + y * (-0.1098628627e-2 + y * (0.2734510407e-4 + y * (-0.2073370639e-5 + y * 0.2093887211e-6))); double ans2 = -0.1562499995e-1 + y * (0.1430488765e-3 + y * (-0.6911147651e-5 + y * (0.7621095161e-6 - y * 0.934935152e-7))); return Math.sqrt(0.636619772 / ax) * (Math.cos(xx) * ans1 - z * Math.sin(xx) * ans2); } }",
+        "label": 0
+    },
+    {
+        "code": "public static double J(int n, double x) { int j, m; double ax, bj, bjm, bjp, sum, tox, ans; boolean jsum; double ACC = 40.0; double BIGNO = 1.0e+10; double BIGNI = 1.0e-10; if (n == 0) return J0(x); if (n == 1) return J(x); ax = Math.abs(x); if (ax == 0.0) return 0.0; else if (ax > (double) n) { tox = 2.0 / ax; bjm = J0(ax); bj = J(ax); for (j = 1; j < n; j++) { bjp = j * tox * bj - bjm; bjm = bj; bj = bjp; } ans = bj; } else { tox = 2.0 / ax; m = 2 * ((n + (int) Math.sqrt(ACC * n)) / 2); jsum = false; bjp = ans = sum = 0.0; bj = 1.0; for (j = m; j > 0; j--) { bjm = j * tox * bj - bjp; bjp = bj; bj = bjm; if (Math.abs(bj) > BIGNO) { bj *= BIGNI; bjp *= BIGNI; ans *= BIGNI; sum *= BIGNI; } if (jsum) sum += bj; jsum = !jsum; if (j == n) ans = bjp; } sum = 2.0 * sum - bj; ans /= sum; } return x < 0.0 && n % 2 == 1 ? -ans : ans; }",
+        "label": 0
+    },
+    {
+        "code": "public static double Y0(double x) { if (x < 8.0) { double y = x * x; double ans1 = -2957821389.0 + y * (7062834065.0 + y * (-512359803.6 + y * (10879881.29 + y * (-86327.92757 + y * 228.4622733)))); double ans2 = 40076544269.0 + y * (745249964.8 + y * (7189466.438 + y * (47447.26470 + y * (226.1030244 + y * 1.0)))); return (ans1 / ans2) + 0.636619772 * J0(x) * Math.log(x); } else { double z = 8.0 / x; double y = z * z; double xx = x - 0.785398164; double ans1 = 1.0 + y * (-0.1098628627e-2 + y * (0.2734510407e-4 + y * (-0.2073370639e-5 + y * 0.2093887211e-6))); double ans2 = -0.1562499995e-1 + y * (0.1430488765e-3 + y * (-0.6911147651e-5 + y * (0.7621095161e-6 + y * (-0.934945152e-7)))); return Math.sqrt(0.636619772 / x) * (Math.sin(xx) * ans1 + z * Math.cos(xx) * ans2); } }",
+        "label": 0
+    },
+    {
+        "code": "public static double Y(double x) { if (x < 8.0) { double y = x * x; double ans1 = x * (-0.4900604943e13 + y * (0.1275274390e13 + y * (-0.5153438139e11 + y * (0.7349264551e9 + y * (-0.4237922726e7 + y * 0.8511937935e4))))); double ans2 = 0.2499580570e14 + y * (0.4244419664e12 + y * (0.3733650367e10 + y * (0.2245904002e8 + y * (0.1020426050e6 + y * (0.3549632885e3 + y))))); return (ans1 / ans2) + 0.636619772 * (J(x) * Math.log(x) - 1.0 / x); } else { double z = 8.0 / x; double y = z * z; double xx = x - 2.356194491; double ans1 = 1.0 + y * (0.183105e-2 + y * (-0.3516396496e-4 + y * (0.2457520174e-5 + y * (-0.240337019e-6)))); double ans2 = 0.04687499995 + y * (-0.2002690873e-3 + y * (0.8449199096e-5 + y * (-0.88228987e-6 + y * 0.105787412e-6))); return Math.sqrt(0.636619772 / x) * (Math.sin(xx) * ans1 + z * Math.cos(xx) * ans2); } }",
+        "label": 0
+    },
+    {
+        "code": "public static double Y(int n, double x) { double by, bym, byp, tox; if (n == 0) return Y0(x); if (n == 1) return Y(x); tox = 2.0 / x; by = Y(x); bym = Y0(x); for (int j = 1; j < n; j++) { byp = j * tox * by - bym; bym = by; by = byp; } return by; }",
+        "label": 0
+    },
+    {
+        "code": "public static double I0(double x) { double ans; double ax = Math.abs(x); if (ax < 3.75) { double y = x / 3.75; y = y * y; ans = 1.0 + y * (3.5156229 + y * (3.0899424 + y * (1.2067492 + y * (0.2659732 + y * (0.360768e-1 + y * 0.45813e-2))))); } else { double y = 3.75 / ax; ans = (Math.exp(ax) / Math.sqrt(ax)) * (0.39894228 + y * (0.1328592e-1 + y * (0.225319e-2 + y * (-0.157565e-2 + y * (0.916281e-2 + y * (-0.2057706e-1 + y * (0.2635537e-1 + y * (-0.1647633e-1 + y * 0.392377e-2)))))))); } return ans; }",
+        "label": 0
+    },
+    {
+        "code": "public static double I(int n, double x) { if (n < 0) throw new IllegalArgumentException(\"the variable n out of range.\"); else if (n == 0) return I0(x); else if (n == 1) return I(x); if (x == 0.0) return 0.0; double ACC = 40.0; double BIGNO = 1.0e+10; double BIGNI = 1.0e-10; double tox = 2.0 / Math.abs(x); double bip = 0, ans = 0.0; double bi = 1.0; for (int j = 2 * (n + (int) Math.sqrt(ACC * n)); j > 0; j--) { double bim = bip + j * tox * bi; bip = bi; bi = bim; if (Math.abs(bi) > BIGNO) { ans *= BIGNI; bi *= BIGNI; bip *= BIGNI; } if (j == n) ans = bip; } ans *= I0(x) / bi; return x < 0.0 && n % 2 == 1 ? -ans : ans; }",
+        "label": 0
+    },
+    {
+        "code": "@Override public ImageSource apply(ImageSource input) { int w = input.getWidth(); int h = input.getHeight(); MatrixSource output = new MatrixSource(input); Vector3 n = new Vector3(0, 0, 1); for (int y = 0; y < h; y++) { for (int x = 0; x < w; x++) { if (x < border || x == w - border || y < border || y == h - border) { output.setRGB(x, y, VectorHelper.Z_NORMAL); continue; } float s0 = input.getR(x - 1, y + 1); float s1 = input.getR(x, y + 1); float s2 = input.getR(x + 1, y + 1); float s3 = input.getR(x - 1, y); float s5 = input.getR(x + 1, y); float s6 = input.getR(x - 1, y - 1); float s7 = input.getR(x, y - 1); float s8 = input.getR(x + 1, y - 1); float nx = -(s2 - s0 + 2 * (s5 - s3) + s8 - s6); float ny = -(s6 - s0 + 2 * (s7 - s1) + s8 - s2); n.set(nx, ny, scale); n.nor(); int rgb = VectorHelper.vectorToColor(n); output.setRGB(x, y, rgb); } } return new MatrixSource(output); }",
+        "label": 0
+    },
+    {
+        "code": "@Deprecated public static TraceContextHolder wrap(TraceContext traceContext) { return (traceContext != null) ? new TraceContextHolder(traceContext) : TraceContextHolder.EMPTY; }",
+        "label": 0
+    },
+    {
+        "code": "public static double Sinc(double x) { return Math.sin(Math.PI * x) / (Math.PI * x); }",
+        "label": 0
+    },
+    {
+        "code": "public static int Mod(int x, int m) { if (m < 0) m = -m; int r = x % m; return r < 0 ? r + m : r; }",
+        "label": 0
+    },
+    {
+        "code": "public static int NextPowerOf2(int x) { --x; x |= x >> 1; x |= x >> 2; x |= x >> 4; x |= x >> 8; x |= x >> 16; return ++x; }",
+        "label": 0
+    },
+    {
+        "code": "public static float Sum(float[] data) { float sum = 0; for (int i = 0; i < data.length; i++) { sum += data[i]; } return sum; }",
+        "label": 0
+    },
+    {
+        "code": "public static double TruncatedPower(double value, double degree) { double x = Math.pow(value, degree); return (x > 0) ? x : 0.0; }",
+        "label": 0
+    },
+    {
+        "code": "public static int[] Unique(int[] values) { HashSet<Integer> lst = new HashSet<Integer>(); for (int i = 0; i < values.length; i++) { lst.add(values[i]); } int[] v = new int[lst.size()]; Iterator<Integer> it = lst.iterator(); for (int i = 0; i < v.length; i++) { v[i] = it.next(); } return v; }",
+        "label": 0
+    },
+    {
+        "code": "public void setT(int t) { this.t = Math.min((radius * 2 + 1) * (radius * 2 + 1) / 2, Math.max(0, t)); }",
+        "label": 0
+    },
+    {
+        "code": "public static double Sin(double x, int nTerms) { if (nTerms < 2) return x; if (nTerms == 2) { return x - (x * x * x) / 6D; } else { double mult = x * x * x; double fact = 6; double sign = 1; int factS = 5; double result = x - mult / fact; for (int i = 3; i <= nTerms; i++) { mult *= x * x; fact *= factS * (factS - 1); factS += 2; result += sign * (mult / fact); sign *= -1; } return result; } }",
+        "label": 0
+    },
+    {
+        "code": "public static double Sinh(double x, int nTerms) { if (nTerms < 2) return x; if (nTerms == 2) { return x + (x * x * x) / 6D; } else { double mult = x * x * x; double fact = 6; int factS = 5; double result = x + mult / fact; for (int i = 3; i <= nTerms; i++) { mult *= x * x; fact *= factS * (factS - 1); factS += 2; result += mult / fact; } return result; } }",
+        "label": 0
+    },
+    {
+        "code": "public static double Cosh(double x, int nTerms) { if (nTerms < 2) return x; if (nTerms == 2) { return 1 + (x * x) / 2D; } else { double mult = x * x; double fact = 2; int factS = 4; double result = 1 + mult / fact; for (int i = 3; i <= nTerms; i++) { mult *= x * x; fact *= factS * (factS - 1); factS += 2; result += mult / fact; } return result; } }",
+        "label": 0
+    },
+    {
+        "code": "public static double Exp(double x, int nTerms) { if (nTerms < 2) return 1 + x; if (nTerms == 2) { return 1 + x + (x * x) / 2; } else { double mult = x * x; double fact = 2; double result = 1 + x + mult / fact; for (int i = 3; i <= nTerms; i++) { mult *= x; fact *= i; result += mult / fact; } return result; } }",
+        "label": 0
+    },
+    {
+        "code": "public double[][] getU() { double[][] X = new double[n][n]; double[][] U = X; for (int i = 0; i < n; i++) { for (int j = 0; j < n; j++) { if (i <= j) { U[i][j] = LU[i][j]; } else { U[i][j] = 0.0; } } } return X; }",
+        "label": 0
+    },
+    {
+        "code": "public double determinant() { if (m != n) { throw new IllegalArgumentException(\"Matrix must be square.\"); } double d = (double) pivsign; for (int j = 0; j < n; j++) { d *= LU[j][j]; } return d; }",
+        "label": 0
+    },
+    {
+        "code": "public static ComplexNumber Add(ComplexNumber z1, ComplexNumber z2) { return new ComplexNumber(z1.real + z2.real, z1.imaginary + z2.imaginary); }",
+        "label": 0
+    },
+    {
+        "code": "public static ComplexNumber Add(ComplexNumber z1, double scalar) { return new ComplexNumber(z1.real + scalar, z1.imaginary); }",
+        "label": 0
+    },
+    {
+        "code": "public static ComplexNumber Subtract(ComplexNumber z1, ComplexNumber z2) { return new ComplexNumber(z1.real - z2.real, z1.imaginary - z2.imaginary); }",
+        "label": 0
+    },
+    {
+        "code": "public static ComplexNumber Subtract(ComplexNumber z1, double scalar) { return new ComplexNumber(z1.real - scalar, z1.imaginary); }",
+        "label": 0
+    },
+    {
+        "code": "public static double Magnitude(ComplexNumber z) { return Math.sqrt(z.real * z.real + z.imaginary * z.imaginary); }",
+        "label": 0
+    },
+    {
+        "code": "public static ComplexNumber Multiply(ComplexNumber z1, ComplexNumber z2) { double z1R = z1.real, z1I = z1.imaginary; double z2R = z2.real, z2I = z2.imaginary; return new ComplexNumber(z1R * z2R - z1I * z2I, z1R * z2I + z1I * z2R); }",
+        "label": 0
+    },
+    {
+        "code": "public static ComplexNumber Multiply(ComplexNumber z1, double scalar) { return new ComplexNumber(z1.real * scalar, z1.imaginary * scalar); }",
+        "label": 0
+    },
+    {
+        "code": "public static ComplexNumber Divide(ComplexNumber z1, ComplexNumber z2) { ComplexNumber conj = ComplexNumber.Conjugate(z2); double a = z1.real * conj.real + ((z1.imaginary * conj.imaginary) * -1); double b = z1.real * conj.imaginary + (z1.imaginary * conj.real); double c = z2.real * conj.real + ((z2.imaginary * conj.imaginary) * -1); return new ComplexNumber(a / c, b / c); }",
+        "label": 0
+    },
+    {
+        "code": "public static ComplexNumber Pow(ComplexNumber z1, double n) { double norm = Math.pow(z1.getMagnitude(), n); double angle = 360 - Math.abs(Math.toDegrees(Math.atan(z1.imaginary / z1.real))); double common = n * angle; double r = norm * Math.cos(Math.toRadians(common)); double i = norm * Math.sin(Math.toRadians(common)); return new ComplexNumber(r, i); }",
+        "label": 0
+    },
+    {
+        "code": "public static ComplexNumber Sin(ComplexNumber z1) { ComplexNumber result = new ComplexNumber(); if (z1.imaginary == 0.0) { result.real = Math.sin(z1.real); result.imaginary = 0.0; } else { result.real = Math.sin(z1.real) * Math.cosh(z1.imaginary); result.imaginary = Math.cos(z1.real) * Math.sinh(z1.imaginary); } return result; }",
+        "label": 0
+    },
+    {
+        "code": "public static ComplexNumber Tan(ComplexNumber z1) { ComplexNumber result = new ComplexNumber(); if (z1.imaginary == 0.0) { result.real = Math.tan(z1.real); result.imaginary = 0.0; } else { double real2 = 2 * z1.real; double imag2 = 2 * z1.imaginary; double denom = Math.cos(real2) + Math.cosh(real2); result.real = Math.sin(real2) / denom; result.imaginary = Math.sinh(imag2) / denom; } return result; }",
+        "label": 0
+    },
+    {
+        "code": "private void srand(int ijkl) { u = new double[97]; int ij = ijkl / 30082; int kl = ijkl % 30082; if (ij < 0 || ij > 31328 || kl < 0 || kl > 30081) { ij = ij % 31329; kl = kl % 30082; } int i = ((ij / 177) % 177) + 2; int j = (ij % 177) + 2; int k = ((kl / 169) % 178) + 1; int l = kl % 169; int m; double s, t; for (int ii = 0; ii < 97; ii++) { s = 0.0; t = 0.5; for (int jj = 0; jj < 24; jj++) { m = (((i * j) % 179) * k) % 179; i = j; j = k; k = m; l = (53 * l + 1) % 169; if (((l * m) % 64) >= 32) { s += t; } t *= 0.5; } u[ii] = s; } c = 362436.0 / 16777216.0; cd = 7654321.0 / 16777216.0; cm = 16777213.0 / 16777216.0; i97 = 96; j97 = 32; }",
+        "label": 0
+    },
+    {
+        "code": "public float DistanceTo(IntPoint anotherPoint) { float dx = this.x - anotherPoint.x; float dy = this.y - anotherPoint.y; return (float) Math.sqrt(dx * dx + dy * dy); }",
+        "label": 0
+    },
+    {
+        "code": "public static double Entropy( int[] values ){ int n = values.length; int total = 0; double entropy = 0; double p; for ( int i = 0; i < n; i++ ) { total += values[i]; } if ( total != 0 ) { for ( int i = 0; i < n; i++ ) { p = (double) values[i] / total; if ( p != 0 ) entropy += ( -p * (Math.log10(p)/Math.log10(2)) ); } } return entropy; }",
+        "label": 0
+    },
+    {
+        "code": "public static IntRange GetRange( int[] values, double percent ){ int total = 0, n = values.length; for ( int i = 0; i < n; i++ ) { total += values[i]; } int min, max, hits; int h = (int) ( total * ( percent + ( 1 - percent ) / 2 ) ); for ( min = 0, hits = total; min < n; min++ ) { hits -= values[min]; if ( hits < h ) break; } for ( max = n - 1, hits = total; max >= 0; max-- ) { hits -= values[max]; if ( hits < h ) break; } return new IntRange( min, max ); }",
+        "label": 0
+    },
+    {
+        "code": "public static int Median( int[] values ){ int total = 0, n = values.length; for ( int i = 0; i < n; i++ ) { total += values[i]; } int halfTotal = total / 2; int median = 0, v = 0; for ( ; median < n; median++ ) { v += values[median]; if ( v >= halfTotal ) break; } return median; }",
+        "label": 0
+    },
+    {
+        "code": "public static int Mode( int[] values ){ int mode = 0, curMax = 0; for ( int i = 0, length = values.length; i < length; i++ ) { if ( values[i] > curMax ) { curMax = values[i]; mode = i; } } return mode; }",
+        "label": 0
+    },
+    {
+        "code": "public static double StdDev( int[] values, double mean ){ double stddev = 0; double diff; int hits; int total = 0; for ( int i = 0, n = values.length; i < n; i++ ) { hits = values[i]; diff = (double) i - mean; stddev += diff * diff * hits; total += hits; } return ( total == 0 ) ? 0 : Math.sqrt( stddev / (total - 1) ); }",
+        "label": 0
+    },
+    {
+        "code": "public static void Forward(double[] data) { double[] result = new double[data.length]; double sum; double scale = Math.sqrt(2.0 / data.length); for (int f = 0; f < data.length; f++) { sum = 0; for (int t = 0; t < data.length; t++) { double cos = Math.cos(((2.0 * t + 1.0) * f * Math.PI) / (2.0 * data.length)); sum += data[t] * cos * alpha(f); } result[f] = scale * sum; } for (int i = 0; i < data.length; i++) { data[i] = result[i]; } }",
+        "label": 0
+    },
+    {
+        "code": "public static void Forward(double[][] data) { int rows = data.length; int cols = data[0].length; double[] row = new double[cols]; double[] col = new double[rows]; for (int i = 0; i < rows; i++) { for (int j = 0; j < row.length; j++) row[j] = data[i][j]; Forward(row); for (int j = 0; j < row.length; j++) data[i][j] = row[j]; } for (int j = 0; j < cols; j++) { for (int i = 0; i < col.length; i++) col[i] = data[i][j]; Forward(col); for (int i = 0; i < col.length; i++) data[i][j] = col[i]; } }",
+        "label": 0
+    },
+    {
+        "code": "public static void Backward(double[] data) { double[] result = new double[data.length]; double sum; double scale = Math.sqrt(2.0 / data.length); for (int t = 0; t < data.length; t++) { sum = 0; for (int j = 0; j < data.length; j++) { double cos = Math.cos(((2 * t + 1) * j * Math.PI) / (2 * data.length)); sum += alpha(j) * data[j] * cos; } result[t] = scale * sum; } for (int i = 0; i < data.length; i++) { data[i] = result[i]; } }",
+        "label": 0
+    },
+    {
+        "code": "public void setInRGB(IntRange inRGB) { this.inRed = inRGB; this.inGreen = inRGB; this.inBlue = inRGB; CalculateMap(inRGB, outRed, mapRed); CalculateMap(inRGB, outGreen, mapGreen); CalculateMap(inRGB, outBlue, mapBlue); }",
+        "label": 0
+    },
+    {
+        "code": "public void setOutRGB(IntRange outRGB) { this.outRed = outRGB; this.outGreen = outRGB; this.outBlue = outRGB; CalculateMap(inRed, outRGB, mapRed); CalculateMap(inGreen, outRGB, mapGreen); CalculateMap(inBlue, outRGB, mapBlue); }",
+        "label": 0
+    },
+    {
+        "code": "private void CalculateMap(IntRange inRange, IntRange outRange, int[] map) { double k = 0, b = 0; if (inRange.getMax() != inRange.getMin()) { k = (double) (outRange.getMax() - outRange.getMin()) / (double) (inRange.getMax() - inRange.getMin()); b = (double) (outRange.getMin()) - k * inRange.getMin(); } for (int i = 0; i < 256; i++) { int v = (int) i; if (v >= inRange.getMax()) v = outRange.getMax(); else if (v <= inRange.getMin()) v = outRange.getMin(); else v = (int) (k * v + b); map[i] = v; } }",
+        "label": 0
+    },
+    {
+        "code": "public static int Maximum(ImageSource fastBitmap, int startX, int startY, int width, int height) { int max = 0; if (fastBitmap.isGrayscale()) { for (int i = startX; i < height; i++) { for (int j = startY; j < width; j++) { int gray = fastBitmap.getRGB(j, i); if (gray > max) { max = gray; } } } } else { for (int i = startX; i < height; i++) { for (int j = startY; j < width; j++) { int gray = fastBitmap.getG(j, i); if (gray > max) { max = gray; } } } } return max; }",
+        "label": 0
+    },
+    {
+        "code": "public static int Minimum(ImageSource fastBitmap, int startX, int startY, int width, int height) { int min = 255; if (fastBitmap.isGrayscale()) { for (int i = startX; i < height; i++) { for (int j = startY; j < width; j++) { int gray = fastBitmap.getRGB(j, i); if (gray < min) { min = gray; } } } } else { for (int i = startX; i < height; i++) { for (int j = startY; j < width; j++) { int gray = fastBitmap.getG(j, i); if (gray < min) { min = gray; } } } } return min; }",
+        "label": 0
+    },
+    {
+        "code": "public static double Bhattacharyya(double[] histogram1, double[] histogram2) { int bins = histogram1.length; double b = 0; for (int i = 0; i < bins; i++) b += Math.sqrt(histogram1[i]) * Math.sqrt(histogram2[i]); return Math.sqrt(1.0 - b); }",
+        "label": 0
+    },
+    {
+        "code": "public static double ChiSquare(double[] histogram1, double[] histogram2) { double r = 0; for (int i = 0; i < histogram1.length; i++) { double t = histogram1[i] + histogram2[i]; if (t != 0) r += Math.pow(histogram1[i] - histogram2[i], 2) / t; } return 0.5 * r; }",
+        "label": 0
+    },
+    {
+        "code": "public static double Correlation(double[] p, double[] q) { double x = 0; double y = 0; for (int i = 0; i < p.length; i++) { x += -p[i]; y += -q[i]; } x /= p.length; y /= q.length; double num = 0; double den1 = 0; double den2 = 0; for (int i = 0; i < p.length; i++) { num += (p[i] + x) * (q[i] + y); den1 += Math.abs(Math.pow(p[i] + x, 2)); den2 += Math.abs(Math.pow(q[i] + x, 2)); } return 1 - (num / (Math.sqrt(den1) * Math.sqrt(den2))); }",
+        "label": 0
+    },
+    {
+        "code": "public static int Hamming(String first, String second) { if (first.length() != second.length()) throw new IllegalArgumentException(\"The size of string must be the same.\"); int diff = 0; for (int i = 0; i < first.length(); i++) if (first.charAt(i) != second.charAt(i)) diff++; return diff; }",
+        "label": 0
+    },
+    {
+        "code": "public static double JaccardDistance(double[] p, double[] q) { double distance = 0; int intersection = 0, union = 0; for (int x = 0; x < p.length; x++) { if ((p[x] != 0) || (q[x] != 0)) { if (p[x] == q[x]) { intersection++; } union++; } } if (union != 0) distance = 1.0 - ((double) intersection / (double) union); else distance = 0; return distance; }",
+        "label": 0
+    },
+    {
+        "code": "public static double JensenShannonDivergence(double[] p, double[] q) { double[] m = new double[p.length]; for (int i = 0; i < m.length; i++) { m[i] = (p[i] + q[i]) / 2; } return (KullbackLeiblerDivergence(p, m) + KullbackLeiblerDivergence(q, m)) / 2; }",
+        "label": 0
+    },
+    {
+        "code": "public static double KumarJohnsonDivergence(double[] p, double[] q) { double r = 0; for (int i = 0; i < p.length; i++) { if (p[i] != 0 && q[i] != 0) { r += Math.pow(p[i] * p[i] - q[i] * q[i], 2) / 2 * Math.pow(p[i] * q[i], 1.5); } } return r; }",
+        "label": 0
+    },
+    {
+        "code": "public static double KullbackLeiblerDivergence(double[] p, double[] q) { boolean intersection = false; double k = 0; for (int i = 0; i < p.length; i++) { if (p[i] != 0 && q[i] != 0) { intersection = true; k += p[i] * Math.log(p[i] / q[i]); } } if (intersection) return k; else return Double.POSITIVE_INFINITY; }",
+        "label": 0
+    },
+    {
+        "code": "public static double SquaredEuclidean(double[] x, double[] y) { double d = 0.0, u; for (int i = 0; i < x.length; i++) { u = x[i] - y[i]; d += u * u; } return d; }",
+        "label": 0
+    },
+    {
+        "code": "public static double SymmetricChiSquareDivergence(double[] p, double[] q) { double r = 0; for (int i = 0; i < p.length; i++) { double den = p[i] * q[i]; if (den != 0) { double p1 = p[i] - q[i]; double p2 = p[i] + q[i]; r += (p1 * p1 * p2) / den; } } return r; }",
+        "label": 0
+    },
+    {
+        "code": "public static double SymmetricKullbackLeibler(double[] p, double[] q) { double dist = 0; for (int i = 0; i < p.length; i++) { dist += (p[i] - q[i]) * (Math.log(p[i]) - Math.log(q[i])); } return dist; }",
+        "label": 0
+    },
+    {
+        "code": "public static double Taneja(double[] p, double[] q) { double r = 0; for (int i = 0; i < p.length; i++) { if (p[i] != 0 && q[i] != 0) { double pq = p[i] + q[i]; r += (pq / 2) * Math.log(pq / (2 * Math.sqrt(p[i] * q[i]))); } } return r; }",
+        "label": 0
+    },
+    {
+        "code": "public static double TopsoeDivergence(double[] p, double[] q) { double r = 0; for (int i = 0; i < p.length; i++) { if (p[i] != 0 && q[i] != 0) { double den = p[i] + q[i]; r += p[i] * Math.log(2 * p[i] / den) + q[i] * Math.log(2 * q[i] / den); } } return r; }",
+        "label": 0
+    },
+    {
+        "code": "public boolean contains(Vector3 p) { boolean ans = false; if(this.halfplane || p== null) return false; if (isCorner(p)) { return true; } PointLinePosition a12 = PointLineTest.pointLineTest(a,b,p); PointLinePosition a23 = PointLineTest.pointLineTest(b,c,p); PointLinePosition a31 = PointLineTest.pointLineTest(c,a,p); if ((a12 == PointLinePosition.LEFT && a23 == PointLinePosition.LEFT && a31 == PointLinePosition.LEFT ) || (a12 == PointLinePosition.RIGHT && a23 == PointLinePosition.RIGHT && a31 == PointLinePosition.RIGHT ) || (a12 == PointLinePosition.ON_SEGMENT ||a23 == PointLinePosition.ON_SEGMENT || a31 == PointLinePosition.ON_SEGMENT)) { ans = true; } return ans; }",
+        "label": 0
+    },
+    {
+        "code": "public static float calcDet(Vector3 a ,Vector3 b, Vector3 c) { return (a.x*(b.y-c.y)) - (a.y*(b.x-c.x)) + (b.x*c.y-b.y*c.x); }",
+        "label": 0
+    },
+    {
+        "code": "public int sharedSegments(Triangle t2) { int counter = 0; if(a.equals(t2.a)) { counter++; } if(a.equals(t2.b)) { counter++; } if(a.equals(t2.c)) { counter++; } if(b.equals(t2.a)) { counter++; } if(b.equals(t2.b)) { counter++; } if(b.equals(t2.c)) { counter++; } if(c.equals(t2.a)) { counter++; } if(c.equals(t2.b)) { counter++; } if(c.equals(t2.c)) { counter++; } return counter; }",
+        "label": 0
+    },
+    {
+        "code": "@Override public ImageSource apply(ImageSource source) { if (radius != 0) { if (source.isGrayscale()) { return applyGrayscale(source, radius); } else { return applyRGB(source, radius); } } else { if (source.isGrayscale()) { return applyGrayscale(source, kernel); } else { return applyRGB(source, kernel); } } }",
+        "label": 0
+    },
+    {
+        "code": "public <T> T handleResponse(Response response, Type returnType) throws ApiException { if (response.isSuccessful()) { if (returnType == null || response.code() == 204) { return null; } else { return deserialize(response, returnType); } } else { String respBody = null; if (response.body() != null) { try { respBody = response.body().string(); } catch (IOException e) { throw new ApiException(response.message(), e, response.code(), response.headers().toMultimap()); } } throw new ApiException(response.message(), response.code(), response.headers().toMultimap(), respBody); } }",
+        "label": 0
+    },
+    {
+        "code": "public void add(int ds, Object value) throws SerializationException, InvalidDataSetException { if (value == null) { return; } DataSetInfo dsi = dsiFactory.create(ds); byte[] data = dsi.getSerializer().serialize(value, activeSerializationContext); DataSet dataSet = new DefaultDataSet(dsi, data); dataSets.add(dataSet); }",
+        "label": 0
+    },
+    {
+        "code": "public void addDateTimeHelper(int ds, Date date) throws SerializationException, InvalidDataSetException { if (date == null) { return; } DataSetInfo dsi = dsiFactory.create(ds); SimpleDateFormat df = new SimpleDateFormat(dsi.getSerializer().toString()); String value = df.format(date); byte[] data = dsi.getSerializer().serialize(value, activeSerializationContext); DataSet dataSet = new DefaultDataSet(dsi, data); add(dataSet); }",
+        "label": 0
+    },
+    {
+        "code": "public Object get(int dataSet) throws SerializationException { Object result = null; for (Iterator<DataSet> i = dataSets.iterator(); i.hasNext();) { DataSet ds = i.next(); DataSetInfo info = ds.getInfo(); if (info.getDataSetNumber() == dataSet) { result = getData(ds); break; } } return result; }",
+        "label": 0
+    },
+    {
+        "code": "public List<Object> getAll(int dataSet) throws SerializationException { List<Object> result = new ArrayList<Object>(); for (Iterator<DataSet> i = dataSets.iterator(); i.hasNext();) { DataSet ds = i.next(); DataSetInfo info = ds.getInfo(); if (info.getDataSetNumber() == dataSet) { result.add(getData(ds)); } } return result; }",
+        "label": 0
+    },
+    {
+        "code": "public void readFrom(IIMReader reader, int recover) throws IOException, InvalidDataSetException { final boolean doLog = log != null; for (;;) { try { DataSet ds = reader.read(); if (ds == null) { break; } if (doLog) { log.debug(\"Read data set \" + ds); } DataSetInfo info = ds.getInfo(); Serializer s = info.getSerializer(); if (s != null) { if (info.getDataSetNumber() == IIM.DS(1, 90)) { setCharacterSet((String) s.deserialize(ds.getData(), activeSerializationContext)); } } dataSets.add(ds); if (stopAfter9_10 && info.getDataSetNumber() == IIM.DS(9, 10)) break; } catch (IIMFormatException e) { if (recoverFromIIMFormat && recover-- > 0) { boolean r = reader.recover(); if (doLog) { log.debug(r ? \"Recoved from \" + e : \"Failed to recover from \" + e); } if (!r) break; } else { throw e; } } catch (UnsupportedDataSetException e) { if (recoverFromUnsupportedDataSet && recover-- > 0) { boolean r = reader.recover(); if (doLog) { log.debug(r ? \"Recoved from \" + e : \"Failed to recover from \" + e); } if (!r) break; } else { throw e; } } catch (InvalidDataSetException e) { if (recoverFromInvalidDataSet && recover-- > 0) { boolean r = reader.recover(); if (doLog) { log.debug(r ? \"Recoved from \" + e : \"Failed to recover from \" + e); } if (!r) break; } else { throw e; } } catch (IOException e) { if (recover-- > 0 && !dataSets.isEmpty()) { if (doLog) { log.error(\"IOException while reading, however some data sets where recovered, \" + e); } return; } else { throw e; } } } }",
+        "label": 0
+    },
+    {
+        "code": "public void writeTo(IIMWriter writer) throws IOException { final boolean doLog = log != null; for (Iterator<DataSet> i = dataSets.iterator(); i.hasNext();) { DataSet ds = i.next(); writer.write(ds); if (doLog) { log.debug(\"Wrote data set \" + ds); } } }",
+        "label": 0
+    },
+    {
+        "code": "public Set<ConstraintViolation> validate(DataSetInfo info) { Set<ConstraintViolation> errors = new LinkedHashSet<ConstraintViolation>(); try { if (info.isMandatory() && get(info.getDataSetNumber()) == null) { errors.add(new ConstraintViolation(info, ConstraintViolation.MANDATORY_MISSING)); } if (!info.isRepeatable() && getAll(info.getDataSetNumber()).size() > 1) { errors.add(new ConstraintViolation(info, ConstraintViolation.REPEATABLE_REPEATED)); } } catch (SerializationException e) { errors.add(new ConstraintViolation(info, ConstraintViolation.INVALID_VALUE)); } return errors; }",
+        "label": 0
+    },
+    {
+        "code": "public Set<ConstraintViolation> validate(int record) { Set<ConstraintViolation> errors = new LinkedHashSet<ConstraintViolation>(); for (int ds = 0; ds < 250; ++ds) { try { DataSetInfo dataSetInfo = dsiFactory.create(IIM.DS(record, ds)); errors.addAll(validate(dataSetInfo)); } catch (InvalidDataSetException ignored) { } } return errors; }",
+        "label": 0
+    },
+    {
+        "code": "public Set<ConstraintViolation> validate() { Set<ConstraintViolation> errors = new LinkedHashSet<ConstraintViolation>(); for (int record = 1; record <= 3; ++record) { errors.addAll(validate(record)); } return errors; }",
+        "label": 0
+    },
+    {
+        "code": "public int compare(Vector3 o1, Vector3 o2) { int ans = 0; if (o1 != null && o2 != null) { Vector3 d1 = o1; Vector3 d2 = o2; if (d1.x > d2.x) return 1; if (d1.x < d2.x) return -1; if (d1.y > d2.y) return 1; if (d1.y < d2.y) return -1; } else { if (o1 == null && o2 == null) return 0; if (o1 == null && o2 != null) return 1; if (o1 != null && o2 == null) return -1; } return ans; }",
+        "label": 0
+    },
+    {
+        "code": "public double nextDouble(double lo, double hi) { if (lo < 0) { if (nextInt(2) == 0) return -nextDouble(0, -lo); else return nextDouble(0, hi); } else { return (lo + (hi - lo) * nextDouble()); } }",
+        "label": 0
+    },
+    {
+        "code": "public ApiResponse<TagsEnvelope> getTagCategoriesWithHttpInfo() throws ApiException { com.squareup.okhttp.Call call = getTagCategoriesValidateBeforeCall(null, null); Type localVarReturnType = new TypeToken<TagsEnvelope>(){}.getType(); return apiClient.execute(call, localVarReturnType); }",
+        "label": 0
+    },
+    {
+        "code": "public RuleEnvelope getRule(String ruleId) throws ApiException { ApiResponse<RuleEnvelope> resp = getRuleWithHttpInfo(ruleId); return resp.getData(); }",
+        "label": 0
+    },
+    {
+        "code": "protected void addNeighbor(Queue<ColorPoint> queue, int px, int py, int color, Feature component) { if (!inBoundary(px, py, component)) { return; } if (!mask.isTouched(px, py)) { queue.add(new ColorPoint(px, py, color)); } }",
+        "label": 0
+    },
+    {
+        "code": "public double Function1D(double x) { return Math.exp(x * x / (-2 * sqrSigma)) / (Math.sqrt(2 * Math.PI) * sigma); }",
+        "label": 0
+    },
+    {
+        "code": "public double Function2D(double x, double y) { return Math.exp(-(x * x + y * y) / (2 * sqrSigma)) / (2 * Math.PI * sqrSigma); }",
+        "label": 0
+    },
+    {
+        "code": "public double[] Kernel1D(int size) { if (((size % 2) == 0) || (size < 3) || (size > 101)) { try { throw new Exception(\"Wrong size\"); } catch (Exception e) { e.printStackTrace(); } } int r = size / 2; double[] kernel = new double[size]; for (int x = -r, i = 0; i < size; x++, i++) { kernel[i] = Function1D(x); } return kernel; }",
+        "label": 0
+    },
+    {
+        "code": "public double[][] Kernel2D(int size) { if (((size % 2) == 0) || (size < 3) || (size > 101)) { try { throw new Exception(\"Wrong size\"); } catch (Exception e) { e.printStackTrace(); } } int r = size / 2; double[][] kernel = new double[size][size]; double sum = 0; for (int y = -r, i = 0; i < size; y++, i++) { for (int x = -r, j = 0; j < size; x++, j++) { kernel[i][j] = Function2D(x, y); sum += kernel[i][j]; } } for (int i = 0; i < kernel.length; i++) { for (int j = 0; j < kernel[0].length; j++) { kernel[i][j] /= sum; } } return kernel; }",
+        "label": 0
+    },
+    {
+        "code": "public ArrayList<IntPoint> process(ImageSource fastBitmap) { if (points == null) { apply(fastBitmap); } int width = fastBitmap.getWidth(); int height = fastBitmap.getHeight(); points = new ArrayList<IntPoint>(); if (fastBitmap.isGrayscale()) { for (int x = 0; x < height; x++) { for (int y = 0; y < width; y++) { if (fastBitmap.getRGB(y, x) == 255) points.add(new IntPoint(y, x)); } } } else { for (int x = 0; x < height; x++) { for (int y = 0; y < width; y++) { if (fastBitmap.getR(y, x) == 255) points.add(new IntPoint(y, x)); } } } return points; }",
+        "label": 0
+    },
+    {
+        "code": "public static void Forward(double[] data) { double[] result = new double[data.length]; for (int k = 0; k < result.length; k++) { double sum = 0; for (int n = 0; n < data.length; n++) { double theta = ((2.0 * Math.PI) / data.length) * k * n; sum += data[n] * cas(theta); } result[k] = (1.0 / Math.sqrt(data.length)) * sum; } for (int i = 0; i < result.length; i++) { data[i] = result[i]; } }",
+        "label": 0
+    },
+    {
+        "code": "public static void Forward(double[][] data) { double[][] result = new double[data.length][data[0].length]; for (int m = 0; m < data.length; m++) { for (int n = 0; n < data[0].length; n++) { double sum = 0; for (int i = 0; i < result.length; i++) { for (int k = 0; k < data.length; k++) { sum += data[i][k] * cas(((2.0 * Math.PI) / data.length) * (i * m + k * n)); } result[m][n] = (1.0 / data.length) * sum; } } } for (int i = 0; i < data.length; i++) { for (int j = 0; j < data[0].length; j++) { data[i][j] = result[i][j]; } } }",
+        "label": 0
+    },
+    {
+        "code": "public PropertiesEnvelope createUserProperties(String userId, AppProperties properties, String aid) throws ApiException { ApiResponse<PropertiesEnvelope> resp = createUserPropertiesWithHttpInfo(userId, properties, aid); return resp.getData(); }",
+        "label": 0
+    },
+    {
+        "code": "public PropertiesEnvelope getUserProperties(String userId, String aid) throws ApiException { ApiResponse<PropertiesEnvelope> resp = getUserPropertiesWithHttpInfo(userId, aid); return resp.getData(); }",
+        "label": 0
+    },
+    {
+        "code": "protected <T extends Listener> Collection<T> copyList(Class<T> listenerClass, Stream<Object> listeners, int sizeHint) { if (sizeHint == 0) { return Collections.emptyList(); } return listeners .map(listenerClass::cast) .collect(Collectors.toCollection(() -> new ArrayList<>(sizeHint))); }",
+        "label": 0
+    },
+    {
+        "code": "public List<Cluster> cluster(final Collection<Point2D> points) { final List<Cluster> clusters = new ArrayList<Cluster>(); final Map<Point2D, PointStatus> visited = new HashMap<Point2D, DBScan.PointStatus>(); KDTree<Point2D> tree = new KDTree<Point2D>(2); for (final Point2D point : points) { double[] key = {point.x, point.y}; tree.insert(key, point); } for (final Point2D point : points) { if (visited.get(point) != null) { continue; } final List<Point2D> neighbors = getNeighbors(point, tree); if (neighbors.size() >= minPoints) { final Cluster cluster = new Cluster(clusters.size()); clusters.add(expandCluster(cluster, point, neighbors, tree, visited)); } else { visited.put(point, PointStatus.NOISE); } } for (Cluster cluster : clusters) { cluster.calculateCentroid(); } return clusters; }",
+        "label": 0
+    },
+    {
+        "code": "private Cluster expandCluster(final Cluster cluster, final Point2D point, final List<Point2D> neighbors, final KDTree<Point2D> points, final Map<Point2D, PointStatus> visited) { cluster.addPoint(point); visited.put(point, PointStatus.PART_OF_CLUSTER); List<Point2D> seeds = new ArrayList<Point2D>(neighbors); int index = 0; while (index < seeds.size()) { Point2D current = seeds.get(index); PointStatus pStatus = visited.get(current); if (pStatus == null) { final List<Point2D> currentNeighbors = getNeighbors(current, points); if (currentNeighbors.size() >= minPoints) { seeds = merge(seeds, currentNeighbors); } } if (pStatus != PointStatus.PART_OF_CLUSTER) { visited.put(current, PointStatus.PART_OF_CLUSTER); cluster.addPoint(current); } index++; } return cluster; }",
+        "label": 0
+    },
+    {
+        "code": "private List<Point2D> merge(final List<Point2D> one, final List<Point2D> two) { final Set<Point2D> oneSet = new HashSet<Point2D>(one); for (Point2D item : two) { if (!oneSet.contains(item)) { one.add(item); } } return one; }",
+        "label": 0
+    },
+    {
+        "code": "public ImageSource apply(ImageSource input) { ImageSource originalImage = input; int width = originalImage.getWidth(); int height = originalImage.getHeight(); boolean[][] matrix = new boolean[width][height]; ImageSource filteredImage = new MatrixSource(input); int[] histogram = OtsuBinarize.imageHistogram(originalImage); int totalNumberOfpixels = height * width; int threshold = OtsuBinarize.threshold(histogram, totalNumberOfpixels); int black = 0; int white = 255; int gray; int alpha; int newColor; for (int i = 0; i < width; i++) { for (int j = 0; j < height; j++) { gray = originalImage.getGray(i, j); if (gray > threshold) { matrix[i][j] = false; } else { matrix[i][j] = true; } } } int blackTreshold = letterThreshold(originalImage, matrix); for (int i = 0; i < width; i++) { for (int j = 0; j < height; j++) { gray = originalImage.getGray(i, j); alpha = originalImage.getA(i, j); if (gray > blackTreshold) { newColor = white; } else { newColor = black; } newColor = ColorHelper.getARGB(newColor, newColor, newColor, alpha); filteredImage.setRGB(i, j, newColor); } } return filteredImage; }",
+        "label": 0
+    },
+    {
+        "code": "public static int[] Argsort(final float[] array, final boolean ascending) { Integer[] indexes = new Integer[array.length]; for (int i = 0; i < indexes.length; i++) { indexes[i] = i; } Arrays.sort(indexes, new Comparator<Integer>() { @Override public int compare(final Integer i1, final Integer i2) { return (ascending ? 1 : -1) * Float.compare(array[i1], array[i2]); } }); return asArray(indexes); }",
+        "label": 0
+    },
+    {
+        "code": "public static int[] Concatenate(int[] array, int[] array2) { int[] all = new int[array.length + array2.length]; int idx = 0; for (int i = 0; i < array.length; i++) all[idx++] = array[i]; for (int i = 0; i < array2.length; i++) all[idx++] = array2[i]; return all; }",
+        "label": 0
+    },
+    {
+        "code": "public static int[] ConcatenateInt(List<int[]> arrays) { int size = 0; for (int i = 0; i < arrays.size(); i++) { size += arrays.get(i).length; } int[] all = new int[size]; int idx = 0; for (int i = 0; i < arrays.size(); i++) { int[] v = arrays.get(i); for (int j = 0; j < v.length; j++) { all[idx++] = v[i]; } } return all; }",
+        "label": 0
+    },
+    {
+        "code": "public static <T extends Number> int[] asArray(final T... array) { int[] b = new int[array.length]; for (int i = 0; i < b.length; i++) { b[i] = array[i].intValue(); } return b; }",
+        "label": 0
+    },
+    {
+        "code": "public static void Shuffle(double[] array, long seed) { Random random = new Random(); if (seed != 0) random.setSeed(seed); for (int i = array.length - 1; i > 0; i--) { int index = random.nextInt(i + 1); double temp = array[index]; array[index] = array[i]; array[i] = temp; } }",
+        "label": 1
+    },
+    {
+        "code": "public static float[] toFloat(int[] array) { float[] n = new float[array.length]; for (int i = 0; i < array.length; i++) { n[i] = (float) array[i]; } return n; }",
+        "label": 0
+    },
+    {
+        "code": "public static float[][] toFloat(int[][] array) { float[][] n = new float[array.length][array[0].length]; for (int i = 0; i < array.length; i++) { for (int j = 0; j < array[0].length; j++) { n[i][j] = (float) array[i][j]; } } return n; }",
+        "label": 0
+    },
+    {
+        "code": "public static int[] toInt(double[] array) { int[] n = new int[array.length]; for (int i = 0; i < array.length; i++) { n[i] = (int) array[i]; } return n; }",
+        "label": 0
+    },
+    {
+        "code": "public static int[][] toInt(double[][] array) { int[][] n = new int[array.length][array[0].length]; for (int i = 0; i < array.length; i++) { for (int j = 0; j < array[0].length; j++) { n[i][j] = (int) array[i][j]; } } return n; }",
+        "label": 0
+    },
+    {
+        "code": "public static double[] toDouble(int[] array) { double[] n = new double[array.length]; for (int i = 0; i < array.length; i++) { n[i] = (double) array[i]; } return n; }",
+        "label": 0
+    },
+    {
+        "code": "public static double[][] toDouble(int[][] array) { double[][] n = new double[array.length][array[0].length]; for (int i = 0; i < array.length; i++) { for (int j = 0; j < array[0].length; j++) { n[i][j] = (double) array[i][j]; } } return n; }",
+        "label": 0
+    },
+    {
+        "code": "public ApiResponse<TokenInfoSuccessResponse> tokenInfoWithHttpInfo() throws ApiException { com.squareup.okhttp.Call call = tokenInfoValidateBeforeCall(null, null); Type localVarReturnType = new TypeToken<TokenInfoSuccessResponse>(){}.getType(); return apiClient.execute(call, localVarReturnType); }",
+        "label": 0
+    },
+    {
+        "code": "public static double HighAccuracyFunction(double x) { if (x < -8 || x > 8) return 0; double sum = x; double term = 0; double nextTerm = x; double pwr = x * x; double i = 1; while (sum != term) { term = sum; nextTerm *= pwr / (i += 2); sum += nextTerm; } return 0.5 + sum * Math.exp(-0.5 * pwr - 0.5 * Constants.Log2PI); }",
+        "label": 0
+    },
+    {
+        "code": "public static double HighAccuracyComplemented(double x) { double[] R = { 1.25331413731550025, 0.421369229288054473, 0.236652382913560671, 0.162377660896867462, 0.123131963257932296, 0.0990285964717319214, 0.0827662865013691773, 0.0710695805388521071, 0.0622586659950261958 }; int j = (int) (0.5 * (Math.abs(x) + 1)); double a = R[j]; double z = 2 * j; double b = a * z - 1; double h = Math.abs(x) - z; double q = h * h; double pwr = 1; double sum = a + h * b; double term = a; for (int i = 2; sum != term; i += 2) { term = sum; a = (a + z * b) / (i); b = (b + z * a) / (i + 1); pwr *= q; sum = term + pwr * (a + h * b); } sum *= Math.exp(-0.5 * (x * x) - 0.5 * Constants.Log2PI); return (x >= 0) ? sum : (1.0 - sum); }",
+        "label": 0
+    },
+    {
+        "code": "public String toIPTC(SubjectReferenceSystem srs) { StringBuffer b = new StringBuffer(); b.append(\"IPTC:\"); b.append(getNumber()); b.append(\":\"); if (getNumber().endsWith(\"000000\")) { b.append(toIPTCHelper(srs.getName(this))); b.append(\"::\"); } else if (getNumber().endsWith(\"000\")) { b.append(toIPTCHelper(srs.getName(srs.get(getNumber().substring(0, 2) + \"000000\")))); b.append(\":\"); b.append(toIPTCHelper(srs.getName(this))); b.append(\":\"); } else { b.append(toIPTCHelper(srs.getName(srs.get(getNumber().substring(0, 2) + \"000000\")))); b.append(\":\"); b.append(toIPTCHelper(srs.getName(srs.get(getNumber().substring(0, 5) + \"000\")))); b.append(\":\"); b.append(toIPTCHelper(srs.getName(this))); } return b.toString(); }",
+        "label": 0
+    },
+    {
+        "code": "public DataSetInfo create(int dataSet) throws InvalidDataSetException { DataSetInfo info = dataSets.get(createKey(dataSet)); if (info == null) { int recordNumber = (dataSet >> 8) & 0xFF; int dataSetNumber = dataSet & 0xFF; throw new UnsupportedDataSetException(recordNumber + \":\" + dataSetNumber); } return info; }",
+        "label": 0
+    },
+    {
+        "code": "public double Function1D(double x) { double frequency = initFrequency; double amplitude = initAmplitude; double sum = 0; for (int i = 0; i < octaves; i++) { sum += SmoothedNoise(x * frequency) * amplitude; frequency *= 2; amplitude *= persistence; } return sum; }",
+        "label": 0
+    },
+    {
+        "code": "public double Function2D(double x, double y) { double frequency = initFrequency; double amplitude = initAmplitude; double sum = 0; for (int i = 0; i < octaves; i++) { sum += SmoothedNoise(x * frequency, y * frequency) * amplitude; frequency *= 2; amplitude *= persistence; } return sum; }",
+        "label": 0
+    },
+    {
+        "code": "private double Noise(int x, int y) { int n = x + y * 57; n = (n << 13) ^ n; return (1.0 - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0); }",
+        "label": 0
+    },
+    {
+        "code": "private double CosineInterpolate(double x1, double x2, double a) { double f = (1 - Math.cos(a * Math.PI)) * 0.5; return x1 * (1 - f) + x2 * f; }",
+        "label": 0
+    },
+    {
+        "code": "public List<FailedEventInvocation> getFailedInvocations() { synchronized (this.mutex) { if (this.failedEvents == null) { return Collections.emptyList(); } return Collections.unmodifiableList(this.failedEvents); } }",
+        "label": 0
+    },
+    {
+        "code": "public Set<Class<?>> getPrevented() { if (this.prevent == null) { return Collections.emptySet(); } return Collections.unmodifiableSet(this.prevent); }",
+        "label": 0
+    },
+    {
+        "code": "public static double Function1D(double x, double mean, double amplitude, double position, double width, double phase, double frequency) { double envelope = mean + amplitude * Math.exp(-Math.pow((x - position), 2) / Math.pow((2 * width), 2)); double carry = Math.cos(2 * Math.PI * frequency * (x - position) + phase); return envelope * carry; }",
+        "label": 0
+    },
+    {
+        "code": "public static ComplexNumber Function2D(int x, int y, double wavelength, double orientation, double phaseOffset, double gaussVariance, double aspectRatio) { double X = x * Math.cos(orientation) + y * Math.sin(orientation); double Y = -x * Math.sin(orientation) + y * Math.cos(orientation); double envelope = Math.exp(-((X * X + aspectRatio * aspectRatio * Y * Y) / (2 * gaussVariance * gaussVariance))); double real = Math.cos(2 * Math.PI * (X / wavelength) + phaseOffset); double imaginary = Math.sin(2 * Math.PI * (X / wavelength) + phaseOffset); return new ComplexNumber(envelope * real, envelope * imaginary); }",
+        "label": 0
+    },
+    {
+        "code": "public Long getOldestTaskCreatedTime(){ Timer.Context ctx = getOldestTaskTimeTimer.time(); try { long oldest = Long.MAX_VALUE; Long oldestQueueTime = this.taskQueue.getOldestQueueTime(); if(oldestQueueTime != null) oldest = oldestQueueTime; long inProgressOldestTime = tasksInProgressTracker.getOldestTime(); if(inProgressOldestTime < oldest) oldest = inProgressOldestTime; return oldest; } finally { ctx.stop(); } }",
+        "label": 0
+    },
+    {
+        "code": "@SuppressWarnings({ \"unchecked\", \"rawtypes\" }) public List<HazeltaskTask<G>> shutdownNow() { return (List<HazeltaskTask<G>>) (List) localExecutorPool.shutdownNow(); }",
+        "label": 0
+    },
+    {
+        "code": "public void registerCollectionSizeGauge( CollectionSizeGauge collectionSizeGauge) { String name = createMetricName(LocalTaskExecutorService.class, \"queue-size\"); metrics.register(name, collectionSizeGauge); }",
+        "label": 0
+    },
+    {
+        "code": "public ExecutorLoadBalancingConfig<GROUP> useLoadBalancedEnumOrdinalPrioritizer(Class<GROUP> groupClass) { if(!groupClass.isEnum()) { throw new IllegalArgumentException(\"The group class \"+groupClass+\" is not an enum\"); } groupPrioritizer = new LoadBalancedPriorityPrioritizer<GROUP>(new EnumOrdinalPrioritizer<GROUP>()); return this; }",
+        "label": 0
+    },
+    {
+        "code": "public static <GROUP extends Serializable> ExecutorConfig<GROUP> basicGroupable() { return new ExecutorConfig<GROUP>() .withTaskIdAdapter((TaskIdAdapter<Groupable<GROUP>, GROUP, ?>) new DefaultGroupableTaskIdAdapter<GROUP>()); }",
+        "label": 0
+    },
+    {
+        "code": "public Collection<HazeltaskTask<GROUP>> call() throws Exception { try { if(isShutdownNow) return this.getDistributedExecutorService().shutdownNowWithHazeltask(); else this.getDistributedExecutorService().shutdown(); } catch(IllegalStateException e) {} return Collections.emptyList(); }",
+        "label": 0
+    },
+    {
+        "code": "public static <T> Collection<MemberResponse<T>> executeOptimistic(IExecutorService execSvc, Set<Member> members, Callable<T> callable) { return executeOptimistic(execSvc, members, callable, 60, TimeUnit.SECONDS); }",
+        "label": 0
+    },
+    {
+        "code": "public static <T> Collection<MemberResponse<T>> executeOptimistic(IExecutorService execSvc, Set<Member> members, Callable<T> callable, long maxWaitTime, TimeUnit unit) { Collection<MemberResponse<T>> result = new ArrayList<MemberResponse<T>>(members.size()); Map<Member, Future<T>> resultFutures = execSvc.submitToMembers(callable, members); for(Entry<Member, Future<T>> futureEntry : resultFutures.entrySet()) { Future<T> future = futureEntry.getValue(); Member member = futureEntry.getKey(); try { if(maxWaitTime > 0) { result.add(new MemberResponse<T>(member, future.get(maxWaitTime, unit))); } else { result.add(new MemberResponse<T>(member, future.get())); } } catch (InterruptedException e) { Thread.currentThread().interrupt(); return result; } catch (MemberLeftException e) { log.warn(\"Member {} left while trying to get a distributed callable result\", member); } catch (ExecutionException e) { if(e.getCause() instanceof InterruptedException) { Thread.currentThread().interrupt(); return result; } else { log.warn(\"Unable to execute callable on \"+member+\". There was an error.\", e); } } catch (TimeoutException e) { log.error(\"Unable to execute task on \"+member+\" within 10 seconds.\"); } catch (RuntimeException e) { log.error(\"Unable to execute task on \"+member+\". An unexpected error occurred.\", e); } } return result; }",
+        "label": 0
+    },
+    {
+        "code": "@SuppressWarnings(\"unchecked\") public <T> DistributedFuture<GROUP, T> createFuture(HazeltaskTask<GROUP> task) { DistributedFuture<GROUP, T> future = new DistributedFuture<GROUP, T>(topologyService, task.getGroup(), task.getId()); this.futures.put(task.getId(), (DistributedFuture<GROUP, Serializable>) future); return future; }",
+        "label": 0
+    },
+    {
+        "code": "public void errorFuture(UUID taskId, Exception e) { DistributedFuture<GROUP, Serializable> future = remove(taskId); if(future != null) { future.setException(e); } }",
+        "label": 0
+    },
+    {
+        "code": "public void schedule(BackoffTask task, long initialDelay, long fixedDelay) { synchronized (queue) { start(); queue.put(new DelayedTimerTask(task, initialDelay, fixedDelay)); } }",
+        "label": 0
+    },
+    {
+        "code": "public Future<HazeltaskTask<GROUP>> addPendingTaskAsync(HazeltaskTask<GROUP> task) { return pendingTask.putAsync(task.getId(), task); }",
+        "label": 0
+    },
+    {
+        "code": "public void applyXMLDSigAsFirstChild (@Nonnull final PrivateKey aPrivateKey, @Nonnull final X509Certificate aCertificate, @Nonnull final Document aDocument) throws Exception { ValueEnforcer.notNull (aPrivateKey, \"privateKey\"); ValueEnforcer.notNull (aCertificate, \"certificate\"); ValueEnforcer.notNull (aDocument, \"document\"); ValueEnforcer.notNull (aDocument.getDocumentElement (), \"Document is missing a document element\"); if (aDocument.getDocumentElement ().getChildNodes ().getLength () == 0) throw new IllegalArgumentException (\"Document element has no children!\"); final NodeList aNodeList = aDocument.getElementsByTagNameNS (XMLSignature.XMLNS, XMLDSigSetup.ELEMENT_SIGNATURE); if (aNodeList.getLength () > 0) throw new IllegalArgumentException (\"Document already contains an XMLDSig Signature element!\"); final XMLSignature aXMLSignature = createXMLSignature (aCertificate); final DOMSignContext aDOMSignContext = new DOMSignContext (aPrivateKey, aDocument.getDocumentElement (), aDocument.getDocumentElement ().getFirstChild ()); aDOMSignContext.setDefaultNamespacePrefix (DEFAULT_NS_PREFIX); aXMLSignature.sign (aDOMSignContext); }",
+        "label": 0
+    },
+    {
+        "code": "public static <K> Map<K, Integer> rankMapOnIntegerValue(Map<K, Integer> inputMap) { Map<K, Integer> newMap = new TreeMap<K, Integer>(new IntegerValueComparator(inputMap)); newMap.putAll(inputMap); Map<K, Integer> linkedMap = new LinkedHashMap<K, Integer>(newMap); return linkedMap; }",
+        "label": 0
+    },
+    {
+        "code": "private void handleIncomingMessage(SerialMessage incomingMessage) { logger.debug(\"Incoming message to process\"); logger.debug(incomingMessage.toString()); switch (incomingMessage.getMessageType()) { case Request: handleIncomingRequestMessage(incomingMessage); break; case Response: handleIncomingResponseMessage(incomingMessage); break; default: logger.warn(\"Unsupported incomingMessageType: 0x%02X\", incomingMessage.getMessageType()); } }",
+        "label": 0
+    },
+    {
+        "code": "private void handleIncomingRequestMessage(SerialMessage incomingMessage) { logger.debug(\"Message type = REQUEST\"); switch (incomingMessage.getMessageClass()) { case ApplicationCommandHandler: handleApplicationCommandRequest(incomingMessage); break; case SendData: handleSendDataRequest(incomingMessage); break; case ApplicationUpdate: handleApplicationUpdateRequest(incomingMessage); break; default: logger.warn(String.format(\"TODO: Implement processing of Request Message = %s (0x%02X)\", incomingMessage.getMessageClass().getLabel(), incomingMessage.getMessageClass().getKey())); break; } }",
+        "label": 0
+    },
+    {
+        "code": "private void handleApplicationCommandRequest(SerialMessage incomingMessage) { logger.trace(\"Handle Message Application Command Request\"); int nodeId = incomingMessage.getMessagePayloadByte(1); logger.debug(\"Application Command Request from Node \" + nodeId); ZWaveNode node = getNode(nodeId); if (node == null) { logger.warn(\"Node {} not initialized yet, ignoring message.\", nodeId); return; } node.resetResendCount(); int commandClassCode = incomingMessage.getMessagePayloadByte(3); ZWaveCommandClass.CommandClass commandClass = ZWaveCommandClass.CommandClass.getCommandClass(commandClassCode); if (commandClass == null) { logger.error(String.format(\"Unsupported command class 0x%02x\", commandClassCode)); return; } logger.debug(String.format(\"Incoming command class %s (0x%02x)\", commandClass.getLabel(), commandClass.getKey())); ZWaveCommandClass zwaveCommandClass = node.getCommandClass(commandClass); if (zwaveCommandClass == null) { logger.error(String.format(\"Unsupported command class %s (0x%02x)\", commandClass.getLabel(), commandClassCode)); return; } logger.trace(\"Found Command Class {}, passing to handleApplicationCommandRequest\", zwaveCommandClass.getCommandClass().getLabel()); zwaveCommandClass.handleApplicationCommandRequest(incomingMessage, 4, 1); if (incomingMessage.getMessageClass() == this.lastSentMessage.getExpectedReply() && nodeId == this.lastSentMessage.getMessageNode() && !incomingMessage.isTransActionCanceled()) { notifyEventListeners(new ZWaveEvent(ZWaveEventType.TRANSACTION_COMPLETED_EVENT, this.lastSentMessage.getMessageNode(), 1, this.lastSentMessage)); transactionCompleted.release(); logger.trace(\"Released. Transaction completed permit count -> {}\", transactionCompleted.availablePermits()); } }",
+        "label": 0
+    },
+    {
+        "code": "private void handleSendDataRequest(SerialMessage incomingMessage) { logger.trace(\"Handle Message Send Data Request\"); int callbackId = incomingMessage.getMessagePayloadByte(0); TransmissionState status = TransmissionState.getTransmissionState(incomingMessage.getMessagePayloadByte(1)); SerialMessage originalMessage = this.lastSentMessage; if (status == null) { logger.warn(\"Transmission state not found, ignoring.\"); return; } logger.debug(\"CallBack ID = {}\", callbackId); logger.debug(String.format(\"Status = %s (0x%02x)\", status.getLabel(), status.getKey())); if (originalMessage == null || originalMessage.getCallbackId() != callbackId) { logger.warn(\"Already processed another send data request for this callback Id, ignoring.\"); return; } switch (status) { case COMPLETE_OK: ZWaveNode node = this.getNode(originalMessage.getMessageNode()); node.resetResendCount(); if (node != null && node.getNodeStage() == NodeStage.NODEBUILDINFO_PING) { node.advanceNodeStage(); } if (incomingMessage.getMessageClass() == originalMessage.getExpectedReply() && !incomingMessage.isTransActionCanceled()) { notifyEventListeners(new ZWaveEvent(ZWaveEventType.TRANSACTION_COMPLETED_EVENT, this.lastSentMessage.getMessageNode(), 1, this.lastSentMessage)); transactionCompleted.release(); logger.trace(\"Released. Transaction completed permit count -> {}\", transactionCompleted.availablePermits()); } return; case COMPLETE_NO_ACK: case COMPLETE_FAIL: case COMPLETE_NOT_IDLE: case COMPLETE_NOROUTE: try { handleFailedSendDataRequest(originalMessage); } finally { transactionCompleted.release(); logger.trace(\"Released. Transaction completed permit count -> {}\", transactionCompleted.availablePermits()); } default: } }",
+        "label": 0
+    },
+    {
+        "code": "private void handleFailedSendDataRequest(SerialMessage originalMessage) { ZWaveNode node = this.getNode(originalMessage.getMessageNode()); if (node.getNodeStage() == NodeStage.NODEBUILDINFO_DEAD) return; if (!node.isListening() && originalMessage.getPriority() != SerialMessage.SerialMessagePriority.Low) { ZWaveWakeUpCommandClass wakeUpCommandClass = (ZWaveWakeUpCommandClass)node.getCommandClass(ZWaveCommandClass.CommandClass.WAKE_UP); if (wakeUpCommandClass != null) { wakeUpCommandClass.setAwake(false); wakeUpCommandClass.putInWakeUpQueue(originalMessage); return; } } else if (!node.isListening() && originalMessage.getPriority() == SerialMessage.SerialMessagePriority.Low) return; node.incrementResendCount(); logger.error(\"Got an error while sending data to node {}. Resending message.\", node.getNodeId()); this.sendData(originalMessage); }",
+        "label": 0
+    },
+    {
+        "code": "private void handleApplicationUpdateRequest(SerialMessage incomingMessage) { logger.trace(\"Handle Message Application Update Request\"); int nodeId = incomingMessage.getMessagePayloadByte(1); logger.trace(\"Application Update Request from Node \" + nodeId); UpdateState updateState = UpdateState.getUpdateState(incomingMessage.getMessagePayloadByte(0)); switch (updateState) { case NODE_INFO_RECEIVED: logger.debug(\"Application update request, node information received.\"); int length = incomingMessage.getMessagePayloadByte(2); ZWaveNode node = getNode(nodeId); node.resetResendCount(); for (int i = 6; i < length + 3; i++) { int data = incomingMessage.getMessagePayloadByte(i); if(data == 0xef ) { break; } logger.debug(String.format(\"Adding command class 0x%02X to the list of supported command classes.\", data)); ZWaveCommandClass commandClass = ZWaveCommandClass.getInstance(data, node, this); if (commandClass != null) node.addCommandClass(commandClass); } node.advanceNodeStage(); if (incomingMessage.getMessageClass() == this.lastSentMessage.getExpectedReply() && !incomingMessage.isTransActionCanceled()) { notifyEventListeners(new ZWaveEvent(ZWaveEventType.TRANSACTION_COMPLETED_EVENT, this.lastSentMessage.getMessageNode(), 1, this.lastSentMessage)); transactionCompleted.release(); logger.trace(\"Released. Transaction completed permit count -> {}\", transactionCompleted.availablePermits()); } break; case NODE_INFO_REQ_FAILED: logger.debug(\"Application update request, Node Info Request Failed, re-request node info.\"); SerialMessage requestInfoMessage = this.lastSentMessage; if (requestInfoMessage.getMessageClass() != SerialMessage.SerialMessageClass.RequestNodeInfo) { logger.warn(\"Got application update request without node info request, ignoring.\"); return; } if (--requestInfoMessage.attempts >= 0) { logger.error(\"Got Node Info Request Failed while sending this serial message. Requeueing\"); this.enqueue(requestInfoMessage); } else { logger.warn(\"Node Info Request Failed 3x. Discarding message: {}\", lastSentMessage.toString()); } transactionCompleted.release(); break; default: logger.warn(String.format(\"TODO: Implement Application Update Request Handling of %s (0x%02X).\", updateState.getLabel(), updateState.getKey())); } }",
+        "label": 0
+    },
+    {
+        "code": "private void handleGetVersionResponse(SerialMessage incomingMessage) { this.ZWaveLibraryType = incomingMessage.getMessagePayloadByte(12); this.zWaveVersion = new String(ArrayUtils.subarray(incomingMessage.getMessagePayload(), 0, 11)); logger.debug(String.format(\"Got MessageGetVersion response. Version = %s, Library Type = 0x%02X\", zWaveVersion, ZWaveLibraryType)); }",
+        "label": 0
+    },
+    {
+        "code": "private void handleSerialApiGetInitDataResponse( SerialMessage incomingMessage) { logger.debug(String.format(\"Got MessageSerialApiGetInitData response.\")); this.isConnected = true; int nodeBytes = incomingMessage.getMessagePayloadByte(2); if (nodeBytes != NODE_BYTES) { logger.error(\"Invalid number of node bytes = {}\", nodeBytes); return; } int nodeId = 1; for (int i = 3;i < 3 + nodeBytes;i++) { int incomingByte = incomingMessage.getMessagePayloadByte(i); for (int j=0;j<8;j++) { int b1 = incomingByte & (int)Math.pow(2.0D, j); int b2 = (int)Math.pow(2.0D, j); if (b1 == b2) { logger.info(String.format(\"Found node id = %d\", nodeId)); this.zwaveNodes.put(nodeId, new ZWaveNode(this.homeId, nodeId, this)); this.getNode(nodeId).advanceNodeStage(); } nodeId++; } } logger.info(\"------------Number of Nodes Found Registered to ZWave Controller------------\"); logger.info(String.format(\"# Nodes = %d\", this.zwaveNodes.size())); logger.info(\"----------------------------------------------------------------------------\"); }",
+        "label": 0
+    },
+    {
+        "code": "private void handleMemoryGetId(SerialMessage incomingMessage) { this.homeId = ((incomingMessage.getMessagePayloadByte(0)) << 24) | ((incomingMessage.getMessagePayloadByte(1)) << 16) | ((incomingMessage.getMessagePayloadByte(2)) << 8) | (incomingMessage.getMessagePayloadByte(3)); this.ownNodeId = incomingMessage.getMessagePayloadByte(4); logger.debug(String.format(\"Got MessageMemoryGetId response. Home id = 0x%08X, Controller Node id = %d\", this.homeId, this.ownNodeId)); }",
+        "label": 0
+    },
+    {
+        "code": "private void handleSerialAPIGetCapabilitiesResponse(SerialMessage incomingMessage) { logger.trace(\"Handle Message Serial API Get Capabilities\"); this.serialAPIVersion = String.format(\"%d.%d\", incomingMessage.getMessagePayloadByte(0), incomingMessage.getMessagePayloadByte(1)); this.manufactureId = ((incomingMessage.getMessagePayloadByte(2)) << 8) | (incomingMessage.getMessagePayloadByte(3)); this.deviceType = ((incomingMessage.getMessagePayloadByte(4)) << 8) | (incomingMessage.getMessagePayloadByte(5)); this.deviceId = (((incomingMessage.getMessagePayloadByte(6)) << 8) | (incomingMessage.getMessagePayloadByte(7))); logger.debug(String.format(\"API Version = %s\", this.getSerialAPIVersion())); logger.debug(String.format(\"Manufacture ID = 0x%x\", this.getManufactureId())); logger.debug(String.format(\"Device Type = 0x%x\", this.getDeviceType())); logger.debug(String.format(\"Device ID = 0x%x\", this.getDeviceId())); this.enqueue(new SerialMessage(SerialMessage.SerialMessageClass.SerialApiGetInitData, SerialMessage.SerialMessageType.Request, SerialMessage.SerialMessageClass.SerialApiGetInitData, SerialMessage.SerialMessagePriority.High)); }",
+        "label": 0
+    },
+    {
+        "code": "private void handleSendDataResponse(SerialMessage incomingMessage) { logger.trace(\"Handle Message Send Data Response\"); if(incomingMessage.getMessageBuffer()[2] != 0x00) logger.debug(\"Sent Data successfully placed on stack.\"); else logger.error(\"Sent Data was not placed on stack due to error.\"); }",
+        "label": 0
+    },
+    {
+        "code": "private void handleRequestNodeInfoResponse(SerialMessage incomingMessage) { logger.trace(\"Handle RequestNodeInfo Response\"); if(incomingMessage.getMessageBuffer()[2] != 0x00) logger.debug(\"Request node info successfully placed on stack.\"); else logger.error(\"Request node info not placed on stack due to error.\"); }",
+        "label": 0
+    },
+    {
+        "code": "public void connect(final String serialPortName) throws SerialInterfaceException { logger.info(\"Connecting to serial port {}\", serialPortName); try { CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(serialPortName); CommPort commPort = portIdentifier.open(\"org.openhab.binding.zwave\",2000); this.serialPort = (SerialPort) commPort; this.serialPort.setSerialPortParams(115200,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE); this.serialPort.enableReceiveThreshold(1); this.serialPort.enableReceiveTimeout(ZWAVE_RECEIVE_TIMEOUT); this.receiveThread = new ZWaveReceiveThread(); this.receiveThread.start(); this.sendThread = new ZWaveSendThread(); this.sendThread.start(); logger.info(\"Serial port is initialized\"); } catch (NoSuchPortException e) { logger.error(e.getLocalizedMessage()); throw new SerialInterfaceException(e.getLocalizedMessage(), e); } catch (PortInUseException e) { logger.error(e.getLocalizedMessage()); throw new SerialInterfaceException(e.getLocalizedMessage(), e); } catch (UnsupportedCommOperationException e) { logger.error(e.getLocalizedMessage()); throw new SerialInterfaceException(e.getLocalizedMessage(), e); } }",
+        "label": 0
+    },
+    {
+        "code": "public void close() { if (watchdog != null) { watchdog.cancel(); watchdog = null; } disconnect(); for (Object listener : this.zwaveEventListeners.toArray()) { if (!(listener instanceof ZWaveNode)) continue; this.zwaveEventListeners.remove(listener); } this.zwaveNodes.clear(); this.sendQueue.clear(); logger.info(\"Stopped Z-Wave controller\"); }",
+        "label": 0
+    },
+    {
+        "code": "public void disconnect() { if (sendThread != null) { sendThread.interrupt(); try { sendThread.join(); } catch (InterruptedException e) { } sendThread = null; } if (receiveThread != null) { receiveThread.interrupt(); try { receiveThread.join(); } catch (InterruptedException e) { } receiveThread = null; } if(transactionCompleted.availablePermits() < 0) transactionCompleted.release(transactionCompleted.availablePermits()); transactionCompleted.drainPermits(); logger.trace(\"Transaction completed permit count -> {}\", transactionCompleted.availablePermits()); if (this.serialPort != null) { this.serialPort.close(); this.serialPort = null; } logger.info(\"Disconnected from serial port\"); }",
+        "label": 0
+    },
+    {
+        "code": "public void enqueue(SerialMessage serialMessage) { this.sendQueue.add(serialMessage); logger.debug(\"Enqueueing message. Queue length = {}\", this.sendQueue.size()); }",
+        "label": 0
+    },
+    {
+        "code": "public void notifyEventListeners(ZWaveEvent event) { logger.debug(\"Notifying event listeners\"); for (ZWaveEventListener listener : this.zwaveEventListeners) { logger.trace(\"Notifying {}\", listener.toString()); listener.ZWaveIncomingEvent(event); } }",
+        "label": 0
+    },
+    {
+        "code": "public void initialize() { this.enqueue(new SerialMessage(SerialMessage.SerialMessageClass.GetVersion, SerialMessage.SerialMessageType.Request, SerialMessage.SerialMessageClass.GetVersion, SerialMessage.SerialMessagePriority.High)); this.enqueue(new SerialMessage(SerialMessage.SerialMessageClass.MemoryGetId, SerialMessage.SerialMessageType.Request, SerialMessage.SerialMessageClass.MemoryGetId, SerialMessage.SerialMessagePriority.High)); this.enqueue(new SerialMessage(SerialMessage.SerialMessageClass.SerialApiGetCapabilities, SerialMessage.SerialMessageType.Request, SerialMessage.SerialMessageClass.SerialApiGetCapabilities, SerialMessage.SerialMessagePriority.High)); }",
+        "label": 0
+    },
+    {
+        "code": "public void identifyNode(int nodeId) throws SerialInterfaceException { SerialMessage newMessage = new SerialMessage(nodeId, SerialMessage.SerialMessageClass.IdentifyNode, SerialMessage.SerialMessageType.Request, SerialMessage.SerialMessageClass.IdentifyNode, SerialMessage.SerialMessagePriority.High); byte[] newPayload = { (byte) nodeId }; newMessage.setMessagePayload(newPayload); this.enqueue(newMessage); }",
+        "label": 0
+    },
+    {
+        "code": "public void requestNodeInfo(int nodeId) { SerialMessage newMessage = new SerialMessage(nodeId, SerialMessage.SerialMessageClass.RequestNodeInfo, SerialMessage.SerialMessageType.Request, SerialMessage.SerialMessageClass.ApplicationUpdate, SerialMessage.SerialMessagePriority.High); byte[] newPayload = { (byte) nodeId }; newMessage.setMessagePayload(newPayload); this.enqueue(newMessage); }",
+        "label": 0
+    },
+    {
+        "code": "public void sendData(SerialMessage serialMessage) { if (serialMessage.getMessageClass() != SerialMessage.SerialMessageClass.SendData) { logger.error(String.format(\"Invalid message class %s (0x%02X) for sendData\", serialMessage.getMessageClass().getLabel(), serialMessage.getMessageClass().getKey())); return; } if (serialMessage.getMessageType() != SerialMessage.SerialMessageType.Request) { logger.error(\"Only request messages can be sent\"); return; } ZWaveNode node = this.getNode(serialMessage.getMessageNode()); if (node.getNodeStage() == NodeStage.NODEBUILDINFO_DEAD) { logger.debug(\"Node {} is dead, not sending message.\", node.getNodeId()); return; } if (!node.isListening() && serialMessage.getPriority() != SerialMessage.SerialMessagePriority.Low) { ZWaveWakeUpCommandClass wakeUpCommandClass = (ZWaveWakeUpCommandClass)node.getCommandClass(ZWaveCommandClass.CommandClass.WAKE_UP); if (wakeUpCommandClass != null && !wakeUpCommandClass.isAwake()) { wakeUpCommandClass.putInWakeUpQueue(serialMessage); return; } } serialMessage.setTransmitOptions(TRANSMIT_OPTION_ACK | TRANSMIT_OPTION_AUTO_ROUTE | TRANSMIT_OPTION_EXPLORE); if (++sentDataPointer > 0xFF) sentDataPointer = 1; serialMessage.setCallbackId(sentDataPointer); logger.debug(\"Callback ID = {}\", sentDataPointer); this.enqueue(serialMessage); }",
+        "label": 0
+    },
+    {
+        "code": "public void sendValue(int nodeId, int endpoint, int value) { ZWaveNode node = this.getNode(nodeId); ZWaveSetCommands zwaveCommandClass = null; SerialMessage serialMessage = null; for (ZWaveCommandClass.CommandClass commandClass : new ZWaveCommandClass.CommandClass[] { ZWaveCommandClass.CommandClass.SWITCH_MULTILEVEL, ZWaveCommandClass.CommandClass.SWITCH_BINARY, ZWaveCommandClass.CommandClass.BASIC }) { zwaveCommandClass = (ZWaveSetCommands)node.resolveCommandClass(commandClass, endpoint); if (zwaveCommandClass != null) break; } if (zwaveCommandClass == null) { logger.error(\"No Command Class found on node {}, instance/endpoint {} to request level.\", nodeId, endpoint); return; } serialMessage = node.encapsulate(zwaveCommandClass.setValueMessage(value), (ZWaveCommandClass)zwaveCommandClass, endpoint); if (serialMessage != null) this.sendData(serialMessage); if (((ZWaveCommandClass)zwaveCommandClass).getCommandClass() == ZWaveCommandClass.CommandClass.SWITCH_MULTILEVEL && value == 255) this.requestValue(nodeId, endpoint); }",
+        "label": 0
+    },
+    {
+        "code": "private void processProperties() { state = true; try { importerServiceFilter = getFilter(importerServiceFilterProperty); } catch (InvalidFilterException invalidFilterException) { LOG.debug(\"The value of the Property \" + FILTER_IMPORTERSERVICE_PROPERTY + \" is invalid,\" + \" the recuperation of the Filter has failed. The instance gonna stop.\", invalidFilterException); state = false; return; } try { importDeclarationFilter = getFilter(importDeclarationFilterProperty); } catch (InvalidFilterException invalidFilterException) { LOG.debug(\"The value of the Property \" + FILTER_IMPORTDECLARATION_PROPERTY + \" is invalid,\" + \" the recuperation of the Filter has failed. The instance gonna stop.\", invalidFilterException); state = false; return; } }",
+        "label": 0
+    },
+    {
+        "code": "@Modified(id = \"importerServices\") void modifiedImporterService(ServiceReference<ImporterService> serviceReference) { try { importersManager.modified(serviceReference); } catch (InvalidFilterException invalidFilterException) { LOG.error(\"The ServiceProperty \\\"\" + TARGET_FILTER_PROPERTY + \"\\\" of the ImporterService \" + bundleContext.getService(serviceReference) + \" doesn't provides a valid Filter.\" + \" To be used, it must provides a correct \\\"\" + TARGET_FILTER_PROPERTY + \"\\\" ServiceProperty.\", invalidFilterException ); importersManager.removeLinks(serviceReference); return; } if (importersManager.matched(serviceReference)) { importersManager.updateLinks(serviceReference); } else { importersManager.removeLinks(serviceReference); } }",
+        "label": 0
+    },
+    {
+        "code": "private void unregisterAllServlets() { for (String endpoint : registeredServlets) { registeredServlets.remove(endpoint); web.unregister(endpoint); LOG.info(\"endpoint {} unregistered\", endpoint); } }",
+        "label": 0
+    },
+    {
+        "code": "public double[] calculateDrift(ArrayList<T> tracks){ double[] result = new double[3]; double sumX =0; double sumY = 0; double sumZ = 0; int N=0; for(int i = 0; i < tracks.size(); i++){ T t = tracks.get(i); TrajectoryValidIndexTimelagIterator it = new TrajectoryValidIndexTimelagIterator(t,1); while(it.hasNext()) { int j = it.next(); sumX += t.get(j+1).x - t.get(j).x; sumY += t.get(j+1).y - t.get(j).y; sumZ += t.get(j+1).z - t.get(j).z; N++; } } result[0] = sumX/N; result[1] = sumY/N; result[2] = sumZ/N; return result; }",
+        "label": 0
+    },
+    {
+        "code": "public void addCommandClass(ZWaveCommandClass commandClass) { ZWaveCommandClass.CommandClass key = commandClass.getCommandClass(); if (!supportedCommandClasses.containsKey(key)) { supportedCommandClasses.put(key, commandClass); } }",
+        "label": 0
+    },
+    {
+        "code": "public boolean canBeLinked(D declaration, ServiceReference<S> declarationBinderRef) { Filter filter = bindersManager.getTargetFilter(declarationBinderRef); return filter.matches(declaration.getMetadata()); }",
+        "label": 0
+    },
+    {
+        "code": "public boolean link(D declaration, ServiceReference<S> declarationBinderRef) { S declarationBinder = bindersManager.getDeclarationBinder(declarationBinderRef); LOG.debug(declaration + \" match the filter of \" + declarationBinder + \" : bind them together\"); declaration.bind(declarationBinderRef); try { declarationBinder.addDeclaration(declaration); } catch (Exception e) { declaration.unbind(declarationBinderRef); LOG.debug(declarationBinder + \" throw an exception when giving to it the Declaration \" + declaration, e); return false; } return true; }",
+        "label": 0
+    },
+    {
+        "code": "public boolean unlink(D declaration, ServiceReference<S> declarationBinderRef) { S declarationBinder = bindersManager.getDeclarationBinder(declarationBinderRef); try { declarationBinder.removeDeclaration(declaration); } catch (BinderException e) { LOG.debug(declarationBinder + \" throw an exception when removing of it the Declaration \" + declaration, e); declaration.unhandle(declarationBinderRef); return false; } finally { declaration.unbind(declarationBinderRef); } return true; }",
+        "label": 0
+    },
+    {
+        "code": "private static String removeLastDot(final String pkgName) { return pkgName.charAt(pkgName.length() - 1) == Characters.DOT ? pkgName.substring(0, pkgName.length() - 1) : pkgName; }",
+        "label": 0
+    },
+    {
+        "code": "@Nonnull private static Properties findDefaultProperties() { final InputStream in = SourceCodeFormatter.class.getClassLoader().getResourceAsStream(DEFAULT_PROPERTIES_PATH); final Properties p = new Properties(); try { p.load(in); } catch (final IOException e) { throw new RuntimeException(String.format(\"Can not load resource %s\", DEFAULT_PROPERTIES_PATH)); } return p; }",
+        "label": 0
+    },
+    {
+        "code": "public static String format(final String code, final Properties options, final LineEnding lineEnding) { Check.notEmpty(code, \"code\"); Check.notEmpty(options, \"options\"); Check.notNull(lineEnding, \"lineEnding\"); final CodeFormatter formatter = ToolFactory.createCodeFormatter(options); final String lineSeparator = LineEnding.find(lineEnding, code); TextEdit te = null; try { te = formatter.format(CodeFormatter.K_COMPILATION_UNIT, code, 0, code.length(), 0, lineSeparator); } catch (final Exception formatFailed) { LOG.warn(\"Formatting failed\", formatFailed); } String formattedCode = code; if (te == null) { LOG.info(\"Code cannot be formatted. Possible cause is unmatched source/target/compliance version.\"); } else { final IDocument doc = new Document(code); try { te.apply(doc); } catch (final Exception e) { LOG.warn(e.getLocalizedMessage(), e); } formattedCode = doc.get(); } return formattedCode; }",
+        "label": 0
+    },
+    {
+        "code": "private void processProperties() { state = true; try { exporterServiceFilter = getFilter(exporterServiceFilterProperty); } catch (InvalidFilterException invalidFilterException) { LOG.debug(\"The value of the Property \" + FILTER_EXPORTERSERVICE_PROPERTY + \" is invalid,\" + \" the recuperation of the Filter has failed. The instance gonna stop.\", invalidFilterException); state = false; return; } try { exportDeclarationFilter = getFilter(exportDeclarationFilterProperty); } catch (InvalidFilterException invalidFilterException) { LOG.debug(\"The value of the Property \" + FILTER_EXPORTDECLARATION_PROPERTY + \" is invalid,\" + \" the recuperation of the Filter has failed. The instance gonna stop.\", invalidFilterException); state = false; return; } }",
+        "label": 0
+    },
+    {
+        "code": "@Modified(id = \"exporterServices\") void modifiedExporterService(ServiceReference<ExporterService> serviceReference) { try { exportersManager.modified(serviceReference); } catch (InvalidFilterException invalidFilterException) { LOG.error(\"The ServiceProperty \\\"\" + TARGET_FILTER_PROPERTY + \"\\\" of the ExporterService \" + bundleContext.getService(serviceReference) + \" doesn't provides a valid Filter.\" + \" To be used, it must provides a correct \\\"\" + TARGET_FILTER_PROPERTY + \"\\\" ServiceProperty.\", invalidFilterException ); exportersManager.removeLinks(serviceReference); return; } if (exportersManager.matched(serviceReference)) { exportersManager.updateLinks(serviceReference); } else { exportersManager.removeLinks(serviceReference); } }",
+        "label": 0
+    },
+    {
+        "code": "private void checkGAs(List l) { for (final Iterator i = l.iterator(); i.hasNext();) if (!(i.next() instanceof GroupAddress)) throw new KNXIllegalArgumentException(\"not a group address list\"); }",
+        "label": 0
+    },
+    {
+        "code": "public static Trajectory addPositionNoise(Trajectory t, double sd){ CentralRandomNumberGenerator r = CentralRandomNumberGenerator.getInstance(); Trajectory newt = new Trajectory(t.getDimension()); for(int i = 0; i < t.size(); i++){ newt.add(t.get(i)); for(int j = 1; j <= t.getDimension(); j++){ switch (j) { case 1: newt.get(i).setX(newt.get(i).x + r.nextGaussian()*sd); break; case 2: newt.get(i).setY(newt.get(i).y + r.nextGaussian()*sd); break; case 3: newt.get(i).setZ(newt.get(i).z + r.nextGaussian()*sd); break; default: break; } } } return newt; }",
+        "label": 1
+    },
+    {
+        "code": "public SerialMessage getNoMoreInformationMessage() { logger.debug(\"Creating new message for application command WAKE_UP_NO_MORE_INFORMATION for node {}\", this.getNode().getNodeId()); SerialMessage result = new SerialMessage(this.getNode().getNodeId(), SerialMessage.SerialMessageClass.SendData, SerialMessage.SerialMessageType.Request, SerialMessage.SerialMessageClass.SendData, SerialMessage.SerialMessagePriority.Low); byte[] newPayload = { (byte) this.getNode().getNodeId(), 2, (byte) getCommandClass().getKey(), (byte) WAKE_UP_NO_MORE_INFORMATION }; result.setMessagePayload(newPayload); return result; }",
+        "label": 0
+    },
+    {
+        "code": "public void putInWakeUpQueue(SerialMessage serialMessage) { if (this.wakeUpQueue.contains(serialMessage)) { logger.debug(\"Message already on the wake-up queue for node {}. Discarding.\", this.getNode().getNodeId()); return; } logger.debug(\"Putting message in wakeup queue for node {}.\", this.getNode().getNodeId()); this.wakeUpQueue.add(serialMessage); }",
+        "label": 0
+    },
+    {
+        "code": "protected Method resolveTargetMethod(Message message, FieldDescriptor payloadField) { Method targetMethod = fieldToMethod.get(payloadField); if (targetMethod == null) { synchronized (this) { targetMethod = fieldToMethod.get(payloadField); if (targetMethod == null) { String name = payloadField.getName(); for (Method method : service.getClass().getMethods()) { if (method.getName().equals(name)) { try { method.setAccessible(true); } catch (Exception ex) { log.log(Level.SEVERE,\"Error accessing RPC method\",ex); } targetMethod = method; fieldToMethod.put(payloadField, targetMethod); break; } } } } } if (targetMethod != null) { return targetMethod; } else { throw new RuntimeException(\"No matching method found by the name '\" + payloadField.getName() + \"'\"); } }",
+        "label": 0
+    },
+    {
+        "code": "protected FieldDescriptor resolvePayloadField(Message message) { for (FieldDescriptor field : message.getDescriptorForType().getFields()) { if (message.hasField(field)) { return field; } } throw new RuntimeException(\"No payload found in message \" + message); }",
+        "label": 0
+    },
+    {
+        "code": "public static Status from(Set<ServiceReference> serviceReferencesBound, Set<ServiceReference> serviceReferencesHandled) { if (serviceReferencesBound == null && serviceReferencesHandled == null) { throw new IllegalArgumentException(\"Cannot create a status with serviceReferencesBound == null\" + \"and serviceReferencesHandled == null\"); } else if (serviceReferencesBound == null) { throw new IllegalArgumentException(\"Cannot create a status with serviceReferencesBound == null\"); } else if (serviceReferencesHandled == null) { throw new IllegalArgumentException(\"Cannot create a status with serviceReferencesHandled == null\"); } return new Status(serviceReferencesBound, serviceReferencesHandled); }",
+        "label": 0
+    },
+    {
+        "code": "public SerialMessage getValueMessage() { logger.debug(\"Creating new message for application command BASIC_GET for node {}\", this.getNode().getNodeId()); SerialMessage result = new SerialMessage(this.getNode().getNodeId(), SerialMessageClass.SendData, SerialMessageType.Request, SerialMessageClass.ApplicationCommandHandler, SerialMessagePriority.Get); byte[] newPayload = { (byte) this.getNode().getNodeId(), 2, (byte) getCommandClass().getKey(), (byte) BASIC_GET }; result.setMessagePayload(newPayload); return result; }",
+        "label": 0
+    },
+    {
+        "code": "public SerialMessage setValueMessage(int level) { logger.debug(\"Creating new message for application command BASIC_SET for node {}\", this.getNode().getNodeId()); SerialMessage result = new SerialMessage(this.getNode().getNodeId(), SerialMessageClass.SendData, SerialMessageType.Request, SerialMessageClass.SendData, SerialMessagePriority.Set); byte[] newPayload = { (byte) this.getNode().getNodeId(), 3, (byte) getCommandClass().getKey(), (byte) BASIC_SET, (byte) level }; result.setMessagePayload(newPayload); return result; }",
+        "label": 0
+    },
+    {
+        "code": "public void subscriptionRequestReceived(SubscriptionRequest sr) throws SubscriptionException { LOG.info(\"Subscriber -> (Hub), new subscription request received.\", sr.getCallback()); try { verifySubscriberRequestedSubscription(sr); if (\"subscribe\".equals(sr.getMode())) { LOG.info(\"Adding callback {} to the topic {}\", sr.getCallback(), sr.getTopic()); addCallbackToTopic(sr.getCallback(), sr.getTopic()); } else if (\"unsubscribe\".equals(sr.getMode())) { LOG.info(\"Removing callback {} from the topic {}\", sr.getCallback(), sr.getTopic()); removeCallbackToTopic(sr.getCallback(), sr.getTopic()); } } catch (Exception e) { throw new SubscriptionException(e); } }",
+        "label": 0
+    },
+    {
+        "code": "public Boolean verifySubscriberRequestedSubscription(SubscriptionRequest sr) throws SubscriptionOriginVerificationException { LOG.info(\"(Hub) -> Subscriber, sending notification to verify the origin of the subscription {}.\", sr.getCallback()); SubscriptionConfirmationRequest sc = new SubscriptionConfirmationRequest(sr.getMode(), sr.getTopic(), \"challenge\", \"0\"); URI uri; try { uri = new URIBuilder(sr.getCallback()).setParameters(sc.toRequestParameters()).build(); } catch (URISyntaxException e) { throw new SubscriptionOriginVerificationException(\"URISyntaxException while sending a confirmation of subscription\", e); } HttpGet httpGet = new HttpGet(uri); CloseableHttpClient httpclient = HttpClients.createDefault(); CloseableHttpResponse response; try { response = httpclient.execute(httpGet); } catch (IOException e) { throw new SubscriptionOriginVerificationException(\"IOException while sending a confirmation of subscription\", e); } LOG.info(\"Subscriber replied with the http code {}.\", response.getStatusLine().getStatusCode()); Integer returnedCode = response.getStatusLine().getStatusCode(); return (199 < returnedCode) && (returnedCode < 300); }",
+        "label": 0
+    },
+    {
+        "code": "public void notifySubscriberCallback(ContentNotification cn) { String content = fetchContentFromPublisher(cn); distributeContentToSubscribers(content, cn.getUrl()); }",
+        "label": 0
+    },
+    {
+        "code": "public Point2D.Double minDistancePointSpline(Point2D.Double p, int nPointsPerSegment){ double minDistance = Double.MAX_VALUE; Point2D.Double minDistancePoint = null; int numberOfSplines = spline.getN(); double[] knots = spline.getKnots(); for(int i = 0; i < numberOfSplines; i++){ double x = knots[i]; double stopx = knots[i+1]; double dx = (stopx-x)/nPointsPerSegment; for(int j = 0; j < nPointsPerSegment; j++){ Point2D.Double candidate = new Point2D.Double(x, spline.value(x)); double d = p.distance(candidate); if(d<minDistance){ minDistance = d; minDistancePoint = candidate; } x += dx; } } return minDistancePoint; }",
+        "label": 0
+    },
+    {
+        "code": "public void showTrajectoryAndSpline(){ if(t.getDimension()==2){ double[] xData = new double[rotatedTrajectory.size()]; double[] yData = new double[rotatedTrajectory.size()]; for(int i = 0; i < rotatedTrajectory.size(); i++){ xData[i] = rotatedTrajectory.get(i).x; yData[i] = rotatedTrajectory.get(i).y; } Chart chart = QuickChart.getChart(\"Spline+Track\", \"X\", \"Y\", \"y(x)\", xData, yData); double[] subxData = new double[splineSupportPoints.size()]; double[] subyData = new double[splineSupportPoints.size()]; for(int i = 0; i < splineSupportPoints.size(); i++){ subxData[i] = splineSupportPoints.get(i).x; subyData[i] = splineSupportPoints.get(i).y; } Series s = chart.addSeries(\"Spline Support Points\", subxData, subyData); s.setLineStyle(SeriesLineStyle.NONE); s.setSeriesType(SeriesType.Line); int numberInterpolatedPointsPerSegment = 20; int numberOfSplines = spline.getN(); double[] sxData = new double[numberInterpolatedPointsPerSegment*numberOfSplines]; double[] syData = new double[numberInterpolatedPointsPerSegment*numberOfSplines]; double[] knots = spline.getKnots(); for(int i = 0; i < numberOfSplines; i++){ double x = knots[i]; double stopx = knots[i+1]; double dx = (stopx-x)/numberInterpolatedPointsPerSegment; for(int j = 0; j < numberInterpolatedPointsPerSegment; j++){ sxData[i*numberInterpolatedPointsPerSegment+j] = x; syData[i*numberInterpolatedPointsPerSegment+j] = spline.value(x); x += dx; } } s = chart.addSeries(\"Spline\", sxData, syData); s.setLineStyle(SeriesLineStyle.DASH_DASH); s.setMarker(SeriesMarker.NONE); s.setSeriesType(SeriesType.Line); new SwingWrapper(chart).displayChart(); } }",
+        "label": 0
+    },
+    {
+        "code": "public static <T> Set<T> getSet(Collection<T> collection) { Set<T> set = new LinkedHashSet<T>(); set.addAll(collection); return set; }",
+        "label": 0
+    },
+    {
+        "code": "public static <T> String join(Collection<T> col, String delim) { StringBuilder sb = new StringBuilder(); Iterator<T> iter = col.iterator(); if (iter.hasNext()) sb.append(iter.next().toString()); while (iter.hasNext()) { sb.append(delim); sb.append(iter.next().toString()); } return sb.toString(); }",
+        "label": 0
+    },
+    {
+        "code": "public void checkVersion(ZWaveCommandClass commandClass) { ZWaveVersionCommandClass versionCommandClass = (ZWaveVersionCommandClass)this.getNode().getCommandClass(CommandClass.VERSION); if (versionCommandClass == null) { logger.error(String.format(\"Version command class not supported on node %d,\" + \"reverting to version 1 for command class %s (0x%02x)\", this.getNode().getNodeId(), commandClass.getCommandClass().getLabel(), commandClass.getCommandClass().getKey())); return; } this.getController().sendData(versionCommandClass.getCommandClassVersionMessage(commandClass.getCommandClass())); }",
+        "label": 0
+    },
+    {
+        "code": "public static String getContent(String stringUrl) throws IOException { InputStream stream = getContentStream(stringUrl); return MyStreamUtils.readContent(stream); }",
+        "label": 0
+    },
+    {
+        "code": "public static InputStream getContentStream(String stringUrl) throws MalformedURLException, IOException { URL url = new URL(stringUrl); URLConnection urlConnection = url.openConnection(); InputStream is = urlConnection.getInputStream(); if (\"gzip\".equals(urlConnection.getContentEncoding())) { is = new GZIPInputStream(is); } return is; }",
+        "label": 0
+    },
+    {
+        "code": "public static Map<String, List<String>> getResponseHeaders(String stringUrl) throws IOException { return getResponseHeaders(stringUrl, true); }",
+        "label": 0
+    },
+    {
+        "code": "public static Map<String, List<String>> getResponseHeaders(String stringUrl, boolean followRedirects) throws IOException { URL url = new URL(stringUrl); HttpURLConnection conn = (HttpURLConnection) url.openConnection(); conn.setInstanceFollowRedirects(followRedirects); InputStream is = conn.getInputStream(); if (\"gzip\".equals(conn.getContentEncoding())) { is = new GZIPInputStream(is); } Map<String, List<String>> headers = new LinkedHashMap<String, List<String>>(conn.getHeaderFields()); headers.put(\"X-Content\", Arrays.asList(MyStreamUtils.readContent(is))); headers.put(\"X-URL\", Arrays.asList(conn.getURL().toString())); headers.put(\"X-Status\", Arrays.asList(String.valueOf(conn.getResponseCode()))); return headers; }",
+        "label": 0
+    },
+    {
+        "code": "public static void downloadUrl(String stringUrl, Map<String, String> parameters, File fileToSave) throws IOException { URL url = new URL(stringUrl); HttpURLConnection conn = (HttpURLConnection) url.openConnection(); conn.setFollowRedirects(true); if (parameters != null) { for (Entry<String, String> entry : parameters.entrySet()) { conn.addRequestProperty(entry.getKey(), entry.getValue()); } } boolean redirect = false; int status = conn.getResponseCode(); if (status != HttpURLConnection.HTTP_OK) { if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER) redirect = true; } if (redirect) { String newUrl = conn.getHeaderField(\"Location\"); String cookies = conn.getHeaderField(\"Set-Cookie\"); conn = (HttpURLConnection) new URL(newUrl).openConnection(); conn.setRequestProperty(\"Cookie\", cookies); } byte[] data = MyStreamUtils.readContentBytes(conn.getInputStream()); FileOutputStream fos = new FileOutputStream(fileToSave); fos.write(data); fos.close(); }",
+        "label": 1
+    },
+    {
+        "code": "public static byte[] getContentBytes(String stringUrl) throws IOException { URL url = new URL(stringUrl); byte[] data = MyStreamUtils.readContentBytes(url.openStream()); return data; }",
+        "label": 0
+    },
+    {
+        "code": "public static String httpRequest(String stringUrl, String method, Map<String, String> parameters, String input, String charset) throws IOException { URL url = new URL(stringUrl); HttpURLConnection conn = (HttpURLConnection) url.openConnection(); conn.setDoOutput(true); conn.setRequestMethod(method); if (parameters != null) { for (Entry<String, String> entry : parameters.entrySet()) { conn.addRequestProperty(entry.getKey(), entry.getValue()); } } if (input != null) { OutputStream output = null; try { output = conn.getOutputStream(); output.write(input.getBytes(charset)); } finally { if (output != null) { output.close(); } } } return MyStreamUtils.readContent(conn.getInputStream()); }",
+        "label": 0
+    },
+    {
+        "code": "public void add(ServiceReference<D> declarationSRef) { D declaration = getDeclaration(declarationSRef); boolean matchFilter = declarationFilter.matches(declaration.getMetadata()); declarations.put(declarationSRef, matchFilter); }",
+        "label": 0
+    },
+    {
+        "code": "public void createLinks(ServiceReference<D> declarationSRef) { D declaration = getDeclaration(declarationSRef); for (ServiceReference<S> serviceReference : linkerManagement.getMatchedBinderServiceRef()) { if (linkerManagement.canBeLinked(declaration, serviceReference)) { linkerManagement.link(declaration, serviceReference); } } }",
+        "label": 0
+    },
+    {
+        "code": "public void removeLinks(ServiceReference<D> declarationSRef) { D declaration = getDeclaration(declarationSRef); for (ServiceReference serviceReference : declaration.getStatus().getServiceReferencesBounded()) { linkerManagement.unlink(declaration, serviceReference); } }",
+        "label": 0
+    },
+    {
+        "code": "public Set<D> getMatchedDeclaration() { Set<D> bindedSet = new HashSet<D>(); for (Map.Entry<ServiceReference<D>, Boolean> e : declarations.entrySet()) { if (e.getValue()) { bindedSet.add(getDeclaration(e.getKey())); } } return bindedSet; }",
+        "label": 0
+    },
+    {
+        "code": "public static AccessorPrefix determineAccessorPrefix(@Nonnull final String methodName) { Check.notEmpty(methodName, \"methodName\"); final Matcher m = PATTERN.matcher(methodName); Check.stateIsTrue(m.find(), \"passed method name '%s' is not applicable\", methodName); return new AccessorPrefix(m.group(1)); }",
+        "label": 0
+    },
+    {
+        "code": "public static String determineFieldName(@Nonnull final String methodName) { Check.notEmpty(methodName, \"methodName\"); final Matcher m = PATTERN.matcher(methodName); Check.stateIsTrue(m.find(), \"passed method name '%s' is not applicable\", methodName); return m.group(2).substring(0, 1).toLowerCase() + m.group(2).substring(1); }",
+        "label": 0
+    },
+    {
+        "code": "public static <T extends JsonRtn> T parseJsonRtn(String jsonRtn, Class<T> jsonRtnClazz) { T rtn = JSONObject.parseObject(jsonRtn, jsonRtnClazz); appendErrorHumanMsg(rtn); return rtn; }",
+        "label": 0
+    },
+    {
+        "code": "private static JsonRtn appendErrorHumanMsg(JsonRtn jsonRtn) { if (bundle == null || jsonRtn == null || StringUtils.isEmpty(jsonRtn.getErrCode())) { return null; } try { jsonRtn.setErrHumanMsg(bundle.getString(jsonRtn.getErrCode())); return jsonRtn; } catch (Exception e) { return null; } }",
+        "label": 0
+    },
+    {
+        "code": "public static boolean isSuccess(JsonRtn jsonRtn) { if (jsonRtn == null) { return false; } String errCode = jsonRtn.getErrCode(); if (StringUtils.isEmpty(errCode) || StringUtils.equals(WECHAT_JSON_RTN_SUCCESS_CODE, errCode)) { return true; } return false; }",
+        "label": 0
+    },
+    {
+        "code": "public static Object unmarshal(String message, Class<?> childClass) { try { Class<?>[] reverseAndToArray = Iterables.toArray(Lists.reverse(getAllSuperTypes(childClass)), Class.class); JAXBContext jaxbCtx = JAXBContext.newInstance(reverseAndToArray); Unmarshaller unmarshaller = jaxbCtx.createUnmarshaller(); return unmarshaller.unmarshal(new StringReader(message)); } catch (Exception e) { } return null; }",
+        "label": 0
+    },
+    {
+        "code": "public static String marshal(Object object) { if (object == null) { return null; } try { JAXBContext jaxbCtx = JAXBContext.newInstance(object.getClass()); Marshaller marshaller = jaxbCtx.createMarshaller(); marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE); StringWriter sw = new StringWriter(); marshaller.marshal(object, sw); return sw.toString(); } catch (Exception e) { } return null; }",
+        "label": 0
+    },
+    {
+        "code": "private Properties parseFile(File file) throws InvalidDeclarationFileException { Properties properties = new Properties(); InputStream is = null; try { is = new FileInputStream(file); properties.load(is); } catch (Exception e) { throw new InvalidDeclarationFileException(String.format(\"Error reading declaration file %s\", file.getAbsoluteFile()), e); } finally { if (is != null) { try { is.close(); } catch (IOException e) { LOG.error(\"IOException thrown while trying to close the declaration file.\", e); } } } if (!properties.containsKey(Constants.ID)) { throw new InvalidDeclarationFileException(String.format(\"File %s is not a correct declaration, needs to contains an id property\", file.getAbsoluteFile())); } return properties; }",
+        "label": 1
+    },
+    {
+        "code": "private D createAndRegisterDeclaration(Map<String, Object> metadata) { D declaration; if (klass.equals(ImportDeclaration.class)) { declaration = (D) ImportDeclarationBuilder.fromMetadata(metadata).build(); } else if (klass.equals(ExportDeclaration.class)) { declaration = (D) ExportDeclarationBuilder.fromMetadata(metadata).build(); } else { throw new IllegalStateException(\"\"); } declarationRegistrationManager.registerDeclaration(declaration); return declaration; }",
+        "label": 0
+    },
+    {
+        "code": "void start(String monitoredDirectory, Long pollingTime) { this.monitoredDirectory = monitoredDirectory; String deployerKlassName; if (klass.equals(ImportDeclaration.class)) { deployerKlassName = ImporterDeployer.class.getName(); } else if (klass.equals(ExportDeclaration.class)) { deployerKlassName = ExporterDeployer.class.getName(); } else { throw new IllegalStateException(\"\"); } this.dm = new DirectoryMonitor(monitoredDirectory, pollingTime, deployerKlassName); try { dm.start(getBundleContext()); } catch (DirectoryMonitoringException e) { LOG.error(\"Failed to start \" + DirectoryMonitor.class.getName() + \" for the directory \" + monitoredDirectory + \" and polling time \" + pollingTime.toString(), e); } }",
+        "label": 0
+    },
+    {
+        "code": "void stop() { try { dm.stop(getBundleContext()); } catch (DirectoryMonitoringException e) { LOG.error(\"Failed to stop \" + DirectoryMonitor.class.getName() + \" for the directory \" + monitoredDirectory, e); } declarationsFiles.clear(); declarationRegistrationManager.unregisterAll(); }",
+        "label": 0
+    },
+    {
+        "code": "public static double calculateBoundedness(double D, int N, double timelag, double confRadius){ double r = confRadius; double cov_area = a(N)*D*timelag; double res = cov_area/(4*r*r); return res; }",
+        "label": 0
+    },
+    {
+        "code": "public static double getRadiusToBoundedness(double D, int N, double timelag, double B){ double cov_area = a(N)*D*timelag; double radius = Math.sqrt(cov_area/(4*B)); return radius; }",
+        "label": 0
+    },
+    {
+        "code": "@ArgumentsChecked @Throws(IllegalNullArgumentException.class) public static byte checkByte(@Nonnull final Number number) { Check.notNull(number, \"number\"); if (!isInByteRange(number)) { throw new IllegalNumberRangeException(number.toString(), BYTE_MIN, BYTE_MAX); } return number.byteValue(); }",
+        "label": 0
+    },
+    {
+        "code": "@ArgumentsChecked @Throws(IllegalNullArgumentException.class) public static double checkDouble(@Nonnull final Number number) { Check.notNull(number, \"number\"); if (!isInDoubleRange(number)) { throw new IllegalNumberRangeException(number.toString(), DOUBLE_MIN, DOUBLE_MAX); } return number.doubleValue(); }",
+        "label": 0
+    },
+    {
+        "code": "@ArgumentsChecked @Throws(IllegalNullArgumentException.class) public static float checkFloat(@Nonnull final Number number) { Check.notNull(number, \"number\"); if (!isInFloatRange(number)) { throw new IllegalNumberRangeException(number.toString(), FLOAT_MIN, FLOAT_MAX); } return number.floatValue(); }",
+        "label": 0
+    },
+    {
+        "code": "@ArgumentsChecked @Throws(IllegalNullArgumentException.class) public static int checkInteger(@Nonnull final Number number) { Check.notNull(number, \"number\"); if (!isInIntegerRange(number)) { throw new IllegalNumberRangeException(number.toString(), INTEGER_MIN, INTEGER_MAX); } return number.intValue(); }",
+        "label": 0
+    },
+    {
+        "code": "@ArgumentsChecked @Throws(IllegalNullArgumentException.class) public static int checkLong(@Nonnull final Number number) { Check.notNull(number, \"number\"); if (!isInLongRange(number)) { throw new IllegalNumberRangeException(number.toString(), LONG_MIN, LONG_MAX); } return number.intValue(); }",
+        "label": 0
+    },
+    {
+        "code": "@ArgumentsChecked @Throws(IllegalNullArgumentException.class) public static short checkShort(@Nonnull final Number number) { Check.notNull(number, \"number\"); if (!isInShortRange(number)) { throw new IllegalNumberRangeException(number.toString(), SHORT_MIN, SHORT_MAX); } return number.shortValue(); }",
+        "label": 0
+    },
+    {
+        "code": "public double estimateExcludedVolumeFraction(){ if(recalculateVolumeFraction){ CentralRandomNumberGenerator r = CentralRandomNumberGenerator.getInstance(); boolean firstRandomDraw = false; if(randomNumbers==null){ randomNumbers = new double[nRandPoints*dimension]; firstRandomDraw = true; } int countCollision = 0; for(int i = 0; i< nRandPoints; i++){ double[] pos = new double[dimension]; for(int j = 0; j < dimension; j++){ if(firstRandomDraw){ randomNumbers[i*dimension + j] = r.nextDouble(); } pos[j] = randomNumbers[i*dimension + j]*size[j]; } if(checkCollision(pos)){ countCollision++; } } fraction = countCollision*1.0/nRandPoints; recalculateVolumeFraction = false; } return fraction; }",
+        "label": 1
+    },
+    {
+        "code": "private void handleMultiInstanceReportResponse(SerialMessage serialMessage, int offset) { logger.trace(\"Process Multi-instance Report\"); int commandClassCode = serialMessage.getMessagePayloadByte(offset); int instances = serialMessage.getMessagePayloadByte(offset + 1); if (instances == 0) { setInstances(1); } else { CommandClass commandClass = CommandClass.getCommandClass(commandClassCode); if (commandClass == null) { logger.error(String.format(\"Unsupported command class 0x%02x\", commandClassCode)); return; } logger.debug(String.format(\"Node %d Requested Command Class = %s (0x%02x)\", this.getNode().getNodeId(), commandClass.getLabel() , commandClassCode)); ZWaveCommandClass zwaveCommandClass = this.getNode().getCommandClass(commandClass); if (zwaveCommandClass == null) { logger.error(String.format(\"Unsupported command class %s (0x%02x)\", commandClass.getLabel(), commandClassCode)); return; } zwaveCommandClass.setInstances(instances); logger.debug(String.format(\"Node %d Instances = %d, number of instances set.\", this.getNode().getNodeId(), instances)); } for (ZWaveCommandClass zwaveCommandClass : this.getNode().getCommandClasses()) if (zwaveCommandClass.getInstances() == 0) return; this.getNode().advanceNodeStage(); }",
+        "label": 0
+    },
+    {
+        "code": "private void handleMultiInstanceEncapResponse( SerialMessage serialMessage, int offset) { logger.trace(\"Process Multi-instance Encapsulation\"); int instance = serialMessage.getMessagePayloadByte(offset); int commandClassCode = serialMessage.getMessagePayloadByte(offset + 1); CommandClass commandClass = CommandClass.getCommandClass(commandClassCode); if (commandClass == null) { logger.error(String.format(\"Unsupported command class 0x%02x\", commandClassCode)); return; } logger.debug(String.format(\"Node %d Requested Command Class = %s (0x%02x)\", this.getNode().getNodeId(), commandClass.getLabel() , commandClassCode)); ZWaveCommandClass zwaveCommandClass = this.getNode().getCommandClass(commandClass); if (zwaveCommandClass == null) { logger.error(String.format(\"Unsupported command class %s (0x%02x)\", commandClass.getLabel(), commandClassCode)); return; } logger.debug(String.format(\"Node %d, Instance = %d, calling handleApplicationCommandRequest.\", this.getNode().getNodeId(), instance)); zwaveCommandClass.handleApplicationCommandRequest(serialMessage, offset+ 3, instance); }",
+        "label": 0
+    },
+    {
+        "code": "private void handleMultiChannelEncapResponse( SerialMessage serialMessage, int offset) { logger.trace(\"Process Multi-channel Encapsulation\"); CommandClass commandClass; ZWaveCommandClass zwaveCommandClass; int endpointId = serialMessage.getMessagePayloadByte(offset); int commandClassCode = serialMessage.getMessagePayloadByte(offset + 2); commandClass = CommandClass.getCommandClass(commandClassCode); if (commandClass == null) { logger.error(String.format(\"Unsupported command class 0x%02x\", commandClassCode)); return; } logger.debug(String.format(\"Node %d Requested Command Class = %s (0x%02x)\", this.getNode().getNodeId(), commandClass.getLabel() , commandClassCode)); ZWaveEndpoint endpoint = this.endpoints.get(endpointId); if (endpoint == null){ logger.error(\"Endpoint {} not found on node {}. Cannot set command classes.\", endpoint, this.getNode().getNodeId()); return; } zwaveCommandClass = endpoint.getCommandClass(commandClass); if (zwaveCommandClass == null) { logger.warn(String.format(\"CommandClass %s (0x%02x) not implemented by endpoint %d, fallback to main node.\", commandClass.getLabel(), commandClassCode, endpointId)); zwaveCommandClass = this.getNode().getCommandClass(commandClass); } if (zwaveCommandClass == null) { logger.error(String.format(\"CommandClass %s (0x%02x) not implemented by node %d.\", commandClass.getLabel(), commandClassCode, this.getNode().getNodeId())); return; } logger.debug(String.format(\"Node %d, Endpoint = %d, calling handleApplicationCommandRequest.\", this.getNode().getNodeId(), endpointId)); zwaveCommandClass.handleApplicationCommandRequest(serialMessage, offset + 3, endpointId); }",
+        "label": 0
+    },
+    {
+        "code": "public SerialMessage getMultiInstanceGetMessage(CommandClass commandClass) { logger.debug(\"Creating new message for application command MULTI_INSTANCE_GET for node {} and command class {}\", this.getNode().getNodeId(), commandClass.getLabel()); SerialMessage result = new SerialMessage(this.getNode().getNodeId(), SerialMessageClass.SendData, SerialMessageType.Request, SerialMessageClass.ApplicationCommandHandler, SerialMessagePriority.Get); byte[] newPayload = { (byte) this.getNode().getNodeId(), 3, (byte) getCommandClass().getKey(), (byte) MULTI_INSTANCE_GET, (byte) commandClass.getKey() }; result.setMessagePayload(newPayload); return result; }",
+        "label": 0
+    },
+    {
+        "code": "public SerialMessage getMultiChannelCapabilityGetMessage(ZWaveEndpoint endpoint) { logger.debug(\"Creating new message for application command MULTI_CHANNEL_CAPABILITY_GET for node {} and endpoint {}\", this.getNode().getNodeId(), endpoint.getEndpointId()); SerialMessage result = new SerialMessage(this.getNode().getNodeId(), SerialMessageClass.SendData, SerialMessageType.Request, SerialMessageClass.ApplicationCommandHandler, SerialMessagePriority.Get); byte[] newPayload = { (byte) this.getNode().getNodeId(), 3, (byte) getCommandClass().getKey(), (byte) MULTI_CHANNEL_CAPABILITY_GET, (byte) endpoint.getEndpointId() }; result.setMessagePayload(newPayload); return result; }",
+        "label": 0
+    },
+    {
+        "code": "public synchronized void createImportationDeclaration(String deviceId, String deviceType, String deviceSubType) { Map<String, Object> metadata = new HashMap<String, Object>(); metadata.put(Constants.DEVICE_ID, deviceId); metadata.put(Constants.DEVICE_TYPE, deviceType); metadata.put(Constants.DEVICE_TYPE_SUB, deviceSubType); metadata.put(\"scope\", \"generic\"); ImportDeclaration declaration = ImportDeclarationBuilder.fromMetadata(metadata).build(); importDeclarations.put(deviceId, declaration); registerImportDeclaration(declaration); }",
+        "label": 0
+    },
+    {
+        "code": "public static Dimension getDimension(File videoFile) throws IOException { try (FileInputStream fis = new FileInputStream(videoFile)) { return getDimension(fis, new AtomicReference<ByteBuffer>()); } }",
+        "label": 1
+    },
+    {
+        "code": "public static String determineAccessorName(@Nonnull final AccessorPrefix prefix, @Nonnull final String fieldName) { Check.notNull(prefix, \"prefix\"); Check.notEmpty(fieldName, \"fieldName\"); final Matcher m = PATTERN.matcher(fieldName); Check.stateIsTrue(m.find(), \"passed field name '%s' is not applicable\", fieldName); final String name = m.group(); return prefix.getPrefix() + name.substring(0, 1).toUpperCase() + name.substring(1); }",
+        "label": 0
+    },
+    {
+        "code": "public static String determineMutatorName(@Nonnull final String fieldName) { Check.notEmpty(fieldName, \"fieldName\"); final Matcher m = PATTERN.matcher(fieldName); Check.stateIsTrue(m.find(), \"passed field name '%s' is not applicable\", fieldName); final String name = m.group(); return METHOD_SET_PREFIX + name.substring(0, 1).toUpperCase() + name.substring(1); }",
+        "label": 0
+    },
+    {
+        "code": "@Nonnull public static XMLDSigValidationResult createReferenceErrors (@Nonnull @Nonempty final List <Integer> aInvalidReferences) { return new XMLDSigValidationResult (aInvalidReferences); }",
+        "label": 0
+    },
+    {
+        "code": "public static Chart getTrajectoryChart(String title, Trajectory t){ if(t.getDimension()==2){ double[] xData = new double[t.size()]; double[] yData = new double[t.size()]; for(int i = 0; i < t.size(); i++){ xData[i] = t.get(i).x; yData[i] = t.get(i).y; } Chart chart = QuickChart.getChart(title, \"X\", \"Y\", \"y(x)\", xData, yData); return chart; } return null; }",
+        "label": 0
+    },
+    {
+        "code": "public static Chart getMSDLineChart(Trajectory t, int lagMin, int lagMax, AbstractMeanSquaredDisplacmentEvaluator msdeval) { double[] xData = new double[lagMax - lagMin + 1]; double[] yData = new double[lagMax - lagMin + 1]; msdeval.setTrajectory(t); msdeval.setTimelag(lagMin); for (int i = lagMin; i < lagMax + 1; i++) { msdeval.setTimelag(i); double msdhelp = msdeval.evaluate()[0]; xData[i - lagMin] = i; yData[i - lagMin] = msdhelp; } Chart chart = QuickChart.getChart(\"MSD Line\", \"LAG\", \"MSD\", \"MSD\", xData, yData); return chart; }",
+        "label": 0
+    },
+    {
+        "code": "public static Chart getMSDLineWithConfinedModelChart(Trajectory t, int lagMin, int lagMax, double timelag, double a, double b, double c, double d) { double[] xData = new double[lagMax - lagMin + 1]; double[] yData = new double[lagMax - lagMin + 1]; double[] modelData = new double[lagMax - lagMin + 1]; MeanSquaredDisplacmentFeature msdeval = new MeanSquaredDisplacmentFeature( t, lagMin); msdeval.setTrajectory(t); msdeval.setTimelag(lagMin); for (int i = lagMin; i < lagMax + 1; i++) { msdeval.setTimelag(i); double msdhelp = msdeval.evaluate()[0]; xData[i - lagMin] = i; yData[i - lagMin] = msdhelp; modelData[i - lagMin] = a * (1 - b * Math.exp((-4 * d) * ((i * timelag) / a) * c)); } Chart chart = QuickChart.getChart(\"MSD Line\", \"LAG\", \"MSD\", \"MSD\", xData, yData); if(Math.abs(1-b)<0.00001 && Math.abs(1-a)<0.00001){ chart.addSeries(\"y=a*(1-exp(-4*D*t/a))\", xData, modelData); }else{ chart.addSeries(\"y=a*(1-b*exp(-4*c*D*t/a))\", xData, modelData); } return chart; }",
+        "label": 0
+    },
+    {
+        "code": "public static Chart getMSDLineWithPowerModelChart(Trajectory t, int lagMin, int lagMax, double timelag, double a, double D) { double[] xData = new double[lagMax - lagMin + 1]; double[] yData = new double[lagMax - lagMin + 1]; double[] modelData = new double[lagMax - lagMin + 1]; MeanSquaredDisplacmentFeature msdeval = new MeanSquaredDisplacmentFeature( t, lagMin); msdeval.setTrajectory(t); msdeval.setTimelag(lagMin); for (int i = lagMin; i < lagMax + 1; i++) { msdeval.setTimelag(i); double msdhelp = msdeval.evaluate()[0]; xData[i - lagMin] = i; yData[i - lagMin] = msdhelp; modelData[i - lagMin] = 4 * D * Math.pow(i * timelag, a); } Chart chart = QuickChart.getChart(\"MSD Line\", \"LAG\", \"MSD\", \"MSD\", xData, yData); chart.addSeries(\"y=4*D*t^alpha\", xData, modelData); return chart; }",
+        "label": 0
+    },
+    {
+        "code": "public static Chart getMSDLineWithFreeModelChart(Trajectory t, int lagMin, int lagMax, double timelag, double diffusionCoefficient, double intercept) { double[] xData = new double[lagMax - lagMin + 1]; double[] yData = new double[lagMax - lagMin + 1]; double[] modelData = new double[lagMax - lagMin + 1]; MeanSquaredDisplacmentFeature msdeval = new MeanSquaredDisplacmentFeature( t, lagMin); msdeval.setTrajectory(t); msdeval.setTimelag(lagMin); for (int i = lagMin; i < lagMax + 1; i++) { msdeval.setTimelag(i); double msdhelp = msdeval.evaluate()[0]; xData[i - lagMin] = i; yData[i - lagMin] = msdhelp; modelData[i - lagMin] = intercept + 4*diffusionCoefficient*(i*timelag); } Chart chart = QuickChart.getChart(\"MSD Line\", \"LAG\", \"MSD\", \"MSD\", xData, yData); chart.addSeries(\"y=4*D*t + a\", xData, modelData); return chart; }",
+        "label": 0
+    },
+    {
+        "code": "public static Chart getMSDLineWithActiveTransportModelChart(Trajectory t, int lagMin, int lagMax, double timelag, double diffusionCoefficient, double velocity) { double[] xData = new double[lagMax - lagMin + 1]; double[] yData = new double[lagMax - lagMin + 1]; double[] modelData = new double[lagMax - lagMin + 1]; MeanSquaredDisplacmentFeature msdeval = new MeanSquaredDisplacmentFeature( t, lagMin); msdeval.setTrajectory(t); msdeval.setTimelag(lagMin); for (int i = lagMin; i < lagMax + 1; i++) { msdeval.setTimelag(i); double msdhelp = msdeval.evaluate()[0]; xData[i - lagMin] = i; yData[i - lagMin] = msdhelp; modelData[i - lagMin] = Math.pow(velocity*(i*timelag), 2) + 4*diffusionCoefficient*(i*timelag); } Chart chart = QuickChart.getChart(\"MSD Line\", \"LAG\", \"MSD\", \"MSD\", xData, yData); chart.addSeries(\"y=4*D*t + (v*t)^2\", xData, modelData); return chart; }",
+        "label": 0
+    },
+    {
+        "code": "public static Chart getMSDLineChart(Trajectory t, int lagMin, int lagMax) { return getMSDLineChart(t, lagMin, lagMax, new MeanSquaredDisplacmentFeature(t, lagMin)); }",
+        "label": 0
+    },
+    {
+        "code": "public static void plotCharts(List<Chart> charts){ int numRows =1; int numCols =1; if(charts.size()>1){ numRows = (int) Math.ceil(charts.size()/2.0); numCols = 2; } final JFrame frame = new JFrame(\"\"); frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE); frame.getContentPane().setLayout(new GridLayout(numRows, numCols)); for (Chart chart : charts) { if (chart != null) { JPanel chartPanel = new XChartPanel(chart); frame.add(chartPanel); } else { JPanel chartPanel = new JPanel(); frame.getContentPane().add(chartPanel); } } frame.pack(); frame.setVisible(true); }",
+        "label": 0
+    },
+    {
+        "code": "@Nullable public Import find(@Nonnull final String typeName) { Check.notEmpty(typeName, \"typeName\"); Import ret = null; final Type type = new Type(typeName); for (final Import imp : imports) { if (imp.getType().getName().equals(type.getName())) { ret = imp; break; } } if (ret == null) { final Type javaLangType = Type.evaluateJavaLangType(typeName); if (javaLangType != null) { ret = Import.of(javaLangType); } } return ret; }",
+        "label": 0
+    },
+    {
+        "code": "private void query(String zipcode) { String qry = URLEncoder.encode(\"SELECT woeid FROM geo.places WHERE text=\" + zipcode + \" LIMIT 1\"); URL url; try { url = new URL(\"http: URLConnection conn = url.openConnection(); InputStream content = conn.getInputStream(); parseResponse(content); } catch (MalformedURLException e) { e.printStackTrace(); } catch (IOException e) { e.printStackTrace(); } }",
+        "label": 0
+    },
+    {
+        "code": "private void parseResponse(InputStream inputStream) { try { DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance(); DocumentBuilder dBuilder = dbFactory.newDocumentBuilder(); Document doc = dBuilder.parse(inputStream); doc.getDocumentElement().normalize(); NodeList nodes = doc.getElementsByTagName(\"place\"); for (int i = 0; i < nodes.getLength(); i++) { Node node = nodes.item(i); if (node.getNodeType() == Node.ELEMENT_NODE) { Element element = (Element) node; _woeid = getValue(\"woeid\", element); } } } catch (Exception ex) { ex.printStackTrace(); } }",
+        "label": 0
+    },
+    {
+        "code": "@Nonnull public static InterfaceAnalysis analyze(@Nonnull final String code) { Check.notNull(code, \"code\"); final CompilationUnit unit = Check.notNull(SourceCodeReader.parse(code), \"compilationUnit\"); final List<TypeDeclaration> types = Check.notEmpty(unit.getTypes(), \"typeDeclarations\"); Check.stateIsTrue(types.size() == 1, \"only one interface declaration per analysis is supported\"); final ClassOrInterfaceDeclaration type = (ClassOrInterfaceDeclaration) types.get(0); final Imports imports = SourceCodeReader.findImports(unit.getImports()); final Package pkg = unit.getPackage() != null ? new Package(unit.getPackage().getName().toString()) : Package.UNDEFINED; final List<Annotation> annotations = SourceCodeReader.findAnnotations(type.getAnnotations(), imports); final List<Method> methods = SourceCodeReader.findMethods(type.getMembers(), imports); Check.stateIsTrue(!hasPossibleMutatingMethods(methods), \"The passed interface '%s' seems to have mutating methods\", type.getName()); final List<Interface> extendsInterfaces = SourceCodeReader.findExtends(type); final String interfaceName = type.getName(); return new ImmutableInterfaceAnalysis(annotations, extendsInterfaces, imports.asList(), interfaceName, methods, pkg); }",
+        "label": 0
+    },
+    {
+        "code": "public Integer next() { for(int i = currentIndex; i < t.size(); i++){ if(i+timelag>=t.size()){ return null; } if((t.get(i) != null) && (t.get(i+timelag) != null)){ if(overlap){ currentIndex = i+1; } else{ currentIndex = i+timelag; } return i; } } return null; }",
+        "label": 0
+    },
+    {
+        "code": "private static boolean matches(@Nonnull final Pattern pattern, @Nonnull final CharSequence chars) { return pattern.matcher(chars).matches(); }",
+        "label": 0
+    },
+    {
+        "code": "@ArgumentsChecked @Throws({ IllegalNullArgumentException.class, IllegalNumberArgumentException.class }) public static void isNumber(final boolean condition, @Nonnull final String value) { if (condition) { Check.isNumber(value); } }",
+        "label": 0
+    },
+    {
+        "code": "@Override public Trajectory subList(int fromIndex, int toIndex) { Trajectory t = new Trajectory(dimension); for(int i = fromIndex; i < toIndex; i++){ t.add(this.get(i)); } return t; }",
+        "label": 0
+    },
+    {
+        "code": "public double[][] getPositionsAsArray(){ double[][] posAsArr = new double[size()][3]; for(int i = 0; i < size(); i++){ if(get(i)!=null){ posAsArr[i][0] = get(i).x; posAsArr[i][1] = get(i).y; posAsArr[i][2] = get(i).z; } else{ posAsArr[i] = null; } } return posAsArr; }",
+        "label": 0
+    },
+    {
+        "code": "public void scale(double v){ for(int i = 0; i < this.size(); i++){ this.get(i).scale(v);; } }",
+        "label": 0
+    },
+    {
+        "code": "public static int randomIntBetween(int min, int max) { Random rand = new Random(); return rand.nextInt((max - min) + 1) + min; }",
+        "label": 1
+    },
+    {
+        "code": "public static long randomLongBetween(long min, long max) { Random rand = new Random(); return min + (long) (rand.nextDouble() * (max - min)); }",
+        "label": 1
+    }
+    
+]

@@ -1,0 +1,3 @@
+[33mUnsafe Lines of Code with Vulnerability Types:[0m
+[31msubprocess.call(user_input, shell=True) - Command Injection[0m
+[31meval("print('Hello, world!')") - Dynamic Code Execution[0m

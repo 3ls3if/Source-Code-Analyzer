@@ -1,0 +1,1004 @@
+[
+    {
+        "code": "def split_phylogeny(p, level=\"s\"): \"\"\" Return either the full or truncated version of a QIIME-formatted taxonomy string. :type p: str :param p: A QIIME-formatted taxonomy string: k__Foo; p__Bar; ... :type level: str :param level: The different level of identification are kingdom (k), phylum (p), class (c),order (o), family (f), genus (g) and species (s). If level is not provided, the default level of identification is species. :rtype: str :return: A QIIME-formatted taxonomy string up to the classification given by param level. \"\"\" level = level+\"__\" result = p.split(level) return result[0]+level+result[1].split(\";\")[0]",
+        "label": 0
+    },
+    {
+        "code": "def ensure_dir(d): \"\"\" Check to make sure the supplied directory path does not exist, if so, create it. The method catches OSError exceptions and returns a descriptive message instead of re-raising the error. :type d: str :param d: It is the full path to a directory. :return: Does not return anything, but creates a directory path if it doesn't exist already. \"\"\" if not os.path.exists(d): try: os.makedirs(d) except OSError as oe: if os.errno == errno.ENOENT: msg = twdd(\"\"\"One or more directories in the path ({}) do not exist. If you are specifying a new directory for output, please ensure all other directories in the path currently exist.\"\"\") return msg.format(d) else: msg = twdd(\"\"\"An error occurred trying to create the output directory ({}) with message: {}\"\"\") return msg.format(d, oe.strerror)",
+        "label": 0
+    },
+    {
+        "code": "def file_handle(fnh, mode=\"rU\"): \"\"\" Takes either a file path or an open file handle, checks validity and returns an open file handle or raises an appropriate Exception. :type fnh: str :param fnh: It is the full path to a file, or open file handle :type mode: str :param mode: The way in which this file will be used, for example to read or write or both. By default, file will be opened in rU mode. :return: Returns an opened file for appropriate usage. \"\"\" handle = None if isinstance(fnh, file): if fnh.closed: raise ValueError(\"Input file is closed.\") handle = fnh elif isinstance(fnh, str): handle = open(fnh, mode) return handle",
+        "label": 1
+    },
+    {
+        "code": "def gather_categories(imap, header, categories=None): \"\"\" Find the user specified categories in the map and create a dictionary to contain the relevant data for each type within the categories. Multiple categories will have their types combined such that each possible combination will have its own entry in the dictionary. :type imap: dict :param imap: The input mapping file data keyed by SampleID :type header: list :param header: The header line from the input mapping file. This will be searched for the user-specified categories :type categories: list :param categories: The list of user-specified category column name from mapping file :rtype: dict :return: A sorted dictionary keyed on the combinations of all the types found within the user-specified categories. Each entry will contain an empty DataCategory namedtuple. If no categories are specified, a single entry with the key 'default' will be returned \"\"\" if categories is None: return {\"default\": DataCategory(set(imap.keys()), {})} cat_ids = [header.index(cat) for cat in categories if cat in header and \"=\" not in cat] table = OrderedDict() conditions = defaultdict(set) for i, cat in enumerate(categories): if \"=\" in cat and cat.split(\"=\")[0] in header: cat_name = header[header.index(cat.split(\"=\")[0])] conditions[cat_name].add(cat.split(\"=\")[1]) if not cat_ids and not conditions: return {\"default\": DataCategory(set(imap.keys()), {})} if cat_ids and not conditions: for sid, row in imap.items(): cat_name = \"_\".join([row[cid] for cid in cat_ids]) if cat_name not in table: table[cat_name] = DataCategory(set(), {}) table[cat_name].sids.add(sid) return table cond_ids = set() for k in conditions: try: cond_ids.add(header.index(k)) except ValueError: continue idx_to_test = set(cat_ids).union(cond_ids) for sid, row in imap.items(): if all([row[header.index(c)] in conditions[c] for c in conditions]): key = \"_\".join([row[idx] for idx in idx_to_test]) try: assert key in table.keys() except AssertionError: table[key] = DataCategory(set(), {}) table[key].sids.add(sid) try: assert len(table) > 0 except AssertionError: return {\"default\": DataCategory(set(imap.keys()), {})} else: return table",
+        "label": 0
+    },
+    {
+        "code": "def parse_unifrac(unifracFN): \"\"\" Parses the unifrac results file into a dictionary :type unifracFN: str :param unifracFN: The path to the unifrac results file :rtype: dict :return: A dictionary with keys: 'pcd' (principle coordinates data) which is a dictionary of the data keyed by sample ID, 'eigvals' (eigenvalues), and 'varexp' (variation explained) \"\"\" with open(unifracFN, \"rU\") as uF: first = uF.next().split(\"\\t\") lines = [line.strip() for line in uF] unifrac = {\"pcd\": OrderedDict(), \"eigvals\": [], \"varexp\": []} if first[0] == \"pc vector number\": return parse_unifrac_v1_8(unifrac, lines) elif first[0] == \"Eigvals\": return parse_unifrac_v1_9(unifrac, lines) else: raise ValueError(\"File format not supported/recognized. Please check input \" \"unifrac file.\")",
+        "label": 1
+    },
+    {
+        "code": "def parse_unifrac_v1_8(unifrac, file_data): \"\"\" Function to parse data from older version of unifrac file obtained from Qiime version 1.8 and earlier. :type unifrac: dict :param unifracFN: The path to the unifrac results file :type file_data: list :param file_data: Unifrac data lines after stripping whitespace characters. \"\"\" for line in file_data: if line == \"\": break line = line.split(\"\\t\") unifrac[\"pcd\"][line[0]] = [float(e) for e in line[1:]] unifrac[\"eigvals\"] = [float(entry) for entry in file_data[-2].split(\"\\t\")[1:]] unifrac[\"varexp\"] = [float(entry) for entry in file_data[-1].split(\"\\t\")[1:]] return unifrac",
+        "label": 0
+    },
+    {
+        "code": "def parse_unifrac_v1_9(unifrac, file_data): \"\"\" Function to parse data from newer version of unifrac file obtained from Qiime version 1.9 and later. :type unifracFN: str :param unifracFN: The path to the unifrac results file :type file_data: list :param file_data: Unifrac data lines after stripping whitespace characters. \"\"\" unifrac[\"eigvals\"] = [float(entry) for entry in file_data[0].split(\"\\t\")] unifrac[\"varexp\"] = [float(entry)*100 for entry in file_data[3].split(\"\\t\")] for line in file_data[8:]: if line == \"\": break line = line.split(\"\\t\") unifrac[\"pcd\"][line[0]] = [float(e) for e in line[1:]] return unifrac",
+        "label": 0
+    },
+    {
+        "code": "def color_mapping(sample_map, header, group_column, color_column=None): \"\"\" Determine color-category mapping. If color_column was specified, then map the category names to color values. Otherwise, use the palettable colors to automatically generate a set of colors for the group values. :type sample_map: dict :param unifracFN: Map associating each line of the mapping file with the appropriate sample ID (each value of the map also contains the sample ID) :type header: tuple :param A tuple of header line for mapping file :type group_column: str :param group_column: String denoting the column name for sample groups. :type color_column: str :param color_column: String denoting the column name for sample colors. :type return: dict :param return: {SampleID: Color} \"\"\" group_colors = OrderedDict() group_gather = gather_categories(sample_map, header, [group_column]) if color_column is not None: color_gather = gather_categories(sample_map, header, [color_column]) for group in group_gather: for color in color_gather: if group_gather[group].sids.intersection(color_gather[color].sids): group_colors[group] = color else: bcolors = itertools.cycle(Set3_12.hex_colors) for group in group_gather: group_colors[group] = bcolors.next() return group_colors",
+        "label": 0
+    },
+    {
+        "code": "def rev_c(read): \"\"\" return reverse completment of read \"\"\" rc = [] rc_nucs = {'A':'T', 'T':'A', 'G':'C', 'C':'G', 'N':'N'} for base in read: rc.extend(rc_nucs[base.upper()]) return rc[::-1]",
+        "label": 0
+    },
+    {
+        "code": "def shuffle_genome(genome, cat, fraction = float(100), plot = True, \\ alpha = 0.1, beta = 100000, \\ min_length = 1000, max_length = 200000): \"\"\" randomly shuffle genome \"\"\" header = '>randomized_%s' % (genome.name) sequence = list(''.join([i[1] for i in parse_fasta(genome)])) length = len(sequence) shuffled = [] while sequence is not False: s = int(random.gammavariate(alpha, beta)) if s <= min_length or s >= max_length: continue if len(sequence) < s: seq = sequence[0:] else: seq = sequence[0:s] sequence = sequence[s:] shuffled.append(''.join(seq)) if sequence == []: break random.shuffle(shuffled) if fraction == float(100): subset = shuffled else: max_pieces = int(length * fraction/100) subset, total = [], 0 for fragment in shuffled: length = len(fragment) if total + length <= max_pieces: subset.append(fragment) total += length else: diff = max_pieces - total subset.append(fragment[0:diff]) break if cat is True: yield [header, ''.join(subset)] else: for i, seq in enumerate(subset): yield ['%s fragment:%s' % (header, i), seq]",
+        "label": 0
+    },
+    {
+        "code": "def _prune(self, fit, p_max): \"\"\" If the fit contains statistically insignificant parameters, remove them. Returns a pruned fit where all parameters have p-values of the t-statistic below p_max Parameters ---------- fit: fm.ols fit object Can contain insignificant parameters p_max : float Maximum allowed probability of the t-statistic Returns ------- fit: fm.ols fit object Won't contain any insignificant parameters \"\"\" def remove_from_model_desc(x, model_desc): \"\"\" Return a model_desc without x \"\"\" rhs_termlist = [] for t in model_desc.rhs_termlist: if not t.factors: rhs_termlist.append(t) elif not x == t.factors[0]._varname: rhs_termlist.append(t) md = ModelDesc(model_desc.lhs_termlist, rhs_termlist) return md corrected_model_desc = ModelDesc(fit.model.formula.lhs_termlist[:], fit.model.formula.rhs_termlist[:]) pars_to_prune = fit.pvalues.where(fit.pvalues > p_max).dropna().index.tolist() try: pars_to_prune.remove('Intercept') except: pass while pars_to_prune: corrected_model_desc = remove_from_model_desc(pars_to_prune[0], corrected_model_desc) fit = fm.ols(corrected_model_desc, data=self.df).fit() pars_to_prune = fit.pvalues.where(fit.pvalues > p_max).dropna().index.tolist() try: pars_to_prune.remove('Intercept') except: pass return fit",
+        "label": 0
+    },
+    {
+        "code": "def find_best_rsquared(list_of_fits): \"\"\"Return the best fit, based on rsquared\"\"\" res = sorted(list_of_fits, key=lambda x: x.rsquared) return res[-1]",
+        "label": 0
+    },
+    {
+        "code": "def _predict(self, fit, df): \"\"\" Return a df with predictions and confidence interval Notes ----- The df will contain the following columns: - 'predicted': the model output - 'interval_u', 'interval_l': upper and lower confidence bounds. The result will depend on the following attributes of self: confint : float (default=0.95) Confidence level for two-sided hypothesis allow_negative_predictions : bool (default=True) If False, correct negative predictions to zero (typically for energy consumption predictions) Parameters ---------- fit : Statsmodels fit df : pandas DataFrame or None (default) If None, use self.df Returns ------- df_res : pandas DataFrame Copy of df with additional columns 'predicted', 'interval_u' and 'interval_l' \"\"\" df_res = df.copy() if 'Intercept' in fit.model.exog_names: df_res['Intercept'] = 1.0 df_res['predicted'] = fit.predict(df_res) if not self.allow_negative_predictions: df_res.loc[df_res['predicted'] < 0, 'predicted'] = 0 prstd, interval_l, interval_u = wls_prediction_std(fit, df_res[fit.model.exog_names], alpha=1 - self.confint) df_res['interval_l'] = interval_l df_res['interval_u'] = interval_u if 'Intercept' in df_res: df_res.drop(labels=['Intercept'], axis=1, inplace=True) return df_res",
+        "label": 0
+    },
+    {
+        "code": "def relative_abundance(biomf, sampleIDs=None): \"\"\" Calculate the relative abundance of each OTUID in a Sample. :type biomf: A BIOM file. :param biomf: OTU table format. :type sampleIDs: list :param sampleIDs: A list of sample id's from BIOM format OTU table. :rtype: dict :return: Returns a keyed on SampleIDs, and the values are dictionaries keyed on OTUID's and their values represent the relative abundance of that OTUID in that SampleID. \"\"\" if sampleIDs is None: sampleIDs = biomf.ids() else: try: for sid in sampleIDs: assert sid in biomf.ids() except AssertionError: raise ValueError( \"\\nError while calculating relative abundances: The sampleIDs provided do\" \" not match the sampleIDs in biom file. Please double check the sampleIDs\" \" provided.\\n\") otuIDs = biomf.ids(axis=\"observation\") norm_biomf = biomf.norm(inplace=False) return {sample: {otuID: norm_biomf.get_value_by_ids(otuID, sample) for otuID in otuIDs} for sample in sampleIDs}",
+        "label": 0
+    },
+    {
+        "code": "def mean_otu_pct_abundance(ra, otuIDs): \"\"\" Calculate the mean OTU abundance percentage. :type ra: Dict :param ra: 'ra' refers to a dictionary keyed on SampleIDs, and the values are dictionaries keyed on OTUID's and their values represent the relative abundance of that OTUID in that SampleID. 'ra' is the output of relative_abundance() function. :type otuIDs: List :param otuIDs: A list of OTUID's for which the percentage abundance needs to be measured. :rtype: dict :return: A dictionary of OTUID and their percent relative abundance as key/value pair. \"\"\" sids = ra.keys() otumeans = defaultdict(int) for oid in otuIDs: otumeans[oid] = sum([ra[sid][oid] for sid in sids if oid in ra[sid]]) / len(sids) * 100 return otumeans",
+        "label": 0
+    },
+    {
+        "code": "def MRA(biomf, sampleIDs=None, transform=None): \"\"\" Calculate the mean relative abundance percentage. :type biomf: A BIOM file. :param biomf: OTU table format. :type sampleIDs: list :param sampleIDs: A list of sample id's from BIOM format OTU table. :param transform: Mathematical function which is used to transform smax to another format. By default, the function has been set to None. :rtype: dict :return: A dictionary keyed on OTUID's and their mean relative abundance for a given number of sampleIDs. \"\"\" ra = relative_abundance(biomf, sampleIDs) if transform is not None: ra = {sample: {otuID: transform(abd) for otuID, abd in ra[sample].items()} for sample in ra.keys()} otuIDs = biomf.ids(axis=\"observation\") return mean_otu_pct_abundance(ra, otuIDs)",
+        "label": 0
+    },
+    {
+        "code": "def raw_abundance(biomf, sampleIDs=None, sample_abd=True): \"\"\" Calculate the total number of sequences in each OTU or SampleID. :type biomf: A BIOM file. :param biomf: OTU table format. :type sampleIDs: List :param sampleIDs: A list of column id's from BIOM format OTU table. By default, the list has been set to None. :type sample_abd: Boolean :param sample_abd: A boolean operator to provide output for OTUID's or SampleID's. By default, the output will be provided for SampleID's. :rtype: dict :return: Returns a dictionary keyed on either OTUID's or SampleIDs and their respective abundance as values. \"\"\" results = defaultdict(int) if sampleIDs is None: sampleIDs = biomf.ids() else: try: for sid in sampleIDs: assert sid in biomf.ids() except AssertionError: raise ValueError( \"\\nError while calculating raw total abundances: The sampleIDs provided \" \"do not match the sampleIDs in biom file. Please double check the \" \"sampleIDs provided.\\n\") otuIDs = biomf.ids(axis=\"observation\") for sampleID in sampleIDs: for otuID in otuIDs: abd = biomf.get_value_by_ids(otuID, sampleID) if sample_abd: results[sampleID] += abd else: results[otuID] += abd return results",
+        "label": 0
+    },
+    {
+        "code": "def transform_raw_abundance(biomf, fn=math.log10, sampleIDs=None, sample_abd=True): \"\"\" Function to transform the total abundance calculation for each sample ID to another format based on user given transformation function. :type biomf: A BIOM file. :param biomf: OTU table format. :param fn: Mathematical function which is used to transform smax to another format. By default, the function has been given as base 10 logarithm. :rtype: dict :return: Returns a dictionary similar to output of raw_abundance function but with the abundance values modified by the mathematical operation. By default, the operation performed on the abundances is base 10 logarithm. \"\"\" totals = raw_abundance(biomf, sampleIDs, sample_abd) return {sid: fn(abd) for sid, abd in totals.items()}",
+        "label": 0
+    },
+    {
+        "code": "def print_MannWhitneyU(div_calc): \"\"\" Compute the Mann-Whitney U test for unequal group sample sizes. \"\"\" try: x = div_calc.values()[0].values() y = div_calc.values()[1].values() except: return \"Error setting up input arrays for Mann-Whitney U Test. Skipping \"\\ \"significance testing.\" T, p = stats.mannwhitneyu(x, y) print \"\\nMann-Whitney U test statistic:\", T print \"Two-tailed p-value: {}\".format(2 * p)",
+        "label": 0
+    },
+    {
+        "code": "def print_KruskalWallisH(div_calc): \"\"\" Compute the Kruskal-Wallis H-test for independent samples. A typical rule is that each group must have at least 5 measurements. \"\"\" calc = defaultdict(list) try: for k1, v1 in div_calc.iteritems(): for k2, v2 in v1.iteritems(): calc[k1].append(v2) except: return \"Error setting up input arrays for Kruskal-Wallis H-Test. Skipping \"\\ \"significance testing.\" h, p = stats.kruskal(*calc.values()) print \"\\nKruskal-Wallis H-test statistic for {} groups: {}\".format(str(len(div_calc)), h) print \"p-value: {}\".format(p)",
+        "label": 0
+    },
+    {
+        "code": "def handle_program_options(): \"\"\"Parses the given options passed in at the command line.\"\"\" parser = argparse.ArgumentParser(description=\"Calculate the alpha diversity\\ of a set of samples using one or more \\ metrics and output a kernal density \\ estimator-smoothed histogram of the \\ results.\") parser.add_argument(\"-m\", \"--map_file\", help=\"QIIME mapping file.\") parser.add_argument(\"-i\", \"--biom_fp\", help=\"Path to the BIOM table\") parser.add_argument(\"-c\", \"--category\", help=\"Specific category from the mapping file.\") parser.add_argument(\"-d\", \"--diversity\", default=[\"shannon\"], nargs=\"+\", help=\"The alpha diversity metric. Default \\ value is 'shannon', which will calculate the Shannon\\ entropy. Multiple metrics can be specified (space separated).\\ The full list of metrics is available at:\\ http: Beta diversity metrics will be supported in the future.\") parser.add_argument(\"--x_label\", default=[None], nargs=\"+\", help=\"The name of the diversity metric to be displayed on the\\ plot as the X-axis label. If multiple metrics are specified,\\ then multiple entries for the X-axis label should be given.\") parser.add_argument(\"--color_by\", help=\"A column name in the mapping file containing\\ hexadecimal ( be used to color the groups. Each sample ID must\\ have a color entry.\") parser.add_argument(\"--plot_title\", default=\"\", help=\"A descriptive title that will appear at the top \\ of the output plot. Surround with quotes if there are\\ spaces in the title.\") parser.add_argument(\"-o\", \"--output_dir\", default=\".\", help=\"The directory plots will be saved to.\") parser.add_argument(\"--image_type\", default=\"png\", help=\"The type of image to save: png, svg, pdf, eps, etc...\") parser.add_argument(\"--save_calculations\", help=\"Path and name of text file to store the calculated \" \"diversity metrics.\") parser.add_argument(\"--suppress_stats\", action=\"store_true\", help=\"Do not display \" \"significance testing results which are shown by default.\") parser.add_argument(\"--show_available_metrics\", action=\"store_true\", help=\"Supply this parameter to see which alpha diversity metrics \" \" are available for usage. No calculations will be performed\" \" if this parameter is provided.\") return parser.parse_args()",
+        "label": 0
+    },
+    {
+        "code": "def blastdb(fasta, maxfile = 10000000): \"\"\" make blast db \"\"\" db = fasta.rsplit('.', 1)[0] type = check_type(fasta) if type == 'nucl': type = ['nhr', type] else: type = ['phr', type] if os.path.exists('%s.%s' % (db, type[0])) is False \\ and os.path.exists('%s.00.%s' % (db, type[0])) is False: print(' os.system('makeblastdb \\ -in %s -out %s -dbtype %s -max_file_sz %s >> log.txt' \\ % (fasta, db, type[1], maxfile)) else: print(' return db",
+        "label": 1
+    },
+    {
+        "code": "def usearchdb(fasta, alignment = 'local', usearch_loc = 'usearch'): \"\"\" make usearch db \"\"\" if '.udb' in fasta: print(' return fasta type = check_type(fasta) db = '%s.%s.udb' % (fasta.rsplit('.', 1)[0], type) if os.path.exists(db) is False: print(' if alignment == 'local': os.system('%s -makeudb_ublast %s -output %s >> log.txt' % (usearch_loc, fasta, db)) elif alignment == 'global': os.system('%s -makeudb_usearch %s -output %s >> log.txt' % (usearch_loc, fasta, db)) else: print(' return db",
+        "label": 1
+    },
+    {
+        "code": "def _pp(dict_data): \"\"\"Pretty print.\"\"\" for key, val in dict_data.items(): print('{0:<11}: {1}'.format(key, val))",
+        "label": 0
+    },
+    {
+        "code": "def print_licences(params, metadata): \"\"\"Print licenses. :param argparse.Namespace params: parameter :param bootstrap_py.classifier.Classifiers metadata: package metadata \"\"\" if hasattr(params, 'licenses'): if params.licenses: _pp(metadata.licenses_desc()) sys.exit(0)",
+        "label": 0
+    },
+    {
+        "code": "def check_repository_existence(params): \"\"\"Check repository existence. :param argparse.Namespace params: parameters \"\"\" repodir = os.path.join(params.outdir, params.name) if os.path.isdir(repodir): raise Conflict( 'Package repository \"{0}\" has already exists.'.format(repodir))",
+        "label": 0
+    },
+    {
+        "code": "def generate_package(params): \"\"\"Generate package repository. :param argparse.Namespace params: parameters \"\"\" pkg_data = package.PackageData(params) pkg_tree = package.PackageTree(pkg_data) pkg_tree.generate() pkg_tree.move() VCS(os.path.join(pkg_tree.outdir, pkg_tree.name), pkg_tree.pkg_data)",
+        "label": 0
+    },
+    {
+        "code": "def print_single(line, rev): \"\"\" print single reads to stderr \"\"\" if rev is True: seq = rc(['', line[9]])[1] qual = line[10][::-1] else: seq = line[9] qual = line[10] fq = ['@%s' % line[0], seq, '+%s' % line[0], qual] print('\\n'.join(fq), file = sys.stderr)",
+        "label": 0
+    },
+    {
+        "code": "def sam2fastq(sam, singles = False, force = False): \"\"\" convert sam to fastq \"\"\" L, R = None, None for line in sam: if line.startswith('@') is True: continue line = line.strip().split() bit = [True if i == '1' else False \\ for i in bin(int(line[1])).split('b')[1][::-1]] while len(bit) < 8: bit.append(False) pair, proper, na, nap, rev, mrev, left, right = bit if pair is False: if singles is True: print_single(line, rev) continue if rev is True: seq = rc(['', line[9]])[1] qual = line[10][::-1] else: seq = line[9] qual = line[10] if left is True: if L is not None and force is False: print('sam file is not sorted', file = sys.stderr) print('\\te.g.: %s' % (line[0]), file = sys.stderr) exit() if L is not None: L = None continue L = ['@%s' % line[0], seq, '+%s' % line[0], qual] if R is not None: yield L yield R L, R = None, None if right is True: if R is not None and force is False: print('sam file is not sorted', file = sys.stderr) print('\\te.g.: %s' % (line[0]), file = sys.stderr) exit() if R is not None: R = None continue R = ['@%s' % line[0], seq, '+%s' % line[0], qual] if L is not None: yield L yield R L, R = None, None",
+        "label": 0
+    },
+    {
+        "code": "def sort_sam(sam, sort): \"\"\" sort sam file \"\"\" tempdir = '%s/' % (os.path.abspath(sam).rsplit('/', 1)[0]) if sort is True: mapping = '%s.sorted.sam' % (sam.rsplit('.', 1)[0]) if sam != '-': if os.path.exists(mapping) is False: os.system(\"\\ sort -k1 --buffer-size=%sG -T %s -o %s %s\\ \" % (sbuffer, tempdir, mapping, sam)) else: mapping = 'stdin-sam.sorted.sam' p = Popen(\"sort -k1 --buffer-size=%sG -T %s -o %s\" \\ % (sbuffer, tempdir, mapping), stdin = sys.stdin, shell = True) p.communicate() mapping = open(mapping) else: if sam == '-': mapping = sys.stdin else: mapping = open(sam) return mapping",
+        "label": 1
+    },
+    {
+        "code": "def sub_sam(sam, percent, sort = True, sbuffer = False): \"\"\" randomly subset sam file \"\"\" mapping = sort_sam(sam, sort) pool = [1 for i in range(0, percent)] + [0 for i in range(0, 100 - percent)] c = cycle([1, 2]) for line in mapping: line = line.strip().split() if line[0].startswith('@'): yield line continue if int(line[1]) <= 20: if random.choice(pool) == 1: yield line else: n = next(c) if n == 1: prev = line if n == 2 and random.choice(pool) == 1: yield prev yield line",
+        "label": 0
+    },
+    {
+        "code": "def fq2fa(fq): \"\"\" convert fq to fa \"\"\" c = cycle([1, 2, 3, 4]) for line in fq: n = next(c) if n == 1: seq = ['>%s' % (line.strip().split('@', 1)[1])] if n == 2: seq.append(line.strip()) yield seq",
+        "label": 0
+    },
+    {
+        "code": "def change_return_type(f): \"\"\" Converts the returned value of wrapped function to the type of the first arg or to the type specified by a kwarg key return_type's value. \"\"\" @wraps(f) def wrapper(*args, **kwargs): if kwargs.has_key('return_type'): return_type = kwargs['return_type'] kwargs.pop('return_type') return return_type(f(*args, **kwargs)) elif len(args) > 0: return_type = type(args[0]) return return_type(f(*args, **kwargs)) else: return f(*args, **kwargs) return wrapper",
+        "label": 0
+    },
+    {
+        "code": "def convert_args_to_sets(f): \"\"\" Converts all args to 'set' type via self.setify function. \"\"\" @wraps(f) def wrapper(*args, **kwargs): args = (setify(x) for x in args) return f(*args, **kwargs) return wrapper",
+        "label": 0
+    },
+    {
+        "code": "def _init_entri(self, laman): \"\"\"Membuat objek-objek entri dari laman yang diambil. :param laman: Laman respons yang dikembalikan oleh KBBI daring. :type laman: Response \"\"\" sup = BeautifulSoup(laman.text, 'html.parser') estr = '' for label in sup.find('hr').next_siblings: if label.name == 'hr': self.entri.append(Entri(estr)) break if label.name == 'h2': if estr: self.entri.append(Entri(estr)) estr = '' estr += str(label).strip()",
+        "label": 0
+    },
+    {
+        "code": "def _init_kata_dasar(self, dasar): \"\"\"Memproses kata dasar yang ada dalam nama entri. :param dasar: ResultSet untuk label HTML dengan class=\"rootword\" :type dasar: ResultSet \"\"\" for tiap in dasar: kata = tiap.find('a') dasar_no = kata.find('sup') kata = ambil_teks_dalam_label(kata) self.kata_dasar.append( kata + ' [{}]'.format(dasar_no.text.strip()) if dasar_no else kata )",
+        "label": 0
+    },
+    {
+        "code": "def serialisasi(self): \"\"\"Mengembalikan hasil serialisasi objek Entri ini. :returns: Dictionary hasil serialisasi :rtype: dict \"\"\" return { \"nama\": self.nama, \"nomor\": self.nomor, \"kata_dasar\": self.kata_dasar, \"pelafalan\": self.pelafalan, \"bentuk_tidak_baku\": self.bentuk_tidak_baku, \"varian\": self.varian, \"makna\": [makna.serialisasi() for makna in self.makna] }",
+        "label": 0
+    },
+    {
+        "code": "def _makna(self): \"\"\"Mengembalikan representasi string untuk semua makna entri ini. :returns: String representasi makna-makna :rtype: str \"\"\" if len(self.makna) > 1: return '\\n'.join( str(i) + \". \" + str(makna) for i, makna in enumerate(self.makna, 1) ) return str(self.makna[0])",
+        "label": 0
+    },
+    {
+        "code": "def _nama(self): \"\"\"Mengembalikan representasi string untuk nama entri ini. :returns: String representasi nama entri :rtype: str \"\"\" hasil = self.nama if self.nomor: hasil += \" [{}]\".format(self.nomor) if self.kata_dasar: hasil = \" \u00bb \".join(self.kata_dasar) + \" \u00bb \" + hasil return hasil",
+        "label": 0
+    },
+    {
+        "code": "def _varian(self, varian): \"\"\"Mengembalikan representasi string untuk varian entri ini. Dapat digunakan untuk \"Varian\" maupun \"Bentuk tidak baku\". :param varian: List bentuk tidak baku atau varian :type varian: list :returns: String representasi varian atau bentuk tidak baku :rtype: str \"\"\" if varian == self.bentuk_tidak_baku: nama = \"Bentuk tidak baku\" elif varian == self.varian: nama = \"Varian\" else: return '' return nama + ': ' + ', '.join(varian)",
+        "label": 0
+    },
+    {
+        "code": "def _init_kelas(self, makna_label): \"\"\"Memproses kelas kata yang ada dalam makna. :param makna_label: BeautifulSoup untuk makna yang ingin diproses. :type makna_label: BeautifulSoup \"\"\" kelas = makna_label.find(color='red') lain = makna_label.find(color='darkgreen') info = makna_label.find(color='green') if kelas: kelas = kelas.find_all('span') if lain: self.kelas = {lain.text.strip(): lain['title'].strip()} self.submakna = lain.next_sibling.strip() self.submakna += ' ' + makna_label.find(color='grey').text.strip() else: self.kelas = { k.text.strip(): k['title'].strip() for k in kelas } if kelas else {} self.info = info.text.strip() if info else ''",
+        "label": 0
+    },
+    {
+        "code": "def _init_contoh(self, makna_label): \"\"\"Memproses contoh yang ada dalam makna. :param makna_label: BeautifulSoup untuk makna yang ingin diproses. :type makna_label: BeautifulSoup \"\"\" indeks = makna_label.text.find(': ') if indeks != -1: contoh = makna_label.text[indeks + 2:].strip() self.contoh = contoh.split('; ') else: self.contoh = []",
+        "label": 0
+    },
+    {
+        "code": "def serialisasi(self): \"\"\"Mengembalikan hasil serialisasi objek Makna ini. :returns: Dictionary hasil serialisasi :rtype: dict \"\"\" return { \"kelas\": self.kelas, \"submakna\": self.submakna, \"info\": self.info, \"contoh\": self.contoh }",
+        "label": 0
+    },
+    {
+        "code": "def build_sphinx(pkg_data, projectdir): \"\"\"Build sphinx documentation. :rtype: int :return: subprocess.call return code :param `bootstrap_py.control.PackageData` pkg_data: package meta data :param str projectdir: project root directory \"\"\" try: version, _minor_version = pkg_data.version.rsplit('.', 1) except ValueError: version = pkg_data.version args = ' '.join(('sphinx-quickstart', '--sep', '-q', '-p \"{name}\"', '-a \"{author}\"', '-v \"{version}\"', '-r \"{release}\"', '-l en', '--suffix=.rst', '--master=index', '--ext-autodoc', '--ext-viewcode', '--makefile', '{projectdir}')).format(name=pkg_data.name, author=pkg_data.author, version=version, release=pkg_data.version, projectdir=projectdir) if subprocess.call(shlex.split(args)) == 0: _touch_gitkeep(projectdir)",
+        "label": 0
+    },
+    {
+        "code": "def bowtiedb(fa, keepDB): \"\"\" make bowtie db \"\"\" btdir = '%s/bt2' % (os.getcwd()) if not os.path.exists(btdir): os.mkdir(btdir) btdb = '%s/%s' % (btdir, fa.rsplit('/', 1)[-1]) if keepDB is True: if os.path.exists('%s.1.bt2' % (btdb)): return btdb p = subprocess.Popen('bowtie2-build -q %s %s' \\ % (fa, btdb), shell = True) p.communicate() return btdb",
+        "label": 1
+    },
+    {
+        "code": "def bowtie(sam, btd, f, r, u, opt, no_shrink, threads): \"\"\" generate bowtie2 command \"\"\" bt2 = 'bowtie2 -x %s -p %s ' % (btd, threads) if f is not False: bt2 += '-1 %s -2 %s ' % (f, r) if u is not False: bt2 += '-U %s ' % (u) bt2 += opt if no_shrink is False: if f is False: bt2 += ' | shrinksam -u -k %s-shrunk.sam ' % (sam) else: bt2 += ' | shrinksam -k %s-shrunk.sam ' % (sam) else: bt2 += ' > %s.sam' % (sam) return bt2",
+        "label": 0
+    },
+    {
+        "code": "def crossmap(fas, reads, options, no_shrink, keepDB, threads, cluster, nodes): \"\"\" map all read sets against all fasta files \"\"\" if cluster is True: threads = '48' btc = [] for fa in fas: btd = bowtiedb(fa, keepDB) F, R, U = reads if F is not False: if U is False: u = False for i, f in enumerate(F): r = R[i] if U is not False: u = U[i] sam = '%s/%s-vs-%s' % (os.getcwd(), \\ fa.rsplit('/', 1)[-1], f.rsplit('/', 1)[-1].rsplit('.', 3)[0]) btc.append(bowtie(sam, btd, f, r, u, options, no_shrink, threads)) else: f = False r = False for u in U: sam = '%s/%s-vs-%s' % (os.getcwd(), \\ fa.rsplit('/', 1)[-1], u.rsplit('/', 1)[-1].rsplit('.', 3)[0]) btc.append(bowtie(sam, btd, f, r, u, options, no_shrink, threads)) if cluster is False: for i in btc: p = subprocess.Popen(i, shell = True) p.communicate() else: ID = ''.join(random.choice([str(i) for i in range(0, 9)]) for _ in range(5)) for node, commands in enumerate(chunks(btc, nodes), 1): bs = open('%s/crossmap-qsub.%s.%s.sh' % (os.getcwd(), ID, node), 'w') print('\\n'.join(commands), file=bs) bs.close() p = subprocess.Popen(\\ 'qsub -V -N crossmap %s' \\ % (bs.name), \\ shell = True) p.communicate()",
+        "label": 1
+    },
+    {
+        "code": "def get_conn(self, *args, **kwargs): \"\"\" Returns a connection object from the router given ``args``. Useful in cases where a connection cannot be automatically determined during all steps of the process. An example of this would be Redis pipelines. \"\"\" connections = self.__connections_for('get_conn', args=args, kwargs=kwargs) if len(connections) is 1: return connections[0] else: return connections",
+        "label": 0
+    },
+    {
+        "code": "def __get_nondirect_init(self, init): \"\"\" return the non-direct init if the direct algorithm has been selected. \"\"\" crc = init for i in range(self.Width): bit = crc & 0x01 if bit: crc^= self.Poly crc >>= 1 if bit: crc |= self.MSB_Mask return crc & self.Mask",
+        "label": 0
+    },
+    {
+        "code": "def reflect(self, data, width): \"\"\" reflect a data word, i.e. reverts the bit order. \"\"\" x = data & 0x01 for i in range(width - 1): data >>= 1 x = (x << 1) | (data & 0x01) return x",
+        "label": 0
+    },
+    {
+        "code": "def bit_by_bit(self, in_data): \"\"\" Classic simple and slow CRC implementation. This function iterates bit by bit over the augmented input message and returns the calculated CRC value at the end. \"\"\" if isinstance(in_data, str): in_data = [ord(c) for c in in_data] register = self.NonDirectInit for octet in in_data: if self.ReflectIn: octet = self.reflect(octet, 8) for i in range(8): topbit = register & self.MSB_Mask register = ((register << 1) & self.Mask) | ((octet >> (7 - i)) & 0x01) if topbit: register ^= self.Poly for i in range(self.Width): topbit = register & self.MSB_Mask register = ((register << 1) & self.Mask) if topbit: register ^= self.Poly if self.ReflectOut: register = self.reflect(register, self.Width) return register ^ self.XorOut",
+        "label": 0
+    },
+    {
+        "code": "def gen_table(self): \"\"\" This function generates the CRC table used for the table_driven CRC algorithm. The Python version cannot handle tables of an index width other than 8. See the generated C code for tables with different sizes instead. \"\"\" table_length = 1 << self.TableIdxWidth tbl = [0] * table_length for i in range(table_length): register = i if self.ReflectIn: register = self.reflect(register, self.TableIdxWidth) register = register << (self.Width - self.TableIdxWidth + self.CrcShift) for j in range(self.TableIdxWidth): if register & (self.MSB_Mask << self.CrcShift) != 0: register = (register << 1) ^ (self.Poly << self.CrcShift) else: register = (register << 1) if self.ReflectIn: register = self.reflect(register >> self.CrcShift, self.Width) << self.CrcShift tbl[i] = register & (self.Mask << self.CrcShift) return tbl",
+        "label": 0
+    },
+    {
+        "code": "def table_driven(self, in_data): \"\"\" The Standard table_driven CRC algorithm. \"\"\" if isinstance(in_data, str): in_data = [ord(c) for c in in_data] tbl = self.gen_table() register = self.DirectInit << self.CrcShift if not self.ReflectIn: for octet in in_data: tblidx = ((register >> (self.Width - self.TableIdxWidth + self.CrcShift)) ^ octet) & 0xff register = ((register << (self.TableIdxWidth - self.CrcShift)) ^ tbl[tblidx]) & (self.Mask << self.CrcShift) register = register >> self.CrcShift else: register = self.reflect(register, self.Width + self.CrcShift) << self.CrcShift for octet in in_data: tblidx = ((register >> self.CrcShift) ^ octet) & 0xff register = ((register >> self.TableIdxWidth) ^ tbl[tblidx]) & (self.Mask << self.CrcShift) register = self.reflect(register, self.Width + self.CrcShift) & self.Mask if self.ReflectOut: register = self.reflect(register, self.Width) return register ^ self.XorOut",
+        "label": 0
+    },
+    {
+        "code": "def parse_masked(seq, min_len): \"\"\" parse masked sequence into non-masked and masked regions \"\"\" nm, masked = [], [[]] prev = None for base in seq[1]: if base.isupper(): nm.append(base) if masked != [[]] and len(masked[-1]) < min_len: nm.extend(masked[-1]) del masked[-1] prev = False elif base.islower(): if prev is False: masked.append([]) masked[-1].append(base) prev = True return nm, masked",
+        "label": 0
+    },
+    {
+        "code": "def strip_masked(fasta, min_len, print_masked): \"\"\" remove masked regions from fasta file as long as they are longer than min_len \"\"\" for seq in parse_fasta(fasta): nm, masked = parse_masked(seq, min_len) nm = ['%s removed_masked >=%s' % (seq[0], min_len), ''.join(nm)] yield [0, nm] if print_masked is True: for i, m in enumerate([i for i in masked if i != []], 1): m = ['%s insertion:%s' % (seq[0], i), ''.join(m)] yield [1, m]",
+        "label": 0
+    },
+    {
+        "code": "def get_relative_abundance(biomfile): \"\"\" Return arcsine transformed relative abundance from a BIOM format file. :type biomfile: BIOM format file :param biomfile: BIOM format file used to obtain relative abundances for each OTU in a SampleID, which are used as node sizes in network plots. :type return: Dictionary of dictionaries. :return: Dictionary keyed on SampleID whose value is a dictionarykeyed on OTU Name whose value is the arc sine tranfsormed relative abundance value for that SampleID-OTU Name pair. \"\"\" biomf = biom.load_table(biomfile) norm_biomf = biomf.norm(inplace=False) rel_abd = {} for sid in norm_biomf.ids(): rel_abd[sid] = {} for otuid in norm_biomf.ids(\"observation\"): otuname = oc.otu_name(norm_biomf.metadata(otuid, axis=\"observation\")[\"taxonomy\"]) otuname = \" \".join(otuname.split(\"_\")) abd = norm_biomf.get_value_by_ids(otuid, sid) rel_abd[sid][otuname] = abd ast_rel_abd = bc.arcsine_sqrt_transform(rel_abd) return ast_rel_abd",
+        "label": 0
+    },
+    {
+        "code": "def find_otu(otuid, tree): \"\"\" Find an OTU ID in a Newick-format tree. Return the starting position of the ID or None if not found. \"\"\" for m in re.finditer(otuid, tree): before, after = tree[m.start()-1], tree[m.start()+len(otuid)] if before in [\"(\", \",\", \")\"] and after in [\":\", \";\"]: return m.start() return None",
+        "label": 0
+    },
+    {
+        "code": "def newick_replace_otuids(tree, biomf): \"\"\" Replace the OTU ids in the Newick phylogenetic tree format with truncated OTU names \"\"\" for val, id_, md in biomf.iter(axis=\"observation\"): otu_loc = find_otu(id_, tree) if otu_loc is not None: tree = tree[:otu_loc] + \\ oc.otu_name(md[\"taxonomy\"]) + \\ tree[otu_loc + len(id_):] return tree",
+        "label": 0
+    },
+    {
+        "code": "def genome_info(genome, info): \"\"\" return genome info for choosing representative if ggKbase table provided - choose rep based on SCGs and genome length - priority for most SCGs - extra SCGs, then largest genome otherwise, based on largest genome \"\"\" try: scg = info[' dups = info[' length = info['genome size (bp)'] return [scg - dups, length, genome] except: return [False, False, info['genome size (bp)'], genome]",
+        "label": 0
+    },
+    {
+        "code": "def print_clusters(fastas, info, ANI): \"\"\" choose represenative genome and print cluster information *if ggKbase table is provided, use SCG info to choose best genome \"\"\" header = [' 'genome size (bp)', 'fragments', 'list'] yield header in_cluster = [] for cluster_num, cluster in enumerate(connected_components(ANI)): cluster = sorted([genome_info(genome, info[genome]) \\ for genome in cluster], \\ key = lambda x: x[0:], reverse = True) rep = cluster[0][-1] cluster = [i[-1] for i in cluster] size = len(cluster) for genome in cluster: in_cluster.append(genome) try: stats = [size, rep, genome, \\ info[genome][' info[genome]['genome size (bp)'], info[genome][' except: stats = [size, rep, genome, \\ 'n/a', 'n/a', \\ info[genome]['genome size (bp)'], info[genome][' if rep == genome: stats = ['*%s' % (cluster_num)] + stats else: stats = [cluster_num] + stats yield stats try: start = cluster_num + 1 except: start = 0 fastas = set([i.rsplit('.', 1)[0].rsplit('/', 1)[-1].rsplit('.contigs')[0] for i in fastas]) for cluster_num, genome in \\ enumerate(fastas.difference(set(in_cluster)), start): try: stats = ['*%s' % (cluster_num), 1, genome, genome, \\ info[genome][' info[genome]['genome size (bp)'], info[genome][' except: stats = ['*%s' % (cluster_num), 1, genome, genome, \\ 'n/a', 'n/a', \\ info[genome]['genome size (bp)'], info[genome][' yield stats",
+        "label": 0
+    },
+    {
+        "code": "def parse_ggKbase_tables(tables, id_type): \"\"\" convert ggKbase genome info tables to dictionary \"\"\" g2info = {} for table in tables: for line in open(table): line = line.strip().split('\\t') if line[0].startswith('name'): header = line header[4] = 'genome size (bp)' header[12] = ' header[13] = ' continue name, code, info = line[0], line[1], line info = [to_int(i) for i in info] if id_type is False: if 'UNK' in code or 'unknown' in code: code = name if (name != code) and (name and code in g2info): print(' print(' exit() if name not in g2info: g2info[name] = {item:stat for item, stat in zip(header, info)} if code not in g2info: g2info[code] = {item:stat for item, stat in zip(header, info)} else: if id_type == 'name': ID = name elif id_type == 'code': ID = code else: print(' exit() ID = ID.replace(' ', '') g2info[ID] = {item:stat for item, stat in zip(header, info)} if g2info[ID]['genome size (bp)'] == '': g2info[ID]['genome size (bp)'] = 0 return g2info",
+        "label": 1
+    },
+    {
+        "code": "def parse_checkM_tables(tables): \"\"\" convert checkM genome info tables to dictionary \"\"\" g2info = {} for table in tables: for line in open(table): line = line.strip().split('\\t') if line[0].startswith('Bin Id'): header = line header[8] = 'genome size (bp)' header[5] = ' header[6] = ' continue ID, info = line[0], line info = [to_int(i) for i in info] ID = ID.replace(' ', '') g2info[ID] = {item:stat for item, stat in zip(header, info)} if g2info[ID]['genome size (bp)'] == '': g2info[ID]['genome size (bp)'] = 0 return g2info",
+        "label": 1
+    },
+    {
+        "code": "def genome_lengths(fastas, info): \"\"\" get genome lengths \"\"\" if info is False: info = {} for genome in fastas: name = genome.rsplit('.', 1)[0].rsplit('/', 1)[-1].rsplit('.contigs')[0] if name in info: continue length = 0 fragments = 0 for seq in parse_fasta(genome): length += len(seq[1]) fragments += 1 info[name] = {'genome size (bp)':length, ' return info",
+        "label": 0
+    },
+    {
+        "code": "def get_dbs(self, attr, args, kwargs, **fkwargs): \"\"\" Returns a list of db keys to route the given call to. :param attr: Name of attribute being called on the connection. :param args: List of arguments being passed to ``attr``. :param kwargs: Dictionary of keyword arguments being passed to ``attr``. >>> redis = Cluster(router=BaseRouter) >>> router = redis.router >>> router.get_dbs('incr', args=('key name', 1)) [0,1,2] \"\"\" if not self._ready: if not self.setup_router(args=args, kwargs=kwargs, **fkwargs): raise self.UnableToSetupRouter() retval = self._pre_routing(attr=attr, args=args, kwargs=kwargs, **fkwargs) if retval is not None: args, kwargs = retval if not (args or kwargs): return self.cluster.hosts.keys() try: db_nums = self._route(attr=attr, args=args, kwargs=kwargs, **fkwargs) except Exception as e: self._handle_exception(e) db_nums = [] return self._post_routing(attr=attr, db_nums=db_nums, args=args, kwargs=kwargs, **fkwargs)",
+        "label": 0
+    },
+    {
+        "code": "def setup_router(self, args, kwargs, **fkwargs): \"\"\" Call method to perform any setup \"\"\" self._ready = self._setup_router(args=args, kwargs=kwargs, **fkwargs) return self._ready",
+        "label": 0
+    },
+    {
+        "code": "def _route(self, attr, args, kwargs, **fkwargs): \"\"\" Perform routing and return db_nums \"\"\" return self.cluster.hosts.keys()",
+        "label": 0
+    },
+    {
+        "code": "def check_down_connections(self): \"\"\" Iterates through all connections which were previously listed as unavailable and marks any that have expired their retry_timeout as being up. \"\"\" now = time.time() for db_num, marked_down_at in self._down_connections.items(): if marked_down_at + self.retry_timeout <= now: self.mark_connection_up(db_num)",
+        "label": 0
+    },
+    {
+        "code": "def flush_down_connections(self): \"\"\" Marks all connections which were previously listed as unavailable as being up. \"\"\" self._get_db_attempts = 0 for db_num in self._down_connections.keys(): self.mark_connection_up(db_num)",
+        "label": 0
+    },
+    {
+        "code": "def standby(df, resolution='24h', time_window=None): \"\"\" Compute standby power Parameters ---------- df : pandas.DataFrame or pandas.Series Electricity Power resolution : str, default='d' Resolution of the computation. Data will be resampled to this resolution (as mean) before computation of the minimum. String that can be parsed by the pandas resample function, example ='h', '15min', '6h' time_window : tuple with start-hour and end-hour, default=None Specify the start-time and end-time for the analysis. Only data within this time window will be considered. Both times have to be specified as string ('01:00', '06:30') or as datetime.time() objects Returns ------- df : pandas.Series with DateTimeIndex in the given resolution \"\"\" if df.empty: raise EmptyDataFrame() df = pd.DataFrame(df) def parse_time(t): if isinstance(t, numbers.Number): return pd.Timestamp.utcfromtimestamp(t).time() else: return pd.Timestamp(t).time() if time_window is not None: t_start = parse_time(time_window[0]) t_end = parse_time(time_window[1]) if t_start > t_end: df = df[(df.index.time >= t_start) | (df.index.time < t_end)] else: df = df[(df.index.time >= t_start) & (df.index.time < t_end)] return df.resample(resolution).min()",
+        "label": 0
+    },
+    {
+        "code": "def share_of_standby(df, resolution='24h', time_window=None): \"\"\" Compute the share of the standby power in the total consumption. Parameters ---------- df : pandas.DataFrame or pandas.Series Power (typically electricity, can be anything) resolution : str, default='d' Resolution of the computation. Data will be resampled to this resolution (as mean) before computation of the minimum. String that can be parsed by the pandas resample function, example ='h', '15min', '6h' time_window : tuple with start-hour and end-hour, default=None Specify the start-time and end-time for the analysis. Only data within this time window will be considered. Both times have to be specified as string ('01:00', '06:30') or as datetime.time() objects Returns ------- fraction : float between 0-1 with the share of the standby consumption \"\"\" p_sb = standby(df, resolution, time_window) df = df.resample(resolution).mean() p_tot = df.sum() p_standby = p_sb.sum() share_standby = p_standby / p_tot res = share_standby.iloc[0] return res",
+        "label": 0
+    },
+    {
+        "code": "def count_peaks(ts): \"\"\" Toggle counter for gas boilers Counts the number of times the gas consumption increases with more than 3kW Parameters ---------- ts: Pandas Series Gas consumption in minute resolution Returns ------- int \"\"\" on_toggles = ts.diff() > 3000 shifted = np.logical_not(on_toggles.shift(1)) result = on_toggles & shifted count = result.sum() return count",
+        "label": 0
+    },
+    {
+        "code": "def load_factor(ts, resolution=None, norm=None): \"\"\" Calculate the ratio of input vs. norm over a given interval. Parameters ---------- ts : pandas.Series timeseries resolution : str, optional interval over which to calculate the ratio default: resolution of the input timeseries norm : int | float, optional denominator of the ratio default: the maximum of the input timeseries Returns ------- pandas.Series \"\"\" if norm is None: norm = ts.max() if resolution is not None: ts = ts.resample(rule=resolution).mean() lf = ts / norm return lf",
+        "label": 0
+    },
+    {
+        "code": "def top_hits(hits, num, column, reverse): \"\"\" get top hits after sorting by column number \"\"\" hits.sort(key = itemgetter(column), reverse = reverse) for hit in hits[0:num]: yield hit",
+        "label": 0
+    },
+    {
+        "code": "def numBlast_sort(blast, numHits, evalueT, bitT): \"\"\" parse b6 output with sorting \"\"\" header = [' 'qstart', 'qend', 'tstart', 'tend', 'evalue', 'bitscore'] yield header hmm = {h:[] for h in header} for line in blast: if line.startswith(' continue line = line.strip().split('\\t') line[10], line[11] = float(line[10]), float(line[11]) evalue, bit = line[10], line[11] if evalueT is not False and evalue > evalueT: continue if bitT is not False and bit < bitT: continue for i, h in zip(line, header): hmm[h].append(i) hmm = pd.DataFrame(hmm) for query, df in hmm.groupby(by = [' df = df.sort_values(by = ['bitscore'], ascending = False) for hit in df[header].values[0:numHits]: yield hit",
+        "label": 1
+    },
+    {
+        "code": "def numBlast(blast, numHits, evalueT = False, bitT = False, sort = False): \"\"\" parse b6 output \"\"\" if sort is True: for hit in numBlast_sort(blast, numHits, evalueT, bitT): yield hit return header = [' 'qstart', 'qend', 'tstart', 'tend', 'evalue', 'bitscore'] yield header prev, hits = None, [] for line in blast: line = line.strip().split('\\t') ID = line[0] line[10], line[11] = float(line[10]), float(line[11]) evalue, bit = line[10], line[11] if ID != prev: if len(hits) > 0: for hit in top_hits(hits, numHits, 11, True): yield hit hits = [] if evalueT == False and bitT == False: hits.append(line) elif evalue <= evalueT and bitT == False: hits.append(line) elif evalue <= evalueT and bit >= bitT: hits.append(line) elif evalueT == False and bit >= bitT: hits.append(line) prev = ID for hit in top_hits(hits, numHits, 11, True): yield hit",
+        "label": 1
+    },
+    {
+        "code": "def numDomtblout(domtblout, numHits, evalueT, bitT, sort): \"\"\" parse hmm domain table output this version is faster but does not work unless the table is sorted \"\"\" if sort is True: for hit in numDomtblout_sort(domtblout, numHits, evalueT, bitT): yield hit return header = [' 'query name', 'query accession', 'qlen', 'full E-value', 'full score', 'full bias', 'domain 'domain c-Evalue', 'domain i-Evalue', 'domain score', 'domain bias', 'hmm from', 'hmm to', 'seq from', 'seq to', 'env from', 'env to', 'acc', 'target description'] yield header prev, hits = None, [] for line in domtblout: if line.startswith(' continue line = line.strip().split() desc = ' '.join(line[18:]) line = line[0:18] line.append(desc) ID = line[0] + line[9] line[11], line[13] = float(line[11]), float(line[13]) evalue, bitscore = line[11], line[13] line[11], line[13] = evalue, bitscore if ID != prev: if len(hits) > 0: for hit in top_hits(hits, numHits, 13, True): yield hit hits = [] if evalueT == False and bitT == False: hits.append(line) elif evalue <= evalueT and bitT == False: hits.append(line) elif evalue <= evalueT and bit >= bitT: hits.append(line) elif evalueT == False and bit >= bitT: hits.append(line) prev = ID for hit in top_hits(hits, numHits, 13, True): yield hit",
+        "label": 1
+    },
+    {
+        "code": "def stock2fa(stock): \"\"\" convert stockholm to fasta \"\"\" seqs = {} for line in stock: if line.startswith(' id, seq = line.strip().split() id = id.rsplit('/', 1)[0] id = re.split('[0-9]\\|', id, 1)[-1] if id not in seqs: seqs[id] = [] seqs[id].append(seq) if line.startswith(' break return seqs",
+        "label": 0
+    },
+    {
+        "code": "def week_schedule(index, on_time=None, off_time=None, off_days=None): \"\"\" Return boolean time series following given week schedule. Parameters ---------- index : pandas.DatetimeIndex Datetime index on_time : str or datetime.time Daily opening time. Default: '09:00' off_time : str or datetime.time Daily closing time. Default: '17:00' off_days : list of str List of weekdays. Default: ['Sunday', 'Monday'] Returns ------- pandas.Series of bool True when on, False otherwise for given datetime index Examples -------- >>> import pandas as pd >>> from opengrid.library.utils import week_schedule >>> index = pd.date_range('20170701', '20170710', freq='H') >>> week_schedule(index) \"\"\" if on_time is None: on_time = '9:00' if off_time is None: off_time = '17:00' if off_days is None: off_days = ['Sunday', 'Monday'] if not isinstance(on_time, datetime.time): on_time = pd.to_datetime(on_time, format='%H:%M').time() if not isinstance(off_time, datetime.time): off_time = pd.to_datetime(off_time, format='%H:%M').time() times = (index.time >= on_time) & (index.time < off_time) & (~index.weekday_name.isin(off_days)) return pd.Series(times, index=index)",
+        "label": 0
+    },
+    {
+        "code": "def carpet(timeseries, **kwargs): \"\"\" Draw a carpet plot of a pandas timeseries. The carpet plot reads like a letter. Every day one line is added to the bottom of the figure, minute for minute moving from left (morning) to right (evening). The color denotes the level of consumption and is scaled logarithmically. If vmin and vmax are not provided as inputs, the minimum and maximum of the colorbar represent the minimum and maximum of the (resampled) timeseries. Parameters ---------- timeseries : pandas.Series vmin, vmax : If not None, either or both of these values determine the range of the z axis. If None, the range is given by the minimum and/or maximum of the (resampled) timeseries. zlabel, title : If not None, these determine the labels of z axis and/or title. If None, the name of the timeseries is used if defined. cmap : matplotlib.cm instance, default coolwarm Examples -------- >>> import numpy as np >>> import pandas as pd >>> from opengrid.library import plotting >>> plt = plotting.plot_style() >>> index = pd.date_range('2015-1-1','2015-12-31',freq='h') >>> ser = pd.Series(np.random.normal(size=len(index)), index=index, name='abc') >>> im = plotting.carpet(ser) \"\"\" cmap = kwargs.pop('cmap', cm.coolwarm) norm = kwargs.pop('norm', LogNorm()) interpolation = kwargs.pop('interpolation', 'nearest') cblabel = kwargs.pop('zlabel', timeseries.name if timeseries.name else '') title = kwargs.pop('title', 'carpet plot: ' + timeseries.name if timeseries.name else '') if timeseries.dropna().empty: print('skipped {} - no data'.format(title)) return ts = timeseries.resample('15min').interpolate() vmin = max(0.1, kwargs.pop('vmin', ts[ts > 0].min())) vmax = max(vmin, kwargs.pop('vmax', ts.quantile(.999))) mpldatetimes = date2num(ts.index.to_pydatetime()) ts.index = pd.MultiIndex.from_arrays( [np.floor(mpldatetimes), 2 + mpldatetimes % 1]) df = ts.unstack() fig, ax = plt.subplots() extent = [df.columns[0], df.columns[-1], df.index[-1] + 0.5, df.index[0] - 0.5] im = plt.imshow(df, vmin=vmin, vmax=vmax, extent=extent, cmap=cmap, aspect='auto', norm=norm, interpolation=interpolation, **kwargs) ax.xaxis_date() ax.xaxis.set_major_locator(HourLocator(interval=2)) ax.xaxis.set_major_formatter(DateFormatter('%H:%M')) ax.xaxis.grid(True) plt.xlabel('UTC Time') ax.yaxis_date() dmin, dmax = ax.yaxis.get_data_interval() number_of_days = (num2date(dmax) - num2date(dmin)).days if abs(number_of_days) <= 35: ax.yaxis.set_major_locator(DayLocator()) else: ax.yaxis.set_major_locator(AutoDateLocator()) ax.yaxis.set_major_formatter(DateFormatter(\"%a, %d %b %Y\")) cbticks = np.logspace(np.log10(vmin), np.log10(vmax), 11, endpoint=True) cb = plt.colorbar(format='%.0f', ticks=cbticks) cb.set_label(cblabel) plt.title(title) return im",
+        "label": 0
+    },
+    {
+        "code": "def calc_pident_ignore_gaps(a, b): \"\"\" calculate percent identity \"\"\" m = 0 mm = 0 for A, B in zip(list(a), list(b)): if A == '-' or A == '.' or B == '-' or B == '.': continue if A == B: m += 1 else: mm += 1 try: return float(float(m)/float((m + mm))) * 100 except: return 0",
+        "label": 0
+    },
+    {
+        "code": "def remove_gaps(A, B): \"\"\" skip column if either is a gap \"\"\" a_seq, b_seq = [], [] for a, b in zip(list(A), list(B)): if a == '-' or a == '.' or b == '-' or b == '.': continue a_seq.append(a) b_seq.append(b) return ''.join(a_seq), ''.join(b_seq)",
+        "label": 0
+    },
+    {
+        "code": "def compare_seqs(seqs): \"\"\" compare pairs of sequences \"\"\" A, B, ignore_gaps = seqs a, b = A[1], B[1] if len(a) != len(b): print(' exit() if ignore_gaps is True: pident = calc_pident_ignore_gaps(a, b) else: pident = calc_pident(a, b) return A[0], B[0], pident",
+        "label": 0
+    },
+    {
+        "code": "def compare_seqs_leven(seqs): \"\"\" calculate Levenshtein ratio of sequences \"\"\" A, B, ignore_gaps = seqs a, b = remove_gaps(A[1], B[1]) if len(a) != len(b): print(' exit() pident = lr(a, b) * 100 return A[0], B[0], pident",
+        "label": 0
+    },
+    {
+        "code": "def pairwise_compare(afa, leven, threads, print_list, ignore_gaps): \"\"\" make pairwise sequence comparisons between aligned sequences \"\"\" seqs = {seq[0]: seq for seq in nr_fasta([afa], append_index = True)} num_seqs = len(seqs) pairs = ((i[0], i[1], ignore_gaps) for i in itertools.combinations(list(seqs.values()), 2)) pool = multithread(threads) if leven is True: pident = pool.map(compare_seqs_leven, pairs) else: compare = pool.imap_unordered(compare_seqs, pairs) pident = [i for i in tqdm(compare, total = (num_seqs*num_seqs)/2)] pool.close() pool.terminate() pool.join() return to_dictionary(pident, print_list)",
+        "label": 0
+    },
+    {
+        "code": "def print_pairwise(pw, median = False): \"\"\" print matrix of pidents to stdout \"\"\" names = sorted(set([i for i in pw])) if len(names) != 0: if '>' in names[0]: yield [' else: yield [' for a in names: if '>' in a: yield [a.split('>')[1]] + [pw[a][b] for b in names] else: out = [] for b in names: if b in pw[a]: if median is False: out.append(max(pw[a][b])) else: out.append(np.median(pw[a][b])) else: out.append('-') yield [a] + out",
+        "label": 0
+    },
+    {
+        "code": "def print_comps(comps): \"\"\" print stats for comparisons \"\"\" if comps == []: print('n/a') else: print(' (min(comps), max(comps), np.mean(comps)))",
+        "label": 0
+    },
+    {
+        "code": "def compare_clades(pw): \"\"\" print min. pident within each clade and then matrix of between-clade max. \"\"\" names = sorted(set([i for i in pw])) for i in range(0, 4): wi, bt = {}, {} for a in names: for b in pw[a]: if ';' not in a or ';' not in b: continue pident = pw[a][b] cA, cB = a.split(';')[i], b.split(';')[i] if i == 0 and '_' in cA and '_' in cB: cA = cA.rsplit('_', 1)[1] cB = cB.rsplit('_', 1)[1] elif '>' in cA or '>' in cB: cA = cA.split('>')[1] cB = cB.split('>')[1] if cA == cB: if cA not in wi: wi[cA] = [] wi[cA].append(pident) else: if cA not in bt: bt[cA] = {} if cB not in bt[cA]: bt[cA][cB] = [] bt[cA][cB].append(pident) print('\\n for clade, pidents in list(wi.items()): print('\\t'.join(['wi:%s' % str(i), clade, str(min(pidents))])) comps = [] print('\\n for comp in print_pairwise(bt): if comp is not None: print('\\t'.join(['bt:%s' % str(i)] + [str(j) for j in comp])) if comp[0] != ' comps.extend([j for j in comp[1:] if j != '-']) print_comps(comps) comps = [] print('\\n for comp in print_pairwise(bt, median = True): if comp is not None: print('\\t'.join(['bt:%s' % str(i)] + [str(j) for j in comp])) if comp[0] != ' comps.extend([j for j in comp[1:] if j != '-']) print_comps(comps)",
+        "label": 0
+    },
+    {
+        "code": "def matrix2dictionary(matrix): \"\"\" convert matrix to dictionary of comparisons \"\"\" pw = {} for line in matrix: line = line.strip().split('\\t') if line[0].startswith(' names = line[1:] continue a = line[0] for i, pident in enumerate(line[1:]): b = names[i] if a not in pw: pw[a] = {} if b not in pw: pw[b] = {} if pident != '-': pident = float(pident) pw[a][b] = pident pw[b][a] = pident return pw",
+        "label": 0
+    },
+    {
+        "code": "def setoption(parser, metadata=None): \"\"\"Set argument parser option.\"\"\" parser.add_argument('-v', action='version', version=__version__) subparsers = parser.add_subparsers(help='sub commands help') create_cmd = subparsers.add_parser('create') create_cmd.add_argument('name', help='Specify Python package name.') create_cmd.add_argument('-d', dest='description', action='store', help='Short description about your package.') create_cmd.add_argument('-a', dest='author', action='store', required=True, help='Python package author name.') create_cmd.add_argument('-e', dest='email', action='store', required=True, help='Python package author email address.') create_cmd.add_argument('-l', dest='license', choices=metadata.licenses().keys(), default='GPLv3+', help='Specify license. (default: %(default)s)') create_cmd.add_argument('-s', dest='status', choices=metadata.status().keys(), default='Alpha', help=('Specify development status. ' '(default: %(default)s)')) create_cmd.add_argument('--no-check', action='store_true', help='No checking package name in PyPI.') create_cmd.add_argument('--with-samples', action='store_true', help='Generate package with sample code.') group = create_cmd.add_mutually_exclusive_group(required=True) group.add_argument('-U', dest='username', action='store', help='Specify GitHub username.') group.add_argument('-u', dest='url', action='store', type=valid_url, help='Python package homepage url.') create_cmd.add_argument('-o', dest='outdir', action='store', default=os.path.abspath(os.path.curdir), help='Specify output directory. (default: $PWD)') list_cmd = subparsers.add_parser('list') list_cmd.add_argument('-l', dest='licenses', action='store_true', help='show license choices.')",
+        "label": 0
+    },
+    {
+        "code": "def parse_options(metadata): \"\"\"Parse argument options.\"\"\" parser = argparse.ArgumentParser(description='%(prog)s usage:', prog=__prog__) setoption(parser, metadata=metadata) return parser",
+        "label": 0
+    },
+    {
+        "code": "def main(): \"\"\"Execute main processes.\"\"\" try: pkg_version = Update() if pkg_version.updatable(): pkg_version.show_message() metadata = control.retreive_metadata() parser = parse_options(metadata) argvs = sys.argv if len(argvs) <= 1: parser.print_help() sys.exit(1) args = parser.parse_args() control.print_licences(args, metadata) control.check_repository_existence(args) control.check_package_existence(args) control.generate_package(args) except (RuntimeError, BackendFailure, Conflict) as exc: sys.stderr.write('{0}\\n'.format(exc)) sys.exit(1)",
+        "label": 0
+    },
+    {
+        "code": "def _check_or_set_default_params(self): \"\"\"Check key and set default vaule when it does not exists.\"\"\" if not hasattr(self, 'date'): self._set_param('date', datetime.utcnow().strftime('%Y-%m-%d')) if not hasattr(self, 'version'): self._set_param('version', self.default_version) if not hasattr(self, 'description') or self.description is None: getattr(self, '_set_param')('description', self.warning_message)",
+        "label": 0
+    },
+    {
+        "code": "def move(self): \"\"\"Move directory from working directory to output directory.\"\"\" if not os.path.isdir(self.outdir): os.makedirs(self.outdir) shutil.move(self.tmpdir, os.path.join(self.outdir, self.name))",
+        "label": 0
+    },
+    {
+        "code": "def vcs_init(self): \"\"\"Initialize VCS repository.\"\"\" VCS(os.path.join(self.outdir, self.name), self.pkg_data)",
+        "label": 0
+    },
+    {
+        "code": "def find_steam_location(): \"\"\" Finds the location of the current Steam installation on Windows machines. Returns None for any non-Windows machines, or for Windows machines where Steam is not installed. \"\"\" if registry is None: return None key = registry.CreateKey(registry.HKEY_CURRENT_USER,\"Software\\Valve\\Steam\") return registry.QueryValueEx(key,\"SteamPath\")[0]",
+        "label": 0
+    },
+    {
+        "code": "def plot_PCoA(cat_data, otu_name, unifrac, names, colors, xr, yr, outDir, save_as, plot_style): \"\"\" Plot PCoA principal coordinates scaled by the relative abundances of otu_name. \"\"\" fig = plt.figure(figsize=(14, 8)) ax = fig.add_subplot(111) for i, cat in enumerate(cat_data): plt.scatter(cat_data[cat][\"pc1\"], cat_data[cat][\"pc2\"], cat_data[cat][\"size\"], color=colors[cat], alpha=0.85, marker=\"o\", edgecolor=\"black\", label=cat) lgnd = plt.legend(loc=\"best\", scatterpoints=3, fontsize=13) for i in range(len(colors.keys())): lgnd.legendHandles[i]._sizes = [80] plt.title(\" \".join(otu_name.split(\"_\")), style=\"italic\") plt.ylabel(\"PC2 (Percent Explained Variance {:.3f}%)\".format(float(unifrac[\"varexp\"][1]))) plt.xlabel(\"PC1 (Percent Explained Variance {:.3f}%)\".format(float(unifrac[\"varexp\"][0]))) plt.xlim(round(xr[0]*1.5, 1), round(xr[1]*1.5, 1)) plt.ylim(round(yr[0]*1.5, 1), round(yr[1]*1.5, 1)) if plot_style: gu.ggplot2_style(ax) fc = \"0.8\" else: fc = \"none\" fig.savefig(os.path.join(outDir, \"_\".join(otu_name.split())) + \".\" + save_as, facecolor=fc, edgecolor=\"none\", format=save_as, bbox_inches=\"tight\", pad_inches=0.2) plt.close(fig)",
+        "label": 0
+    },
+    {
+        "code": "def split_by_category(biom_cols, mapping, category_id): \"\"\" Split up the column data in a biom table by mapping category value. \"\"\" columns = defaultdict(list) for i, col in enumerate(biom_cols): columns[mapping[col['id']][category_id]].append((i, col)) return columns",
+        "label": 0
+    },
+    {
+        "code": "def print_line(l): \"\"\" print line if starts with ... \"\"\" print_lines = [' if len(l.split()) == 0: return True for start in print_lines: if l.startswith(start): return True return False",
+        "label": 0
+    },
+    {
+        "code": "def stock2one(stock): \"\"\" convert stockholm to single line format \"\"\" lines = {} for line in stock: line = line.strip() if print_line(line) is True: yield line continue if line.startswith(' continue ID, seq = line.rsplit(' ', 1) if ID not in lines: lines[ID] = '' else: seq = seq.strip() lines[ID] += seq for ID, line in lines.items(): yield '\\t'.join([ID, line]) yield '\\n",
+        "label": 0
+    },
+    {
+        "code": "def math_func(f): \"\"\" Statics the methods. wut. \"\"\" @wraps(f) def wrapper(*args, **kwargs): if len(args) > 0: return_type = type(args[0]) if kwargs.has_key('return_type'): return_type = kwargs['return_type'] kwargs.pop('return_type') return return_type(f(*args, **kwargs)) args = list((setify(x) for x in args)) return return_type(f(*args, **kwargs)) return wrapper",
+        "label": 0
+    },
+    {
+        "code": "def dump_stats(myStats): \"\"\" Show stats when pings are done \"\"\" print(\"\\n----%s PYTHON PING Statistics----\" % (myStats.thisIP)) if myStats.pktsSent > 0: myStats.fracLoss = (myStats.pktsSent - myStats.pktsRcvd) \\ / myStats.pktsSent print((\"%d packets transmitted, %d packets received, \" \"%0.1f%% packet loss\") % ( myStats.pktsSent, myStats.pktsRcvd, 100.0 * myStats.fracLoss )) if myStats.pktsRcvd > 0: print(\"round-trip (ms) min/avg/max = %d/%0.1f/%d\" % ( myStats.minTime, myStats.totTime / myStats.pktsRcvd, myStats.maxTime )) print(\"\") return",
+        "label": 0
+    },
+    {
+        "code": "def updatable(self): \"\"\"bootstrap-py package updatable?.\"\"\" if self.latest_version > self.current_version: updatable_version = self.latest_version else: updatable_version = False return updatable_version",
+        "label": 0
+    },
+    {
+        "code": "def show_message(self): \"\"\"Show message updatable.\"\"\" print( 'current version: {current_version}\\n' 'latest version : {latest_version}'.format( current_version=self.current_version, latest_version=self.latest_version))",
+        "label": 0
+    },
+    {
+        "code": "def condense_otus(otuF, nuniqueF): \"\"\" Traverse the input otu-sequence file, collect the non-unique OTU IDs and file the sequences associated with then under the unique OTU ID as defined by the input matrix. :@type otuF: file :@param otuF: The output file from QIIME's pick_otus.py :@type nuniqueF: file :@param nuniqueF: The matrix of unique OTU IDs associated to the list of non-unique OTU IDs they replaced. :@rtype: dict :@return: The new condensed table of unique OTU IDs and the sequence IDs associated with them. \"\"\" uniqueOTUs = set() nuOTUs = {} for line in nuniqueF: line = line.split() uOTU = line[0] for nuOTU in line[1:]: nuOTUs[nuOTU] = uOTU uniqueOTUs.add(uOTU) otuFilter = defaultdict(list) for line in otuF: line = line.split() otuID, seqIDs = line[0], line[1:] if otuID in uniqueOTUs: otuFilter[otuID].extend(seqIDs) elif otuID in nuOTUs: otuFilter[nuOTUs[otuID]].extend(seqIDs) return otuFilter",
+        "label": 0
+    },
+    {
+        "code": "def rna_bases(rna_cov, scaffold, bases, line): \"\"\" determine if read overlaps with rna, if so count bases \"\"\" start = int(line[3]) stop = start + bases - 1 if scaffold not in rna_cov: return rna_cov for pos in rna_cov[scaffold][2]: ol = get_overlap([start, stop], pos) rna_cov[scaffold][0] += ol return rna_cov",
+        "label": 0
+    },
+    {
+        "code": "def parse_s2bins(s2bins): \"\"\" parse ggKbase scaffold-to-bin mapping - scaffolds-to-bins and bins-to-scaffolds \"\"\" s2b = {} b2s = {} for line in s2bins: line = line.strip().split() s, b = line[0], line[1] if 'UNK' in b: continue if len(line) > 2: g = ' '.join(line[2:]) else: g = 'n/a' b = '%s\\t%s' % (b, g) s2b[s] = b if b not in b2s: b2s[b] = [] b2s[b].append(s) return s2b, b2s",
+        "label": 0
+    },
+    {
+        "code": "def filter_missing_rna(s2bins, bins2s, rna_cov): \"\"\" remove any bins that don't have 16S \"\"\" for bin, scaffolds in list(bins2s.items()): c = 0 for s in scaffolds: if s in rna_cov: c += 1 if c == 0: del bins2s[bin] for scaffold, bin in list(s2bins.items()): if bin not in bins2s: del s2bins[scaffold] return s2bins, bins2s",
+        "label": 0
+    },
+    {
+        "code": "def calc_bin_cov(scaffolds, cov): \"\"\" calculate bin coverage \"\"\" bases = sum([cov[i][0] for i in scaffolds if i in cov]) length = sum([cov[i][1] for i in scaffolds if i in cov]) if length == 0: return 0 return float(float(bases)/float(length))",
+        "label": 0
+    },
+    {
+        "code": "def clean(self): \"\"\" Make sure there is at least a translation has been filled in. If a default language has been specified, make sure that it exists amongst translations. \"\"\" super(TranslationFormSet, self).clean() if settings.HIDE_LANGUAGE: return if len(self.forms) > 0: if settings.DEFAULT_LANGUAGE and not any(self.errors): for form in self.forms: language_code = form.cleaned_data.get( 'language_code', None ) if language_code == settings.DEFAULT_LANGUAGE: return raise forms.ValidationError(_( 'No translation provided for default language \\'%s\\'.' ) % settings.DEFAULT_LANGUAGE) else: raise forms.ValidationError( _('At least one translation should be provided.') )",
+        "label": 0
+    },
+    {
+        "code": "def _get_default_language(self): \"\"\" If a default language has been set, and is still available in `self.available_languages`, return it and remove it from the list. If not, simply pop the first available language. \"\"\" assert hasattr(self, 'available_languages'), \\ 'No available languages have been generated.' assert len(self.available_languages) > 0, \\ 'No available languages to select from.' if ( settings.DEFAULT_LANGUAGE and settings.DEFAULT_LANGUAGE in self.available_languages ) or ( 'language_code' not in self.form.base_fields ): self.available_languages.remove(settings.DEFAULT_LANGUAGE) return settings.DEFAULT_LANGUAGE else: return self.available_languages.pop(0)",
+        "label": 0
+    },
+    {
+        "code": "def _construct_form(self, i, **kwargs): \"\"\" Construct the form, overriding the initial value for `language_code`. \"\"\" if not settings.HIDE_LANGUAGE: self._construct_available_languages() form = super(TranslationFormSet, self)._construct_form(i, **kwargs) if settings.HIDE_LANGUAGE: form.instance.language_code = settings.DEFAULT_LANGUAGE else: language_code = form.instance.language_code if language_code: logger.debug( u'Removing translation choice %s for instance %s' u' in form %d', language_code, form.instance, i ) self.available_languages.remove(language_code) else: initial_language_code = self._get_default_language() logger.debug( u'Preselecting language code %s for form %d', initial_language_code, i ) form.initial['language_code'] = initial_language_code return form",
+        "label": 0
+    },
+    {
+        "code": "def fq_merge(R1, R2): \"\"\" merge separate fastq files \"\"\" c = itertools.cycle([1, 2, 3, 4]) for r1, r2 in zip(R1, R2): n = next(c) if n == 1: pair = [[], []] pair[0].append(r1.strip()) pair[1].append(r2.strip()) if n == 4: yield pair",
+        "label": 0
+    },
+    {
+        "code": "def _build_circle(self): \"\"\" Creates hash ring. \"\"\" total_weight = 0 for node in self._nodes: total_weight += self._weights.get(node, 1) for node in self._nodes: weight = self._weights.get(node, 1) ks = math.floor((40 * len(self._nodes) * weight) / total_weight) for i in xrange(0, int(ks)): b_key = self._md5_digest('%s-%s-salt' % (node, i)) for l in xrange(0, 4): key = ((b_key[3 + l * 4] << 24) | (b_key[2 + l * 4] << 16) | (b_key[1 + l * 4] << 8) | b_key[l * 4]) self._hashring[key] = node self._sorted_keys.append(key) self._sorted_keys.sort()",
+        "label": 0
+    },
+    {
+        "code": "def _gen_key(self, key): \"\"\" Return long integer for a given key, that represent it place on the hash ring. \"\"\" b_key = self._md5_digest(key) return self._hashi(b_key, lambda x: x)",
+        "label": 0
+    },
+    {
+        "code": "def has_custom_image(user_context, app_id): \"\"\"Returns True if there exists a custom image for app_id.\"\"\" possible_paths = _valid_custom_image_paths(user_context, app_id) return any(map(os.path.exists, possible_paths))",
+        "label": 0
+    },
+    {
+        "code": "def get_custom_image(user_context, app_id): \"\"\"Returns the custom image associated with a given app. If there are multiple candidate images on disk, one is chosen arbitrarily.\"\"\" possible_paths = _valid_custom_image_paths(user_context, app_id) existing_images = filter(os.path.exists, possible_paths) if len(existing_images) > 0: return existing_images[0]",
+        "label": 0
+    },
+    {
+        "code": "def set_custom_image(user_context, app_id, image_path): \"\"\"Sets the custom image for `app_id` to be the image located at `image_path`. If there already exists a custom image for `app_id` it will be deleted. Returns True is setting the image was successful.\"\"\" if image_path is None: return False if not os.path.exists(image_path): return False (root, ext) = os.path.splitext(image_path) if not is_valid_extension(ext): return False if has_custom_image(user_context, app_id): img = get_custom_image(user_context, app_id) assert(img is not None) os.remove(img) parent_dir = paths.custom_images_directory(user_context) new_path = os.path.join(parent_dir, app_id + ext) shutil.copyfile(image_path, new_path) return True",
+        "label": 0
+    },
+    {
+        "code": "def from_file(cls, fname, form=None): \"\"\" Read an orthography profile from a metadata file or a default tab-separated profile file. \"\"\" try: tg = TableGroup.from_file(fname) opfname = None except JSONDecodeError: tg = TableGroup.fromvalue(cls.MD) opfname = fname if len(tg.tables) != 1: raise ValueError('profile description must contain exactly one table') metadata = tg.common_props metadata.update(fname=Path(fname), form=form) return cls( *[{k: None if (k != cls.GRAPHEME_COL and v == cls.NULL) else v for k, v in d.items()} for d in tg.tables[0].iterdicts(fname=opfname)], **metadata)",
+        "label": 0
+    },
+    {
+        "code": "def from_text(cls, text, mapping='mapping'): \"\"\" Create a Profile instance from the Unicode graphemes found in `text`. Parameters ---------- text mapping Returns ------- A Profile instance. \"\"\" graphemes = Counter(grapheme_pattern.findall(text)) specs = [ OrderedDict([ (cls.GRAPHEME_COL, grapheme), ('frequency', frequency), (mapping, grapheme)]) for grapheme, frequency in graphemes.most_common()] return cls(*specs)",
+        "label": 0
+    },
+    {
+        "code": "def split_fasta(f, id2f): \"\"\" split fasta file into separate fasta files based on list of scaffolds that belong to each separate file \"\"\" opened = {} for seq in parse_fasta(f): id = seq[0].split('>')[1].split()[0] if id not in id2f: continue fasta = id2f[id] if fasta not in opened: opened[fasta] = '%s.fa' % fasta seq[1] += '\\n' with open(opened[fasta], 'a+') as f_out: f_out.write('\\n'.join(seq))",
+        "label": 1
+    },
+    {
+        "code": "def _is_user_directory(self, pathname): \"\"\"Check whether `pathname` is a valid user data directory This method is meant to be called on the contents of the userdata dir. As such, it will return True when `pathname` refers to a directory name that can be interpreted as a users' userID. \"\"\" fullpath = os.path.join(self.userdata_location(), pathname) return os.path.isdir(fullpath) and pathname.isdigit()",
+        "label": 0
+    },
+    {
+        "code": "def local_users(self): \"\"\"Returns an array of user ids for users on the filesystem\"\"\" userdirs = filter(self._is_user_directory, os.listdir(self.userdata_location())) return map(lambda userdir: user.User(self, int(userdir)), userdirs)",
+        "label": 0
+    },
+    {
+        "code": "def _calculate_degree_days(temperature_equivalent, base_temperature, cooling=False): \"\"\" Calculates degree days, starting with a series of temperature equivalent values Parameters ---------- temperature_equivalent : Pandas Series base_temperature : float cooling : bool Set True if you want cooling degree days instead of heating degree days Returns ------- Pandas Series called HDD_base_temperature for heating degree days or CDD_base_temperature for cooling degree days. \"\"\" if cooling: ret = temperature_equivalent - base_temperature else: ret = base_temperature - temperature_equivalent ret[ret < 0] = 0 prefix = 'CDD' if cooling else 'HDD' ret.name = '{}_{}'.format(prefix, base_temperature) return ret",
+        "label": 0
+    },
+    {
+        "code": "def status(self): \"\"\"Development status.\"\"\" return {self._acronym_status(l): l for l in self.resp_text.split('\\n') if l.startswith(self.prefix_status)}",
+        "label": 0
+    },
+    {
+        "code": "def licenses(self): \"\"\"OSI Approved license.\"\"\" return {self._acronym_lic(l): l for l in self.resp_text.split('\\n') if l.startswith(self.prefix_lic)}",
+        "label": 0
+    },
+    {
+        "code": "def licenses_desc(self): \"\"\"Remove prefix.\"\"\" return {self._acronym_lic(l): l.split(self.prefix_lic)[1] for l in self.resp_text.split('\\n') if l.startswith(self.prefix_lic)}",
+        "label": 0
+    },
+    {
+        "code": "def _acronym_lic(self, license_statement): \"\"\"Convert license acronym.\"\"\" pat = re.compile(r'\\(([\\w+\\W?\\s?]+)\\)') if pat.search(license_statement): lic = pat.search(license_statement).group(1) if lic.startswith('CNRI'): acronym_licence = lic[:4] else: acronym_licence = lic.replace(' ', '') else: acronym_licence = ''.join( [w[0] for w in license_statement.split(self.prefix_lic)[1].split()]) return acronym_licence",
+        "label": 0
+    },
+    {
+        "code": "def calcMD5(path): \"\"\" calc MD5 based on path \"\"\" if os.path.exists(path) is False: yield False else: command = ['md5sum', path] p = Popen(command, stdout = PIPE) for line in p.communicate()[0].splitlines(): yield line.decode('ascii').strip().split()[0] p.wait() yield False",
+        "label": 1
+    },
+    {
+        "code": "def wget(ftp, f = False, exclude = False, name = False, md5 = False, tries = 10): \"\"\" download files with wget \"\"\" if f is False: f = ftp.rsplit('/', 1)[-1] t = 0 while md5check(f, ftp, md5, exclude) is not True: t += 1 if name is not False: print(' if exclude is False: command = 'wget -q --random-wait %s' % (ftp) else: command = 'wget -q --random-wait -R %s %s' % (exclude, ftp) p = Popen(command, shell = True) p.communicate() if t >= tries: print('not downloaded:', name, f) return [f, False] return [f, True]",
+        "label": 1
+    },
+    {
+        "code": "def check(line, queries): \"\"\" check that at least one of queries is in list, l \"\"\" line = line.strip() spLine = line.replace('.', ' ').split() matches = set(spLine).intersection(queries) if len(matches) > 0: return matches, line.split('\\t') return matches, False",
+        "label": 0
+    },
+    {
+        "code": "def entrez(db, acc): \"\"\" search entrez using specified database and accession \"\"\" c1 = ['esearch', '-db', db, '-query', acc] c2 = ['efetch', '-db', 'BioSample', '-format', 'docsum'] p1 = Popen(c1, stdout = PIPE, stderr = PIPE) p2 = Popen(c2, stdin = p1.stdout, stdout = PIPE, stderr = PIPE) return p2.communicate()",
+        "label": 1
+    },
+    {
+        "code": "def searchAccession(acc): \"\"\" attempt to use NCBI Entrez to get BioSample ID \"\"\" out, error = entrez('genome', acc) for line in out.splitlines(): line = line.decode('ascii').strip() if 'Assembly_Accession' in line or 'BioSample' in line: newAcc = line.split('>')[1].split('<')[0].split('.')[0].split(',')[0] if len(newAcc) > 0: return (True, acc, newAcc) out, error = entrez('nucleotide', acc) for line in out.splitlines(): line = line.decode('ascii').strip() if 'Assembly_Accession' in line or 'BioSample' in line: newAcc = line.split('>')[1].split('<')[0].split('.')[0].split(',')[0] if len(newAcc) > 0: return (True, acc, newAcc) out, error = entrez('assembly', acc) for line in out.splitlines(): line = line.decode('ascii').strip() if 'Assembly_Accession' in line or 'BioSample' in line: newAcc = line.split('>')[1].split('<')[0].split('.')[0].split(',')[0] if len(newAcc) > 0: return (True, acc, newAcc) for error in error.splitlines(): error = error.decode('ascii').strip() if '500 Can' in error: return (False, acc, 'no network') return (False, acc, 'efetch failed')",
+        "label": 0
+    },
+    {
+        "code": "def getFTPs(accessions, ftp, search, exclude, convert = False, threads = 1, attempt = 1, max_attempts = 2): \"\"\" download genome info from NCBI \"\"\" info = wget(ftp)[0] allMatches = [] for genome in open(info, encoding = 'utf8'): genome = str(genome) matches, genomeInfo = check(genome, accessions) if genomeInfo is not False: f = genomeInfo[0] + search Gftp = genomeInfo[19] Gftp = Gftp + '/' + search allMatches.extend(matches) yield (Gftp, f, exclude, matches) newAccs = [] missing = accessions.difference(set(allMatches)) if convert is True: pool = Pool(threads) pool = pool.imap_unordered(searchAccession, missing) for newAcc in tqdm(pool, total = len(missing)): status, accession, newAcc = newAcc if status is True: newAccs.append(newAcc) print('not found:', accession, '->', newAcc) else: for accession in missing: print('not found:', accession) if len(newAccs) > 0 and attempt <= max_attempts: print('convert accession attempt', attempt) attempt += 1 for hit in getFTPs(set(newAccs), ftp, search, exclude, convert, threads = 1, attempt = attempt): yield hit",
+        "label": 1
+    },
+    {
+        "code": "def download(args): \"\"\" download genomes from NCBI \"\"\" accessions, infoFTP = set(args['g']), args['i'] search, exclude = args['s'], args['e'] FTPs = getFTPs(accessions, infoFTP, search, exclude, threads = args['t'], convert = args['convert']) if args['test'] is True: for genome in FTPs: print('found:', ';'.join(genome[-1]), genome[0]) return FTPs pool = Pool(args['t']) pool = pool.imap_unordered(wgetGenome, FTPs) files = [] for f in tqdm(pool, total = len(accessions)): files.append(f) return files",
+        "label": 0
+    },
+    {
+        "code": "def fix_fasta(fasta): \"\"\" remove pesky characters from fasta file header \"\"\" for seq in parse_fasta(fasta): seq[0] = remove_char(seq[0]) if len(seq[1]) > 0: yield seq",
+        "label": 0
+    },
+    {
+        "code": "def _calc_frames(stats): \"\"\" Compute a DataFrame summary of a Stats object. \"\"\" timings = [] callers = [] for key, values in iteritems(stats.stats): timings.append( pd.Series( key + values[:-1], index=timing_colnames, ) ) for caller_key, caller_values in iteritems(values[-1]): callers.append( pd.Series( key + caller_key + caller_values, index=caller_columns, ) ) timings_df = pd.DataFrame(timings) callers_df = pd.DataFrame(callers) timings_df['filename:funcname'] = \\ (timings_df['filename'] + ':' + timings_df['funcname']) timings_df = timings_df.groupby('filename:funcname').sum() return timings_df, callers_df",
+        "label": 0
+    },
+    {
+        "code": "def unmapped(sam, mates): \"\"\" get unmapped reads \"\"\" for read in sam: if read.startswith('@') is True: continue read = read.strip().split() if read[2] == '*' and read[6] == '*': yield read elif mates is True: if read[2] == '*' or read[6] == '*': yield read for i in read: if i == 'YT:Z:UP': yield read",
+        "label": 0
+    },
+    {
+        "code": "def parallel(processes, threads): \"\"\" execute jobs in processes using N threads \"\"\" pool = multithread(threads) pool.map(run_process, processes) pool.close() pool.join()",
+        "label": 1
+    },
+    {
+        "code": "def define_log_renderer(fmt, fpath, quiet): \"\"\" the final log processor that structlog requires to render. \"\"\" if fmt: return structlog.processors.JSONRenderer() if fpath is not None: return structlog.processors.JSONRenderer() if sys.stderr.isatty() and not quiet: return structlog.dev.ConsoleRenderer() return structlog.processors.JSONRenderer()",
+        "label": 0
+    },
+    {
+        "code": "def _structlog_default_keys_processor(logger_class, log_method, event): ''' Add unique id, type and hostname ''' global HOSTNAME if 'id' not in event: event['id'] = '%s_%s' % ( datetime.utcnow().strftime('%Y%m%dT%H%M%S'), uuid.uuid1().hex ) if 'type' not in event: event['type'] = 'log' event['host'] = HOSTNAME return event",
+        "label": 0
+    },
+    {
+        "code": "def define_log_processors(): \"\"\" log processors that structlog executes before final rendering \"\"\" return [ structlog.processors.TimeStamper(fmt=\"iso\"), _structlog_default_keys_processor, structlog.stdlib.PositionalArgumentsFormatter(), structlog.processors.StackInfoRenderer(), structlog.processors.format_exc_info, ]",
+        "label": 1
+    },
+    {
+        "code": "def _configure_logger(fmt, quiet, level, fpath, pre_hooks, post_hooks, metric_grouping_interval): \"\"\" configures a logger when required write to stderr or a file \"\"\" level = getattr(logging, level.upper()) global _GLOBAL_LOG_CONFIGURED if _GLOBAL_LOG_CONFIGURED: return def wrap_hook(fn): @wraps(fn) def processor(logger, method_name, event_dict): fn(event_dict) return event_dict return processor processors = define_log_processors() processors.extend( [ wrap_hook(h) for h in pre_hooks ] ) if metric_grouping_interval: processors.append(metrics_grouping_processor) log_renderer = define_log_renderer(fmt, fpath, quiet) stderr_required = (not quiet) pretty_to_stderr = ( stderr_required and ( fmt == \"pretty\" or (fmt is None and sys.stderr.isatty()) ) ) should_inject_pretty_renderer = ( pretty_to_stderr and not isinstance(log_renderer, structlog.dev.ConsoleRenderer) ) if should_inject_pretty_renderer: stderr_required = False processors.append(StderrConsoleRenderer()) processors.append(log_renderer) processors.extend( [ wrap_hook(h) for h in post_hooks ] ) streams = [] if stderr_required: streams.append(sys.stderr) if fpath is not None: streams.append(open(fpath, 'a')) assert len(streams) != 0, \"cannot configure logger for 0 streams\" stream = streams[0] if len(streams) == 1 else Stream(*streams) atexit.register(stream.close) structlog.configure( processors=processors, context_class=dict, logger_factory=LevelLoggerFactory(stream, level=level), wrapper_class=BoundLevelLogger, cache_logger_on_first_use=True, ) stdlib_root_log = logging.getLogger() stdlib_root_log.addHandler(StdlibStructlogHandler()) stdlib_root_log.setLevel(level) _GLOBAL_LOG_CONFIGURED = True",
+        "label": 1
+    },
+    {
+        "code": "def _add_base_info(self, event_dict): \"\"\" Instead of using a processor, adding basic information like caller, filename etc here. \"\"\" f = sys._getframe() level_method_frame = f.f_back caller_frame = level_method_frame.f_back return event_dict",
+        "label": 0
+    },
+    {
+        "code": "def _proxy_to_logger(self, method_name, event, *event_args, **event_kw): \"\"\" Propagate a method call to the wrapped logger. This is the same as the superclass implementation, except that it also preserves positional arguments in the `event_dict` so that the stdblib's support for format strings can be used. \"\"\" if isinstance(event, bytes): event = event.decode('utf-8') if event_args: event_kw['positional_args'] = event_args return super(BoundLevelLogger, self)._proxy_to_logger(method_name, event=event, **event_kw)",
+        "label": 0
+    },
+    {
+        "code": "def translate(rect, x, y, width=1): \"\"\" Given four points of a rectangle, translate the rectangle to the specified x and y coordinates and, optionally, change the width. :type rect: list of tuples :param rect: Four points describing a rectangle. :type x: float :param x: The amount to shift the rectangle along the x-axis. :type y: float :param y: The amount to shift the rectangle along the y-axis. :type width: float :param width: The amount by which to change the width of the rectangle. \"\"\" return ((rect[0][0]+x, rect[0][1]+y), (rect[1][0]+x, rect[1][1]+y), (rect[2][0]+x+width, rect[2][1]+y), (rect[3][0]+x+width, rect[3][1]+y))",
+        "label": 0
+    },
+    {
+        "code": "def remove_bad(string): \"\"\" remove problem characters from string \"\"\" remove = [':', ',', '(', ')', ' ', '|', ';', '\\''] for c in remove: string = string.replace(c, '_') return string",
+        "label": 0
+    },
+    {
+        "code": "def get_ids(a): \"\"\" make copy of sequences with short identifier \"\"\" a_id = '%s.id.fa' % (a.rsplit('.', 1)[0]) a_id_lookup = '%s.id.lookup' % (a.rsplit('.', 1)[0]) if check(a_id) is True: return a_id, a_id_lookup a_id_f = open(a_id, 'w') a_id_lookup_f = open(a_id_lookup, 'w') ids = [] for seq in parse_fasta(open(a)): id = id_generator() while id in ids: id = id_generator() ids.append(id) header = seq[0].split('>')[1] name = remove_bad(header) seq[0] = '>%s %s' % (id, header) print('\\n'.join(seq), file=a_id_f) print('%s\\t%s\\t%s' % (id, name, header), file=a_id_lookup_f) return a_id, a_id_lookup",
+        "label": 1
+    },
+    {
+        "code": "def convert2phylip(convert): \"\"\" convert fasta to phylip because RAxML is ridiculous \"\"\" out = '%s.phy' % (convert.rsplit('.', 1)[0]) if check(out) is False: convert = open(convert, 'rU') out_f = open(out, 'w') alignments = AlignIO.parse(convert, \"fasta\") AlignIO.write(alignments, out, \"phylip\") return out",
+        "label": 1
+    },
+    {
+        "code": "def run_iqtree(phy, model, threads, cluster, node): \"\"\" run IQ-Tree \"\"\" if threads > 24: ppn = 24 else: ppn = threads tree = '%s.treefile' % (phy) if check(tree) is False: if model is False: model = 'TEST' dir = os.getcwd() command = 'iqtree-omp -s %s -m %s -nt %s -quiet' % \\ (phy, model, threads) if cluster is False: p = Popen(command, shell = True) else: if node is False: node = '1' qsub = 'qsub -l nodes=%s:ppn=%s -m e -N iqtree' % (node, ppn) command = 'cd /tmp; mkdir iqtree; cd iqtree; cp %s/%s .; %s; mv * %s/; rm -r ../iqtree' \\ % (dir, phy, command, dir) re_call = 'cd %s; %s --no-fast --iq' % (dir.rsplit('/', 1)[0], ' '.join(sys.argv)) p = Popen('echo \"%s;%s\" | %s' % (command, re_call, qsub), shell = True) p.communicate() return tree",
+        "label": 1
+    },
+    {
+        "code": "def fix_tree(tree, a_id_lookup, out): \"\"\" get the names for sequences in the raxml tree \"\"\" if check(out) is False and check(tree) is True: tree = open(tree).read() for line in open(a_id_lookup): id, name, header = line.strip().split('\\t') tree = tree.replace(id+':', name+':') out_f = open(out, 'w') print(tree.strip(), file=out_f) return out",
+        "label": 1
+    },
+    {
+        "code": "def create_cluster(settings): \"\"\" Creates a new Nydus cluster from the given settings. :param settings: Dictionary of the cluster settings. :returns: Configured instance of ``nydus.db.base.Cluster``. >>> redis = create_cluster({ >>> 'backend': 'nydus.db.backends.redis.Redis', >>> 'router': 'nydus.db.routers.redis.PartitionRouter', >>> 'defaults': { >>> 'host': 'localhost', >>> 'port': 6379, >>> }, >>> 'hosts': { >>> 0: {'db': 0}, >>> 1: {'db': 1}, >>> 2: {'db': 2}, >>> } >>> }) \"\"\" settings = copy.deepcopy(settings) backend = settings.pop('engine', settings.pop('backend', None)) if isinstance(backend, basestring): Conn = import_string(backend) elif backend: Conn = backend else: raise KeyError('backend') cluster = settings.pop('cluster', None) if not cluster: Cluster = Conn.get_cluster() elif isinstance(cluster, basestring): Cluster = import_string(cluster) else: Cluster = cluster router = settings.pop('router', None) if not router: Router = BaseRouter elif isinstance(router, basestring): Router = import_string(router) else: Router = router return Cluster( router=Router, backend=Conn, **settings )",
+        "label": 0
+    },
+    {
+        "code": "def _get_translation(self, field, code): \"\"\" Gets the translation of a specific field for a specific language code. This raises ObjectDoesNotExist if the lookup was unsuccesful. As of today, this stuff is cached. As the cache is rather aggressive it might cause rather strange effects. However, we would see the same effects when an ordinary object is changed which is already in memory: the old state would remain. \"\"\" if not code in self._translation_cache: translations = self.translations.select_related() logger.debug( u'Matched with field %s for language %s. Attempting lookup.', field, code ) try: translation_obj = translations.get(language_code=code) except ObjectDoesNotExist: translation_obj = None self._translation_cache[code] = translation_obj logger.debug(u'Translation not found in cache.') else: logger.debug(u'Translation found in cache.') translation_obj = self._translation_cache.get(code) if not translation_obj: raise ObjectDoesNotExist field_value = getattr(translation_obj, field) logger.debug( u'Found translation object %s, returning value %s.', translation_obj, field_value ) return field_value",
+        "label": 0
+    },
+    {
+        "code": "def unicode_wrapper(self, property, default=ugettext('Untitled')): \"\"\" Wrapper to allow for easy unicode representation of an object by the specified property. If this wrapper is not able to find the right translation of the specified property, it will return the default value instead. Example:: def __unicode__(self): return unicode_wrapper('name', default='Unnamed') \"\"\" try: value = getattr(self, property) except ValueError: logger.warn( u'ValueError rendering unicode for %s object.', self._meta.object_name ) value = None if not value: value = default return value",
+        "label": 0
+    },
+    {
+        "code": "def strip_inserts(fasta): \"\"\" remove insertion columns from aligned fasta file \"\"\" for seq in parse_fasta(fasta): seq[1] = ''.join([b for b in seq[1] if b == '-' or b.isupper()]) yield seq",
+        "label": 0
+    },
+    {
+        "code": "def transform(self, word, column=Profile.GRAPHEME_COL, error=errors.replace): \"\"\" Transform a string's graphemes into the mappings given in a different column in the orthography profile. Parameters ---------- word : str The input string to be tokenized. column : str (default = \"Grapheme\") The label of the column to transform to. Default it to tokenize with orthography profile. Returns ------- result : list of lists Result of the transformation. \"\"\" assert self.op, 'method can only be called with orthography profile.' if column != Profile.GRAPHEME_COL and column not in self.op.column_labels: raise ValueError(\"Column {0} not found in profile.\".format(column)) word = self.op.tree.parse(word, error) if column == Profile.GRAPHEME_COL: return word out = [] for token in word: try: target = self.op.graphemes[token][column] except KeyError: target = self._errors['replace'](token) if target is not None: if isinstance(target, (tuple, list)): out.extend(target) else: out.append(target) return out",
+        "label": 0
+    },
+    {
+        "code": "def rules(self, word): \"\"\" Function to tokenize input string and return output of str with ortho rules applied. Parameters ---------- word : str The input string to be tokenized. Returns ------- result : str Result of the orthography rules applied to the input str. \"\"\" return self._rules.apply(word) if self._rules else word",
+        "label": 0
+    },
+    {
+        "code": "def combine_modifiers(self, graphemes): \"\"\" Given a string that is space-delimited on Unicode grapheme clusters, group Unicode modifier letters with their preceding base characters, deal with tie bars, etc. Parameters ---------- string : str A Unicode string tokenized into grapheme clusters to be tokenized into simple IPA. \"\"\" result = [] temp = \"\" count = len(graphemes) for grapheme in reversed(graphemes): count -= 1 if len(grapheme) == 1 and unicodedata.category(grapheme) == \"Lm\" \\ and not ord(grapheme) in [712, 716]: temp = grapheme + temp if count == 0: result[-1] = temp + result[-1] continue if len(grapheme) == 1 and ord(grapheme) in [712, 716]: result[-1] = grapheme + result[-1] temp = \"\" continue if len(grapheme) == 1 and unicodedata.category(grapheme) == \"Sk\": if len(result) == 0: result.append(grapheme) temp = \"\" continue else: if unicodedata.category(result[-1][0]) == \"Sk\": result[-1] = grapheme + result[-1] temp = \"\" continue result.append(grapheme + temp) temp = \"\" segments = result[::-1] i = 0 r = [] while i < len(segments): if ord(segments[i][-1]) in [865, 860]: r.append(segments[i] + segments[i + 1]) i += 2 else: r.append(segments[i]) i += 1 return r",
+        "label": 0
+    },
+    {
+        "code": "def parse_catalytic(insertion, gff): \"\"\" parse catalytic RNAs to gff format \"\"\" offset = insertion['offset'] GeneStrand = insertion['strand'] if type(insertion['intron']) is not str: return gff for intron in parse_fasta(insertion['intron'].split('|')): ID, annot, strand, pos = intron[0].split('>')[1].split() Start, End = [int(i) for i in pos.split('-')] if strand != GeneStrand: if strand == '+': strand = '-' else: strand = '+' Start, End = End - 2, Start - 2 Start, End = abs(Start + offset) - 1, abs(End + offset) - 1 gff[' gff['source'].append('Rfam') gff['feature'].append('Catalytic RNA') gff['start'].append(Start) gff['end'].append(End) gff['score'].append('.') gff['strand'].append(strand) gff['frame'].append('.') gff['attribute'].append('ID=%s; Name=%s' % (ID, annot)) return gff",
+        "label": 0
+    },
+    {
+        "code": "def parse_orf(insertion, gff): \"\"\" parse ORF to gff format \"\"\" offset = insertion['offset'] if type(insertion['orf']) is not str: return gff for orf in parse_fasta(insertion['orf'].split('|')): ID = orf[0].split('>')[1].split()[0] Start, End, strand = [int(i) for i in orf[0].split(' if strand == 1: strand = '+' else: strand = '-' GeneStrand = insertion['strand'] if strand != GeneStrand: if strand == '+': strand = '-' else: strand = '+' Start, End = End - 2, Start - 2 Start, End = abs(Start + offset) - 1, abs(End + offset) - 1 annot = orf[0].split()[1] if annot == 'n/a': annot = 'unknown' gff[' gff['source'].append('Prodigal and Pfam') gff['feature'].append('CDS') gff['start'].append(Start) gff['end'].append(End) gff['score'].append('.') gff['strand'].append(strand) gff['frame'].append('.') gff['attribute'].append('ID=%s; Name=%s' % (ID, annot)) return gff",
+        "label": 0
+    },
+    {
+        "code": "def parse_insertion(insertion, gff): \"\"\" parse insertion to gff format \"\"\" offset = insertion['offset'] for ins in parse_fasta(insertion['insertion sequence'].split('|')): strand = insertion['strand'] ID = ins[0].split('>')[1].split()[0] Start, End = [int(i) for i in ins[0].split('gene-pos=', 1)[1].split()[0].split('-')] Start, End = abs(Start + offset), abs(End + offset) if strand == '-': Start, End = End, Start gff[' gff['source'].append(insertion['source']) gff['feature'].append('IVS') gff['start'].append(Start) gff['end'].append(End) gff['score'].append('.') gff['strand'].append(strand) gff['frame'].append('.') gff['attribute'].append('ID=%s' % (ID)) return gff",
+        "label": 0
+    },
+    {
+        "code": "def parse_rRNA(insertion, seq, gff): \"\"\" parse rRNA to gff format \"\"\" offset = insertion['offset'] strand = insertion['strand'] for rRNA in parse_masked(seq, 0)[0]: rRNA = ''.join(rRNA) Start = seq[1].find(rRNA) + 1 End = Start + len(rRNA) - 1 if strand == '-': Start, End = End - 2, Start - 2 pos = (abs(Start + offset) - 1, abs(End + offset) - 1) Start, End = min(pos), max(pos) source = insertion['source'] annot = '%s rRNA' % (source.split('from', 1)[0]) gff[' gff['source'].append(source) gff['feature'].append('rRNA') gff['start'].append(Start) gff['end'].append(End) gff['score'].append('.') gff['strand'].append(strand) gff['frame'].append('.') gff['attribute'].append('Name=%s' % (annot)) return gff",
+        "label": 0
+    },
+    {
+        "code": "def iTable2GFF(iTable, fa, contig = False): \"\"\" convert iTable to gff file \"\"\" columns = [' gff = {c:[] for c in columns} for insertion in iTable.iterrows(): insertion = insertion[1] if insertion['ID'] not in fa: continue strand = insertion['sequence'].split('strand=', 1)[1].split()[0] if contig is True: gene = [int(i) for i in insertion['sequence'].split('pos=', 1)[1].split()[0].split('-')] if strand == '-': offset = -1 * (gene[1]) else: offset = gene[0] else: strand = '+' gene = [1, int(insertion['sequence'].split('total-len=', 1)[1].split()[0])] offset = gene[0] insertion['strand'] = strand insertion['offset'] = offset source = insertion['sequence'].split('::model', 1)[0].rsplit(' ', 1)[-1] insertion['source'] = source geneAnnot = '%s rRNA gene' % (source.split('from', 1)[0]) geneNum = insertion['sequence'].split('seq=', 1)[1].split()[0] gff[' gff['source'].append(source) gff['feature'].append('Gene') gff['start'].append(gene[0]) gff['end'].append(gene[1]) gff['score'].append('.') gff['strand'].append(strand) gff['frame'].append('.') gff['attribute'].append('ID=%s; Name=%s' % (geneNum, geneAnnot)) gff = parse_rRNA(insertion, fa[insertion['ID']], gff) gff = parse_insertion(insertion, gff) gff = parse_orf(insertion, gff) gff = parse_catalytic(insertion, gff) return pd.DataFrame(gff)[columns].drop_duplicates()",
+        "label": 0
+    },
+    {
+        "code": "def summarize_taxa(biom): \"\"\" Given an abundance table, group the counts by every taxonomic level. \"\"\" tamtcounts = defaultdict(int) tot_seqs = 0.0 for row, col, amt in biom['data']: tot_seqs += amt rtax = biom['rows'][row]['metadata']['taxonomy'] for i, t in enumerate(rtax): t = t.strip() if i == len(rtax)-1 and len(t) > 3 and len(rtax[-1]) > 3: t = 's__'+rtax[i-1].strip().split('_')[-1]+'_'+t.split('_')[-1] tamtcounts[t] += amt lvlData = {lvl: levelData(tamtcounts, tot_seqs, lvl) for lvl in ['k', 'p', 'c', 'o', 'f', 'g', 's']} return tot_seqs, lvlData",
+        "label": 0
+    },
+    {
+        "code": "def custom_image(self, user): \"\"\"Returns the path to the custom image set for this game, or None if no image is set\"\"\" for ext in self.valid_custom_image_extensions(): image_location = self._custom_image_path(user, ext) if os.path.isfile(image_location): return image_location return None",
+        "label": 0
+    },
+    {
+        "code": "def set_image(self, user, image_path): \"\"\"Sets a custom image for the game. `image_path` should refer to an image file on disk\"\"\" _, ext = os.path.splitext(image_path) shutil.copy(image_path, self._custom_image_path(user, ext))",
+        "label": 0
+    },
+    {
+        "code": "def sam_list(sam): \"\"\" get a list of mapped reads \"\"\" list = [] for file in sam: for line in file: if line.startswith('@') is False: line = line.strip().split() id, map = line[0], int(line[1]) if map != 4 and map != 8: list.append(id) return set(list)",
+        "label": 0
+    },
+    {
+        "code": "def sam_list_paired(sam): \"\"\" get a list of mapped reads require that both pairs are mapped in the sam file in order to remove the reads \"\"\" list = [] pair = ['1', '2'] prev = '' for file in sam: for line in file: if line.startswith('@') is False: line = line.strip().split() id, map = line[0], int(line[1]) if map != 4 and map != 8: read = id.rsplit('/')[0] if read == prev: list.append(read) prev = read return set(list)",
+        "label": 0
+    },
+    {
+        "code": "def filter_paired(list): \"\"\" require that both pairs are mapped in the sam file in order to remove the reads \"\"\" pairs = {} filtered = [] for id in list: read = id.rsplit('/')[0] if read not in pairs: pairs[read] = [] pairs[read].append(id) for read in pairs: ids = pairs[read] if len(ids) == 2: filtered.extend(ids) return set(filtered)",
+        "label": 0
+    },
+    {
+        "code": "def sam2fastq(line): \"\"\" print fastq from sam \"\"\" fastq = [] fastq.append('@%s' % line[0]) fastq.append(line[9]) fastq.append('+%s' % line[0]) fastq.append(line[10]) return fastq",
+        "label": 0
+    },
+    {
+        "code": "def check_mismatches(read, pair, mismatches, mm_option, req_map): \"\"\" - check to see if the read maps with <= threshold number of mismatches - mm_option = 'one' or 'both' depending on whether or not one or both reads in a pair need to pass the mismatch threshold - pair can be False if read does not have a pair - make sure alignment score is not 0, which would indicate that the read was not aligned to the reference \"\"\" if pair is False: mm = count_mismatches(read) if mm is False: return False if mismatches is False: return True if mm <= mismatches: return True r_mm = count_mismatches(read) p_mm = count_mismatches(pair) if r_mm is False and p_mm is False: return False if mismatches is False: return True if req_map is True: if r_mm is False or p_mm is False: return False if mm_option == 'one': if (r_mm is not False and r_mm <= mismatches) or (p_mm is not False and p_mm <= mismatches): return True if mm_option == 'both': if r_mm is False: if p_mm <= mismatches: return True elif p_mm is False: if r_mm <= mismatches: return True elif (r_mm is not False and r_mm <= mismatches) and (p_mm is not False and p_mm <= mismatches): return True return False",
+        "label": 0
+    },
+    {
+        "code": "def check_region(read, pair, region): \"\"\" determine whether or not reads map to specific region of scaffold \"\"\" if region is False: return True for mapping in read, pair: if mapping is False: continue start, length = int(mapping[3]), len(mapping[9]) r = [start, start + length - 1] if get_overlap(r, region) > 0: return True return False",
+        "label": 0
+    },
+    {
+        "code": "def get_steam(): \"\"\" Returns a Steam object representing the current Steam installation on the users computer. If the user doesn't have Steam installed, returns None. \"\"\" helper = lambda udd: Steam(udd) if os.path.exists(udd) else None plat = platform.system() if plat == 'Darwin': return helper(paths.default_osx_userdata_path()) if plat == 'Linux': return helper(paths.default_linux_userdata_path()) if plat == 'Windows': possible_dir = winutils.find_userdata_directory() return helper(possible_dir) if possible_dir is not None else None return None",
+        "label": 0
+    },
+    {
+        "code": "def zero_to_one(table, option): \"\"\" normalize from zero to one for row or table \"\"\" if option == 'table': m = min(min(table)) ma = max(max(table)) t = [] for row in table: t_row = [] if option != 'table': m, ma = min(row), max(row) for i in row: if ma == m: t_row.append(0) else: t_row.append((i - m)/(ma - m)) t.append(t_row) return t",
+        "label": 0
+    },
+    {
+        "code": "def pertotal(table, option): \"\"\" calculate percent of total \"\"\" if option == 'table': total = sum([i for line in table for i in line]) t = [] for row in table: t_row = [] if option != 'table': total = sum(row) for i in row: if total == 0: t_row.append(0) else: t_row.append(i/total*100) t.append(t_row) return t",
+        "label": 0
+    },
+    {
+        "code": "def scale(table): \"\"\" scale table based on the column with the largest sum \"\"\" t = [] columns = [[] for i in table[0]] for row in table: for i, v in enumerate(row): columns[i].append(v) sums = [float(sum(i)) for i in columns] scale_to = float(max(sums)) scale_factor = [scale_to/i for i in sums if i != 0] for row in table: t.append([a * b for a,b in zip(row, scale_factor)]) return t",
+        "label": 0
+    },
+    {
+        "code": "def norm(table): \"\"\" fit to normal distribution \"\"\" print(' exit() from matplotlib.pyplot import hist as hist t = [] for i in table: t.append(np.ndarray.tolist(hist(i, bins = len(i), normed = True)[0])) return t",
+        "label": 0
+    },
+    {
+        "code": "def log_trans(table): \"\"\" log transform each value in table \"\"\" t = [] all = [item for sublist in table for item in sublist] if min(all) == 0: scale = min([i for i in all if i != 0]) * 10e-10 else: scale = 0 for i in table: t.append(np.ndarray.tolist(np.log10([j + scale for j in i]))) return t",
+        "label": 0
+    },
+    {
+        "code": "def box_cox(table): \"\"\" box-cox transform table \"\"\" from scipy.stats import boxcox as bc t = [] for i in table: if min(i) == 0: scale = min([j for j in i if j != 0]) * 10e-10 else: scale = 0 t.append(np.ndarray.tolist(bc(np.array([j + scale for j in i]))[0])) return t",
+        "label": 0
+    },
+    {
+        "code": "def inh(table): \"\"\" inverse hyperbolic sine transformation \"\"\" t = [] for i in table: t.append(np.ndarray.tolist(np.arcsinh(i))) return t",
+        "label": 0
+    },
+    {
+        "code": "def diri(table): \"\"\" from SparCC - \"randomly draw from the corresponding posterior Dirichlet distribution with a uniform prior\" \"\"\" t = [] for i in table: a = [j + 1 for j in i] t.append(np.ndarray.tolist(np.random.mtrand.dirichlet(a))) return t",
+        "label": 0
+    },
+    {
+        "code": "def generate_barcodes(nIds, codeLen=12): \"\"\" Given a list of sample IDs generate unique n-base barcodes for each. Note that only 4^n unique barcodes are possible. \"\"\" def next_code(b, c, i): return c[:i] + b + (c[i+1:] if i < -1 else '') def rand_base(): return random.choice(['A', 'T', 'C', 'G']) def rand_seq(n): return ''.join([rand_base() for _ in range(n)]) hpf = re.compile('aaaa|cccc|gggg|tttt', re.IGNORECASE) while True: codes = [rand_seq(codeLen)] if (hpf.search(codes[0]) is None): break idx = 0 while len(codes) < nIds: idx -= 1 if idx < -codeLen: idx = -1 codes.append(rand_seq(codeLen)) else: nc = next_code(rand_base(), codes[-1], idx) if hpf.search(nc) is None: codes.append(nc) codes = list(set(codes)) return codes",
+        "label": 0
+    },
+    {
+        "code": "def scrobble_data_dir(dataDir, sampleMap, outF, qualF=None, idopt=None, utf16=False): \"\"\" Given a sample ID and a mapping, modify a Sanger FASTA file to include the barcode and 'primer' in the sequence data and change the description line as needed. \"\"\" seqcount = 0 outfiles = [osp.split(outF.name)[1]] if qualF: outfiles.append(osp.split(qualF.name)[1]) for item in os.listdir(dataDir): if item in outfiles or not osp.isfile(os.path.join(dataDir, item)): continue if osp.splitext(item)[1] in file_types['fasta']: fh = open_enc(os.path.join(dataDir, item), utf16) records = SeqIO.parse(fh, 'fasta') for record in records: if isinstance(idopt, tuple): sep, field = idopt sampleID = record.id.split(sep)[field - 1] else: sampleID = osp.splitext(item)[0] record.seq = (sampleMap[sampleID].barcode + sampleMap[sampleID].primer + record.seq) SeqIO.write(record, outF, 'fasta') seqcount += 1 fh.close() elif qualF and osp.splitext(item)[1] in file_types['qual']: fh = open_enc(os.path.join(dataDir, item), utf16) records = SeqIO.parse(fh, 'qual') for record in records: mi = sampleMap[sampleMap.keys()[0]] quals = [40 for _ in range(len(mi.barcode) + len(mi.primer))] record.letter_annotations['phred_quality'][0:0] = quals SeqIO.write(record, qualF, 'qual') fh.close() return seqcount",
+        "label": 0
+    },
+    {
+        "code": "def handle_program_options(): \"\"\" Uses the built-in argparse module to handle command-line options for the program. :return: The gathered command-line options specified by the user :rtype: argparse.ArgumentParser \"\"\" parser = argparse.ArgumentParser(description=\"Convert Sanger-sequencing \\ derived data files for use with the \\ metagenomics analysis program QIIME, by \\ extracting Sample ID information, adding\\ barcodes and primers to the sequence \\ data, and outputting a mapping file and\\ single FASTA-formatted sequence file \\ formed by concatenating all input data.\") parser.add_argument('-i', '--input_dir', required=True, help=\"The directory containing sequence data files. \\ Assumes all data files are placed in this \\ directory. For files organized within folders by\\ sample, use -s in addition.\") parser.add_argument('-m', '--map_file', default='map.txt', help=\"QIIME-formatted mapping file linking Sample IDs \\ with barcodes and primers.\") parser.add_argument('-o', '--output', default='output.fasta', metavar='OUTPUT_FILE', help=\"Single file containing all sequence data found \\ in input_dir, FASTA-formatted with barcode and \\ primer preprended to sequence. If the -q option \\ is passed, any quality data will also be output \\ to a single file of the same name with a .qual \\ extension.\") parser.add_argument('-b', '--barcode_length', type=int, default=12, help=\"Length of the generated barcode sequences. \\ Default is 12 (QIIME default), minimum is 8.\") parser.add_argument('-q', '--qual', action='store_true', default=False, help=\"Instruct the program to look for quality \\ input files\") parser.add_argument('-u', '--utf16', action='store_true', default=False, help=\"UTF-16 encoded input files\") parser.add_argument('-t', '--treatment', help=\"Inserts an additional column into the mapping \\ file specifying some treatment or other variable\\ that separates the current set of sequences \\ from any other set of seqeunces. For example:\\ -t DiseaseState=healthy\") sidGroup = parser.add_mutually_exclusive_group(required=True) sidGroup.add_argument('-d', '--identifier_pattern', action=ValidateIDPattern, nargs=2, metavar=('SEPARATOR', 'FIELD_NUMBER'), help=\"Indicates how to extract the Sample ID from \\ the description line. Specify two things: \\ 1. Field separator, 2. Field number of Sample \\ ID (1 or greater). If the separator is a space \\ or tab, use \\s or \\\\t respectively. \\ Example: >ka-SampleID-2091, use -i - 2, \\ indicating - is the separator and the Sample ID\\ is field sidGroup.add_argument('-f', '--filename_sample_id', action='store_true', default=False, help='Specify that the program should\\ the name of each fasta file as the Sample ID for use\\ in the mapping file. This is meant to be used when \\ all sequence data for a sample is stored in a single\\ file.') return parser.parse_args()",
+        "label": 0
+    },
+    {
+        "code": "def arcsin_sqrt(biom_tbl): \"\"\" Applies the arcsine square root transform to the given BIOM-format table \"\"\" arcsint = lambda data, id_, md: np.arcsin(np.sqrt(data)) tbl_relabd = relative_abd(biom_tbl) tbl_asin = tbl_relabd.transform(arcsint, inplace=False) return tbl_asin",
+        "label": 0
+    },
+    {
+        "code": "def parse_sam(sam, qual): \"\"\" parse sam file and check mapping quality \"\"\" for line in sam: if line.startswith('@'): continue line = line.strip().split() if int(line[4]) == 0 or int(line[4]) < qual: continue yield line",
+        "label": 0
+    },
+    {
+        "code": "def rc_stats(stats): \"\"\" reverse completement stats \"\"\" rc_nucs = {'A':'T', 'T':'A', 'G':'C', 'C':'G', 'N':'N'} rcs = [] for pos in reversed(stats): rc = {} rc['reference frequencey'] = pos['reference frequency'] rc['consensus frequencey'] = pos['consensus frequency'] rc['In'] = pos['In'] rc['Del'] = pos['Del'] rc['ref'] = rc_nucs[pos['ref']] rc['consensus'] = (rc_nucs[pos['consensus'][0]], pos['consensus'][1]) for base, stat in list(pos.items()): if base in rc_nucs: rc[rc_nucs[base]] = stat rcs.append(rc) return rcs",
+        "label": 0
+    },
+    {
+        "code": "def parse_codons(ref, start, end, strand): \"\"\" parse codon nucleotide positions in range start -> end, wrt strand \"\"\" codon = [] c = cycle([1, 2, 3]) ref = ref[start - 1:end] if strand == -1: ref = rc_stats(ref) for pos in ref: n = next(c) codon.append(pos) if n == 3: yield codon codon = []",
+        "label": 0
+    },
+    {
+        "code": "def calc_coverage(ref, start, end, length, nucs): \"\"\" calculate coverage for positions in range start -> end \"\"\" ref = ref[start - 1:end] bases = 0 for pos in ref: for base, count in list(pos.items()): if base in nucs: bases += count return float(bases)/float(length)",
+        "label": 0
+    },
+    {
+        "code": "def parse_gbk(gbks): \"\"\" parse gbk file \"\"\" for gbk in gbks: for record in SeqIO.parse(open(gbk), 'genbank'): for feature in record.features: if feature.type == 'gene': try: locus = feature.qualifiers['locus_tag'][0] except: continue if feature.type == 'CDS': try: locus = feature.qualifiers['locus_tag'][0] except: pass start = int(feature.location.start) + int(feature.qualifiers['codon_start'][0]) end, strand = int(feature.location.end), feature.location.strand if strand is None: strand = 1 else: strand = -1 contig = record.id yield contig, [locus, \\ [start, end, strand], \\ feature.qualifiers]",
+        "label": 1
+    },
+    {
+        "code": "def parse_fasta_annotations(fastas, annot_tables, trans_table): \"\"\" parse gene call information from Prodigal fasta output \"\"\" if annot_tables is not False: annots = {} for table in annot_tables: for cds in open(table): ID, start, end, strand = cds.strip().split() annots[ID] = [start, end, int(strand)] for fasta in fastas: for seq in parse_fasta(fasta): if (' print(' exit() if 'ID=' in seq[0]: ID = seq[0].rsplit('ID=', 1)[1].split(';', 1)[0] contig = seq[0].split()[0].split('>')[1].rsplit('_%s' % (ID), 1)[0] else: contig = seq[0].split()[0].split('>')[1].rsplit('_', 1)[0] locus = seq[0].split()[0].split('>')[1] if (' info = seq[0].split(' start, end, strand = int(info[1]), int(info[2]), info[3] if strand == '1': strand = 1 else: strand = -1 product = [''.join(info[4].split()[1:])] else: start, end, strand = annots[locus] product = seq[0].split(' ', 1)[1] info = {'transl_table':[trans_table], \\ 'translation':[seq[1]], \\ 'product':product} yield contig, [locus, [start, end, strand], info]",
+        "label": 1
+    },
+    {
+        "code": "def parse_annotations(annots, fmt, annot_tables, trans_table): \"\"\" parse annotations in either gbk or Prodigal fasta format \"\"\" annotations = {} if fmt is False: for contig, feature in parse_gbk(annots): if contig not in annotations: annotations[contig] = [] annotations[contig].append(feature) else: for contig, feature in parse_fasta_annotations(annots, annot_tables, trans_table): if contig not in annotations: annotations[contig] = [] annotations[contig].append(feature) return annotations",
+        "label": 0
+    },
+    {
+        "code": "def codon2aa(codon, trans_table): \"\"\" convert codon to amino acid \"\"\" return Seq(''.join(codon), IUPAC.ambiguous_dna).translate(table = trans_table)[0]",
+        "label": 0
+    },
+    {
+        "code": "def find_consensus(bases): \"\"\" find consensus base based on nucleotide frequencies \"\"\" nucs = ['A', 'T', 'G', 'C', 'N'] total = sum([bases[nuc] for nuc in nucs if nuc in bases]) try: top = max([bases[nuc] for nuc in nucs if nuc in bases]) except: bases['consensus'] = ('N', 'n/a') bases['consensus frequency'] = 'n/a' bases['reference frequency'] = 'n/a' return bases top = [(nuc, bases[nuc]) for nuc in bases if bases[nuc] == top] if top[0][1] == 0: bases['consensus'] = ('n/a', 0) else: bases['consensus'] = random.choice(top) if total == 0: c_freq = 'n/a' ref_freq = 'n/a' else: c_freq = float(bases['consensus'][1]) / float(total) if bases['ref'] not in bases: ref_freq = 0 else: ref_freq = float(bases[bases['ref']]) / float(total) bases['consensus frequency'] = c_freq bases['reference frequency'] = ref_freq return bases",
+        "label": 0
+    },
+    {
+        "code": "def print_consensus(genomes): \"\"\" print consensensus sequences for each genome and sample \"\"\" cons = {} for genome, contigs in list(genomes.items()): cons[genome] = {} for contig, samples in list(contigs.items()): for sample, stats in list(samples.items()): if sample not in cons[genome]: cons[genome][sample] = {} seq = cons[genome][sample][contig] = [] for pos, ps in enumerate(stats['bp_stats'], 1): ref, consensus = ps['ref'], ps['consensus'][0] if consensus == 'n/a': consensus = ref.lower() seq.append(consensus) for genome, samples in cons.items(): for sample, contigs in samples.items(): fn = '%s.%s.consensus.fa' % (genome, sample) f = open(fn, 'w') for contig, seq in contigs.items(): print('>%s' % (contig), file = f) print(''.join(seq), file = f) f.close() return cons",
+        "label": 1
+    },
+    {
+        "code": "def parse_cov(cov_table, scaffold2genome): \"\"\" calculate genome coverage from scaffold coverage table \"\"\" size = {} mapped = {} for line in open(cov_table): line = line.strip().split('\\t') if line[0].startswith(' samples = line[1:] samples = [i.rsplit('/', 1)[-1].split('.', 1)[0] for i in samples] continue scaffold, length = line[0].split(': ') length = float(length) covs = [float(i) for i in line[1:]] bases = [c * length for c in covs] if scaffold not in scaffold2genome: continue genome = scaffold2genome[scaffold] if genome not in size: size[genome] = 0 mapped[genome] = {sample:0 for sample in samples} size[genome] += length for sample, count in zip(samples, bases): mapped[genome][sample] += count coverage = {'genome':[], 'genome size (bp)':[], 'sample':[], 'coverage':[]} for genome, length in size.items(): for sample in samples: cov = mapped[genome][sample] / length coverage['genome'].append(genome) coverage['genome size (bp)'].append(length) coverage['sample'].append(sample) coverage['coverage'].append(cov) return pd.DataFrame(coverage)",
+        "label": 1
+    },
+    {
+        "code": "def genome_coverage(covs, s2b): \"\"\" calculate genome coverage from scaffold coverage \"\"\" COV = [] for cov in covs: COV.append(parse_cov(cov, s2b)) return pd.concat(COV)",
+        "label": 0
+    },
+    {
+        "code": "def parse_s2bs(s2bs): \"\"\" convert s2b files to dictionary \"\"\" s2b = {} for s in s2bs: for line in open(s): line = line.strip().split('\\t') s, b = line[0], line[1] s2b[s] = b return s2b",
+        "label": 1
+    },
+    {
+        "code": "def fa2s2b(fastas): \"\"\" convert fastas to s2b dictionary \"\"\" s2b = {} for fa in fastas: for seq in parse_fasta(fa): s = seq[0].split('>', 1)[1].split()[0] s2b[s] = fa.rsplit('/', 1)[-1].rsplit('.', 1)[0] return s2b",
+        "label": 0
+    },
+    {
+        "code": "def filter_ambiguity(records, percent=0.5): \"\"\" Filters out sequences with too much ambiguity as defined by the method parameters. :type records: list :param records: A list of sequences :type repeats: int :param repeats: Defines the number of repeated N that trigger truncating a sequence. :type percent: float :param percent: Defines the overall percentage of N in a sequence that will cause the sequence to be filtered out. \"\"\" seqs = [] count = 0 for record in records: if record.seq.count('N')/float(len(record)) < percent: seqs.append(record) count += 1 return seqs, count",
+        "label": 0
+    },
+    {
+        "code": "def package_existent(name): \"\"\"Search package. * :class:`bootstrap_py.exceptions.Conflict` exception occurs when user specified name has already existed. * :class:`bootstrap_py.exceptions.BackendFailure` exception occurs when PyPI service is down. :param str name: package name \"\"\" try: response = requests.get(PYPI_URL.format(name)) if response.ok: msg = ('[error] \"{0}\" is registered already in PyPI.\\n' '\\tSpecify another package name.').format(name) raise Conflict(msg) except (socket.gaierror, Timeout, ConnectionError, HTTPError) as exc: raise BackendFailure(exc)",
+        "label": 0
+    },
+    {
+        "code": "def append_index_id(id, ids): \"\"\" add index to id to make it unique wrt ids \"\"\" index = 1 mod = '%s_%s' % (id, index) while mod in ids: index += 1 mod = '%s_%s' % (id, index) ids.append(mod) return mod, ids",
+        "label": 0
+    },
+    {
+        "code": "def de_rep(fastas, append_index, return_original = False): \"\"\" de-replicate fastas based on sequence names \"\"\" ids = [] for fasta in fastas: for seq in parse_fasta(fasta): header = seq[0].split('>')[1].split() id = header[0] if id not in ids: ids.append(id) if return_original is True: yield [header, seq] else: yield seq elif append_index == True: new, ids = append_index_id(id, ids) if return_original is True: yield [header, ['>%s %s' % (new, ' '.join(header[1::])), seq[1]]] else: yield ['>%s %s' % (new, ' '.join(header[1::])), seq[1]]",
+        "label": 0
+    },
+    {
+        "code": "def get(postcode): \"\"\" Request data associated with `postcode`. :param postcode: the postcode to search for. The postcode may contain spaces (they will be removed). :returns: a dict of the nearest postcode's data or None if no postcode data is found. \"\"\" postcode = quote(postcode.replace(' ', '')) url = '%s/postcode/%s.json' % (END_POINT, postcode) return _get_json_resp(url)",
+        "label": 0
+    },
+    {
+        "code": "def get_from_postcode(postcode, distance): \"\"\" Request all postcode data within `distance` miles of `postcode`. :param postcode: the postcode to search for. The postcode may contain spaces (they will be removed). :param distance: distance in miles to `postcode`. :returns: a list of dicts containing postcode data within the specified distance or `None` if `postcode` is not valid. \"\"\" postcode = quote(postcode.replace(' ', '')) return _get_from(distance, 'postcode=%s' % postcode)",
+        "label": 0
+    },
+    {
+        "code": "def _check_point(self, lat, lng): \"\"\" Checks if latitude and longitude correct \"\"\" if abs(lat) > 90 or abs(lng) > 180: msg = \"Illegal lat and/or lng, (%s, %s) provided.\" % (lat, lng) raise IllegalPointException(msg)",
+        "label": 0
+    },
+    {
+        "code": "def _lookup(self, skip_cache, fun, *args, **kwargs): \"\"\" Checks for cached responses, before requesting from web-service \"\"\" if args not in self.cache or skip_cache: self.cache[args] = fun(*args, **kwargs) return self.cache[args]",
+        "label": 0
+    },
+    {
+        "code": "def get_nearest(self, lat, lng, skip_cache=False): \"\"\" Calls `postcodes.get_nearest` but checks correctness of `lat` and `long`, and by default utilises a local cache. :param skip_cache: optional argument specifying whether to skip the cache and make an explicit request. :raises IllegalPointException: if the latitude or longitude are out of bounds. :returns: a dict of the nearest postcode's data. \"\"\" lat, lng = float(lat), float(lng) self._check_point(lat, lng) return self._lookup(skip_cache, get_nearest, lat, lng)",
+        "label": 0
+    },
+    {
+        "code": "def get_from_postcode(self, postcode, distance, skip_cache=False): \"\"\" Calls `postcodes.get_from_postcode` but checks correctness of `distance`, and by default utilises a local cache. :param skip_cache: optional argument specifying whether to skip the cache and make an explicit request. :raises IllegalPointException: if the latitude or longitude are out of bounds. :returns: a list of dicts containing postcode data within the specified distance. \"\"\" distance = float(distance) if distance < 0: raise IllegalDistanceException(\"Distance must not be negative\") postcode = postcode.lower().replace(' ', '') return self._lookup(skip_cache, get_from_postcode, postcode, float(distance))",
+        "label": 0
+    },
+    {
+        "code": "def get_from_geo(self, lat, lng, distance, skip_cache=False): \"\"\" Calls `postcodes.get_from_geo` but checks the correctness of all arguments, and by default utilises a local cache. :param skip_cache: optional argument specifying whether to skip the cache and make an explicit request. :raises IllegalPointException: if the latitude or longitude are out of bounds. :returns: a list of dicts containing postcode data within the specified distance. \"\"\" lat, lng, distance = float(lat), float(lng), float(distance) if distance < 0: raise IllegalDistanceException(\"Distance must not be negative\") self._check_point(lat, lng) return self._lookup(skip_cache, get_from_geo, lat, lng, distance)",
+        "label": 0
+    },
+    {
+        "code": "def insertions_from_masked(seq): \"\"\" get coordinates of insertions from insertion-masked sequence \"\"\" insertions = [] prev = True for i, base in enumerate(seq): if base.isupper() and prev is True: insertions.append([]) prev = False elif base.islower(): insertions[-1].append(i) prev = True return [[min(i), max(i)] for i in insertions if i != []]",
+        "label": 0
+    },
+    {
+        "code": "def seq_info(names, id2names, insertions, sequences): \"\"\" get insertion information from header \"\"\" seqs = {} for name in names: id = id2names[name] gene = name.split('fromHMM::', 1)[0].rsplit(' ', 1)[1] model = name.split('fromHMM::', 1)[1].split('=', 1)[1].split()[0] i_gene_pos = insertions[id] i_model_pos = name.split('fromHMM::', 1)[1].split('model-pos(ins-len)=')[1].split()[0].split(';') i_info = [] for i, ins in enumerate(i_gene_pos): model_pos = i_model_pos[i].split('-')[1].split('(')[0] length = i_model_pos[i].split('(')[1].split(')')[0] iheader = '>%s_%s insertion::seq=%s type=insertion strand=n/a gene-pos=%s-%s model-pos=%s'\\ % (id, (i + 1), (i + 1), ins[0], ins[1], model_pos) iseq = sequences[id][1][ins[0]:(ins[1] + 1)] iseq = [iheader, iseq] info = [ins, model_pos, length, iseq, [], []] i_info.append(info) seqs[id] = [gene, model, i_info] return seqs",
+        "label": 0
+    },
+    {
+        "code": "def check_overlap(pos, ins, thresh): \"\"\" make sure thresh % feature is contained within insertion \"\"\" ins_pos = ins[0] ins_len = ins[2] ol = overlap(ins_pos, pos) feat_len = pos[1] - pos[0] + 1 if float(ol) / float(feat_len) >= thresh: return True return False",
+        "label": 0
+    },
+    {
+        "code": "def max_insertion(seqs, gene, domain): \"\"\" length of largest insertion \"\"\" seqs = [i[2] for i in list(seqs.values()) if i[2] != [] and i[0] == gene and i[1] == domain] lengths = [] for seq in seqs: for ins in seq: lengths.append(int(ins[2])) if lengths == []: return 100 return max(lengths)",
+        "label": 0
+    },
+    {
+        "code": "def model_length(gene, domain): \"\"\" get length of model \"\"\" if gene == '16S': domain2max = {'E_coli_K12': int(1538), 'bacteria': int(1689), 'archaea': int(1563), 'eukarya': int(2652)} return domain2max[domain] elif gene == '23S': domain2max = {'E_coli_K12': int(2903), 'bacteria': int(3146), 'archaea': int(3774), 'eukarya': int(9079)} return domain2max[domain] else: print(sys.stderr, ' exit()",
+        "label": 0
+    },
+    {
+        "code": "def setup_markers(seqs): \"\"\" setup unique marker for every orf annotation - change size if necessary \"\"\" family2marker = {} markers = cycle(['^', 'p', '*', '+', 'x', 'd', '|', 'v', '>', '<', '8']) size = 60 families = [] for seq in list(seqs.values()): for insertion in seq[2]: for family in list(insertion[-1].values()): if family not in families: families.append(family) for family in families: marker = next(markers) if marker == '^': size = size * 0.5 family2marker[family] = [marker, size] return family2marker",
+        "label": 0
+    },
+    {
+        "code": "def plot_by_gene_and_domain(name, seqs, tax, id2name): \"\"\" plot insertions for each gene and domain \"\"\" for gene in set([seq[0] for seq in list(seqs.values())]): for domain in set([seq[1] for seq in list(seqs.values())]): plot_insertions(name, seqs, gene, domain, tax, id2name)",
+        "label": 0
+    },
+    {
+        "code": "def get_descriptions(fastas): \"\"\" get the description for each ORF \"\"\" id2desc = {} for fasta in fastas: for seq in parse_fasta(fasta): header = seq[0].split('>')[1].split(' ') id = header[0] if len(header) > 1: desc = ' '.join(header[1:]) else: desc = 'n/a' length = float(len([i for i in seq[1].strip() if i != '*'])) id2desc[id] = [fasta, desc, length] return id2desc",
+        "label": 0
+    },
+    {
+        "code": "def print_genome_matrix(hits, fastas, id2desc, file_name): \"\"\" optimize later? slow ... should combine with calculate_threshold module \"\"\" out = open(file_name, 'w') fastas = sorted(fastas) print(' print(' for fasta in fastas: line = [fasta] for other in fastas: if other == fasta: average = '-' else: average = numpy.average([hits[fasta][other][i][3] for i in hits[fasta][other]]) line.append(str(average)) print('\\t'.join(line), file=out) print('', file=out) print(' print(' for fasta in fastas: line = [fasta] for other in fastas: if other == fasta: percent = '-' else: orthologs = float(len(hits[fasta][other])) orfs = float(len([i for i in id2desc if id2desc[i][0] == fasta])) percent = float(orthologs / orfs) * 100 line.append(str(percent)) print('\\t'.join(line), file=out)",
+        "label": 1
+    },
+    {
+        "code": "def self_compare(fastas, id2desc, algorithm): \"\"\" compare genome to self to get the best possible bit score for each ORF \"\"\" for fasta in fastas: blast = open(search(fasta, fasta, method = algorithm, alignment = 'local')) for hit in best_blast(blast, 1): id, bit = hit[0].split()[0], float(hit[-1]) id2desc[id].append(bit) return id2desc",
+        "label": 1
+    },
+    {
+        "code": "def calc_thresholds(rbh, file_name, thresholds = [False, False, False, False], stdevs = 2): \"\"\" if thresholds are not specififed, calculate based on the distribution of normalized bit scores \"\"\" calc_threshold = thresholds[-1] norm_threshold = {} for pair in itertools.permutations([i for i in rbh], 2): if pair[0] not in norm_threshold: norm_threshold[pair[0]] = {} norm_threshold[pair[0]][pair[1]] = {} out = open(file_name, 'w') print(' comparisons = [] for genome in rbh: for compare in rbh[genome]: pair = ''.join(sorted([genome, compare])) if pair in comparisons: continue comparisons.append(pair) scores = {'percent identity': [], 'e-value': [], 'bit score': [], 'normalized bit score': [], 'alignment length fraction': []} print(' for id in rbh[genome][compare]: pident, length_fraction, e, bit, norm_bit = rbh[genome][compare][id][3:] scores['percent identity'].append(pident) scores['alignment length fraction'].append(length_fraction) scores['e-value'].append(e) scores['bit score'].append(bit) scores['normalized bit score'].append(norm_bit) if calc_threshold is True: norms = scores['normalized bit score'] average = numpy.average(norms) std = numpy.std(norms) normal_thresh = average - (std * stdevs) print(' print(' print(' norm_threshold[genome][compare], norm_threshold[compare][genome] = normal_thresh, normal_thresh for score in scores: print(' if len(scores[score]) > 0: print(' print('', file=out) out.close() if calc_threshold is True: return thresholds[0:-1] + [norm_threshold] else: return thresholds",
+        "label": 1
+    },
+    {
+        "code": "def neto(fastas, algorithm = 'usearch', e = 0.01, bit = 40, length = .65, norm_bit = False): \"\"\" make and split a rbh network \"\"\" thresholds = [e, bit, length, norm_bit] id2desc = get_descriptions(fastas) id2desc = self_compare(fastas, id2desc, algorithm) hits = compare_genomes(fastas, id2desc, algorithm) calc_thresholds(hits, file_name = 'fbh.scores.summary.txt') rbh_network(id2desc, hits, file_name = 'fbh.network.edges.txt') hits, rbh = find_rbh(hits, id2desc) thresholds = calc_thresholds(rbh, 'rbh.scores.summary.txt', thresholds) g = rbh_network(id2desc, rbh, file_name = 'rbh.network.edges.txt') filtered_g, filtered_rbh = rbh_network(id2desc, rbh, 'rbh.filtered.network.edges.txt', thresholds) calc_thresholds(filtered_rbh, file_name = 'rbh.filtered.scores.summary.txt') print_summary(filtered_g, fastas, id2desc, file_name = 'rbh.filtered.network.nodes.txt') print_network_matrix(filtered_g, fastas, id2desc, file_name = 'rbh.filtered.network.matrix.txt') print_genome_matrix(filtered_rbh, fastas, id2desc, file_name = 'rbh.filtered.network.genome_matrix.txt') split_g = split_network(filtered_g, id2desc, file_name = 'rbh.filtered.split.network.edges.txt') print_summary(split_g, fastas, id2desc, file_name = 'rbh.filtered.split.network.nodes.txt') print_network_matrix(split_g, fastas, id2desc, file_name = 'rbh.filtered.split.network.matrix.txt') return split_g",
+        "label": 0
+    },
+    {
+        "code": "def _parse_raster_info(self, prop=RASTER_INFO): \"\"\" Collapses multiple dimensions into a single raster_info complex struct \"\"\" raster_info = {}.fromkeys(_iso_definitions[prop], u'') raster_info['dimensions'] = get_default_for_complex_sub( prop=prop, subprop='dimensions', value=parse_property(self._xml_tree, None, self._data_map, '_ri_num_dims'), xpath=self._data_map['_ri_num_dims'] ) xpath_root = self._get_xroot_for(prop) xpath_map = self._data_structures[prop] for dimension in parse_complex_list(self._xml_tree, xpath_root, xpath_map, RASTER_DIMS): dimension_type = dimension['type'].lower() if dimension_type == 'vertical': raster_info['vertical_count'] = dimension['size'] elif dimension_type == 'column': raster_info['column_count'] = dimension['size'] raster_info['x_resolution'] = u' '.join(dimension[k] for k in ['value', 'units']).strip() elif dimension_type == 'row': raster_info['row_count'] = dimension['size'] raster_info['y_resolution'] = u' '.join(dimension[k] for k in ['value', 'units']).strip() return raster_info if any(raster_info[k] for k in raster_info) else {}",
+        "label": 0
+    },
+    {
+        "code": "def _update_raster_info(self, **update_props): \"\"\" Derives multiple dimensions from a single raster_info complex struct \"\"\" tree_to_update = update_props['tree_to_update'] prop = update_props['prop'] values = update_props.pop('values') xroot, xpath = None, self._data_map['_ri_num_dims'] raster_info = [update_property(tree_to_update, xroot, xpath, prop, values.get('dimensions', u''))] xpath_root = self._get_xroot_for(prop) xpath_map = self._data_structures[prop] v_dimension = {} if values.get('vertical_count'): v_dimension = v_dimension.fromkeys(xpath_map, u'') v_dimension['type'] = 'vertical' v_dimension['size'] = values.get('vertical_count', u'') x_dimension = {} if values.get('column_count') or values.get('x_resolution'): x_dimension = x_dimension.fromkeys(xpath_map, u'') x_dimension['type'] = 'column' x_dimension['size'] = values.get('column_count', u'') x_dimension['value'] = values.get('x_resolution', u'') y_dimension = {} if values.get('row_count') or values.get('y_resolution'): y_dimension = y_dimension.fromkeys(xpath_map, u'') y_dimension['type'] = 'row' y_dimension['size'] = values.get('row_count', u'') y_dimension['value'] = values.get('y_resolution', u'') update_props['prop'] = RASTER_DIMS update_props['values'] = [v_dimension, x_dimension, y_dimension] raster_info += update_complex_list(xpath_root=xpath_root, xpath_map=xpath_map, **update_props) return raster_info",
+        "label": 0
+    },
+    {
+        "code": "def _trim_xpath(self, xpath, prop): \"\"\" Removes primitive type tags from an XPATH \"\"\" xroot = self._get_xroot_for(prop) if xroot is None and isinstance(xpath, string_types): xtags = xpath.split(XPATH_DELIM) if xtags[-1] in _iso_tag_primitives: xroot = XPATH_DELIM.join(xtags[:-1]) return xroot",
+        "label": 0
+    },
+    {
+        "code": "def shortcut_app_id(shortcut): \"\"\" Generates the app id for a given shortcut. Steam uses app ids as a unique identifier for games, but since shortcuts dont have a canonical serverside representation they need to be generated on the fly. The important part about this function is that it will generate the same app id as Steam does for a given shortcut \"\"\" algorithm = Crc(width = 32, poly = 0x04C11DB7, reflect_in = True, xor_in = 0xffffffff, reflect_out = True, xor_out = 0xffffffff) crc_input = ''.join([shortcut.exe,shortcut.name]) high_32 = algorithm.bit_by_bit(crc_input) | 0x80000000 full_64 = (high_32 << 32) | 0x02000000 return str(full_64)",
+        "label": 0
+    },
+    {
+        "code": "def _config(self): \"\"\"Execute git config.\"\"\" cfg_wr = self.repo.config_writer() cfg_wr.add_section('user') cfg_wr.set_value('user', 'name', self.metadata.author) cfg_wr.set_value('user', 'email', self.metadata.email) cfg_wr.release()",
+        "label": 0
+    },
+    {
+        "code": "def _remote_add(self): \"\"\"Execute git remote add.\"\"\" self.repo.create_remote( 'origin', 'git@github.com:{username}/{repo}.git'.format( username=self.metadata.username, repo=self.metadata.name))",
+        "label": 0
+    },
+    {
+        "code": "def start(self): ''' Starts execution of the script ''' try: self.args.func() except SystemExit as e: if e.code != 0: raise except KeyboardInterrupt: self.log.warning(\"exited via keyboard interrupt\") except: self.log.exception(\"exited start function\") finally: self._flush_metrics_q.put(None, block=True) self._flush_metrics_q.put(None, block=True, timeout=1) self.log.debug(\"exited_successfully\")",
+        "label": 1
+    },
+    {
+        "code": "def define_baseargs(self, parser): ''' Define basic command-line arguments required by the script. @parser is a parser object created using the `argparse` module. returns: None ''' parser.add_argument('--name', default=sys.argv[0], help='Name to identify this instance') parser.add_argument('--log-level', default=None, help='Logging level as picked from the logging module') parser.add_argument('--log-format', default=None, choices=(\"json\", \"pretty\",), help=(\"Force the format of the logs. By default, if the \" \"command is from a terminal, print colorful logs. \" \"Otherwise print json.\"), ) parser.add_argument('--log-file', default=None, help='Writes logs to log file if specified, default: %(default)s', ) parser.add_argument('--quiet', default=False, action=\"store_true\", help='if true, does not print logs to stderr, default: %(default)s', ) parser.add_argument('--metric-grouping-interval', default=None, type=int, help='To group metrics based on time interval ex:10 i.e;(10 sec)', ) parser.add_argument('--debug', default=False, action=\"store_true\", help='To run the code in debug mode', )",
+        "label": 0
+    },
+    {
+        "code": "def cleanup_payload(self, payload): \"\"\" Basically, turns payload that looks like ' \\\\n ' to ''. In the calling function, if this function returns '' no object is added for that payload. \"\"\" p = payload.replace('\\n', '') p = p.rstrip() p = p.lstrip() return p",
+        "label": 0
+    },
+    {
+        "code": "def get_default_for(prop, value): \"\"\" Ensures complex property types have the correct default values \"\"\" prop = prop.strip('_') val = reduce_value(value) if prop in _COMPLEX_LISTS: return wrap_value(val) elif prop in _COMPLEX_STRUCTS: return val or {} else: return u'' if val is None else val",
+        "label": 0
+    },
+    {
+        "code": "def update_property(tree_to_update, xpath_root, xpaths, prop, values, supported=None): \"\"\" Either update the tree the default way, or call the custom updater Default Way: Existing values in the tree are overwritten. If xpaths contains a single path, then each value is written to the tree at that path. If xpaths contains a list of xpaths, then the values corresponding to each xpath index are written to their respective locations. In either case, empty values are ignored. :param tree_to_update: the XML tree compatible with element_utils to be updated :param xpath_root: the XPATH location shared by all the xpaths passed in :param xpaths: a string or a list of strings representing the XPATH location(s) to which to write values :param prop: the name of the property of the parser containing the value(s) with which to update the tree :param values: a single value, or a list of values to write to the specified XPATHs :see: ParserProperty for more on custom updaters :return: a list of all elements updated by this operation \"\"\" if supported and prop.startswith('_') and prop.strip('_') in supported: values = u'' else: values = get_default_for(prop, values) if not xpaths: return [] elif not isinstance(xpaths, ParserProperty): return _update_property(tree_to_update, xpath_root, xpaths, values) else: return xpaths.set_prop(tree_to_update=tree_to_update, prop=prop, values=values)",
+        "label": 0
+    },
+    {
+        "code": "def _update_property(tree_to_update, xpath_root, xpaths, values): \"\"\" Default update operation for a single parser property. If xpaths contains one xpath, then one element per value will be inserted at that location in the tree_to_update; otherwise, the number of values must match the number of xpaths. \"\"\" def update_element(elem, idx, root, path, vals): \"\"\" Internal helper function to encapsulate single item update \"\"\" has_root = bool(root and len(path) > len(root) and path.startswith(root)) path, attr = get_xpath_tuple(path) if attr: removed = [get_element(elem, path)] remove_element_attributes(removed[0], attr) elif not has_root: removed = wrap_value(remove_element(elem, path)) else: path = get_xpath_branch(root, path) removed = [] if idx != 0 else [remove_element(e, path, True) for e in get_elements(elem, root)] if not vals: return removed items = [] for i, val in enumerate(wrap_value(vals)): elem_to_update = elem if has_root: elem_to_update = insert_element(elem, (i + idx), root) val = val.decode('utf-8') if not isinstance(val, string_types) else val if not attr: items.append(insert_element(elem_to_update, i, path, val)) elif path: items.append(insert_element(elem_to_update, i, path, **{attr: val})) else: set_element_attributes(elem_to_update, **{attr: val}) items.append(elem_to_update) return items xpaths = reduce_value(xpaths) values = filter_empty(values) if isinstance(xpaths, string_types): return update_element(tree_to_update, 0, xpath_root, xpaths, values) else: each = [] for index, xpath in enumerate(xpaths): value = values[index] if values else None each.extend(update_element(tree_to_update, index, xpath_root, xpath, value)) return each",
+        "label": 0
+    },
+    {
+        "code": "def validate_complex(prop, value, xpath_map=None): \"\"\" Default validation for single complex data structure \"\"\" if value is not None: validate_type(prop, value, dict) if prop in _complex_definitions: complex_keys = _complex_definitions[prop] else: complex_keys = {} if xpath_map is None else xpath_map for complex_prop, complex_val in iteritems(value): complex_key = '.'.join((prop, complex_prop)) if complex_prop not in complex_keys: _validation_error(prop, None, value, ('keys: {0}'.format(','.join(complex_keys)))) validate_type(complex_key, complex_val, (string_types, list))",
+        "label": 0
+    },
+    {
+        "code": "def validate_complex_list(prop, value, xpath_map=None): \"\"\" Default validation for Attribute Details data structure \"\"\" if value is not None: validate_type(prop, value, (dict, list)) if prop in _complex_definitions: complex_keys = _complex_definitions[prop] else: complex_keys = {} if xpath_map is None else xpath_map for idx, complex_struct in enumerate(wrap_value(value)): cs_idx = prop + '[' + str(idx) + ']' validate_type(cs_idx, complex_struct, dict) for cs_prop, cs_val in iteritems(complex_struct): cs_key = '.'.join((cs_idx, cs_prop)) if cs_prop not in complex_keys: _validation_error(prop, None, value, ('keys: {0}'.format(','.join(complex_keys)))) if not isinstance(cs_val, list): validate_type(cs_key, cs_val, (string_types, list)) else: for list_idx, list_val in enumerate(cs_val): list_prop = cs_key + '[' + str(list_idx) + ']' validate_type(list_prop, list_val, string_types)",
+        "label": 0
+    },
+    {
+        "code": "def validate_dates(prop, value, xpath_map=None): \"\"\" Default validation for Date Types data structure \"\"\" if value is not None: validate_type(prop, value, dict) date_keys = set(value) if date_keys: if DATE_TYPE not in date_keys or DATE_VALUES not in date_keys: if prop in _complex_definitions: complex_keys = _complex_definitions[prop] else: complex_keys = _complex_definitions[DATES] if xpath_map is None else xpath_map _validation_error(prop, None, value, ('keys: {0}'.format(','.join(complex_keys)))) date_type = value[DATE_TYPE] if date_type not in DATE_TYPES: _validation_error('dates.type', None, date_type, DATE_TYPES) date_vals = value[DATE_VALUES] validate_type('dates.values', date_vals, list) dates_len = len(date_vals) if date_type == DATE_TYPE_MISSING and dates_len != 0: _validation_error('len(dates.values)', None, dates_len, 0) if date_type == DATE_TYPE_SINGLE and dates_len != 1: _validation_error('len(dates.values)', None, dates_len, 1) if date_type == DATE_TYPE_RANGE and dates_len != 2: _validation_error('len(dates.values)', None, dates_len, 2) if date_type == DATE_TYPE_MULTIPLE and dates_len < 2: _validation_error('len(dates.values)', None, dates_len, 'at least two') for idx, date in enumerate(date_vals): date_key = 'dates.value[' + str(idx) + ']' validate_type(date_key, date, string_types)",
+        "label": 0
+    },
+    {
+        "code": "def validate_process_steps(prop, value): \"\"\" Default validation for Process Steps data structure \"\"\" if value is not None: validate_type(prop, value, (dict, list)) procstep_keys = set(_complex_definitions[prop]) for idx, procstep in enumerate(wrap_value(value)): ps_idx = prop + '[' + str(idx) + ']' validate_type(ps_idx, procstep, dict) for ps_prop, ps_val in iteritems(procstep): ps_key = '.'.join((ps_idx, ps_prop)) if ps_prop not in procstep_keys: _validation_error(prop, None, value, ('keys: {0}'.format(','.join(procstep_keys)))) if ps_prop != 'sources': validate_type(ps_key, ps_val, string_types) else: validate_type(ps_key, ps_val, (string_types, list)) for src_idx, src_val in enumerate(wrap_value(ps_val)): src_key = ps_key + '[' + str(src_idx) + ']' validate_type(src_key, src_val, string_types)",
+        "label": 0
+    },
+    {
+        "code": "def validate_type(prop, value, expected): \"\"\" Default validation for all types \"\"\" if value is not None and not isinstance(value, expected): _validation_error(prop, type(value).__name__, None, expected)",
+        "label": 0
+    },
+    {
+        "code": "def _validation_error(prop, prop_type, prop_value, expected): \"\"\" Default validation for updated properties \"\"\" if prop_type is None: attrib = 'value' assigned = prop_value else: attrib = 'type' assigned = prop_type raise ValidationError( 'Invalid property {attrib} for {prop}:\\n\\t{attrib}: {assigned}\\n\\texpected: {expected}', attrib=attrib, prop=prop, assigned=assigned, expected=expected, invalid={prop: prop_value} if attrib == 'value' else {} )",
+        "label": 0
+    },
+    {
+        "code": "def get_prop(self, prop): \"\"\" Calls the getter with no arguments and returns its value \"\"\" if self._parser is None: raise ConfigurationError('Cannot call ParserProperty.\"get_prop\" with no parser configured') return self._parser(prop) if prop else self._parser()",
+        "label": 0
+    },
+    {
+        "code": "def can_group_commands(command, next_command): \"\"\" Returns a boolean representing whether these commands can be grouped together or not. A few things are taken into account for this decision: For ``set`` commands: - Are all arguments other than the key/value the same? For ``delete`` and ``get`` commands: - Are all arguments other than the key the same? \"\"\" multi_capable_commands = ('get', 'set', 'delete') if next_command is None: return False name = command.get_name() if name not in multi_capable_commands: return False if name != next_command.get_name(): return False if grouped_args_for_command(command) != grouped_args_for_command(next_command): return False if command.get_kwargs() != next_command.get_kwargs(): return False return True",
+        "label": 0
+    },
+    {
+        "code": "def find_databases(databases): \"\"\" define ribosomal proteins and location of curated databases \"\"\" proteins = ['L15', 'L18', 'L6', 'S8', 'L5', 'L24', 'L14', 'S17', 'L16', 'S3', 'L22', 'S19', 'L2', 'L4', 'L3', 'S10'] protein_databases = { 'L14': 'rpL14_JGI_MDM.filtered.faa', 'L15': 'rpL15_JGI_MDM.filtered.faa', 'L16': 'rpL16_JGI_MDM.filtered.faa', 'L18': 'rpL18_JGI_MDM.filtered.faa', 'L22': 'rpL22_JGI_MDM.filtered.faa', 'L24': 'rpL24_JGI_MDM.filtered.faa', 'L2': 'rpL2_JGI_MDM.filtered.faa', 'L3': 'rpL3_JGI_MDM.filtered.faa', 'L4': 'rpL4_JGI_MDM.filtered.faa', 'L5': 'rpL5_JGI_MDM.filtered.faa', 'L6': 'rpL6_JGI_MDM.filtered.faa', 'S10': 'rpS10_JGI_MDM.filtered.faa', 'S17': 'rpS17_JGI_MDM.filtered.faa', 'S19': 'rpS19_JGI_MDM.filtered.faa', 'S3': 'rpS3_JGI_MDM.filtered.faa', 'S8': 'rpS8_JGI_MDM.filtered.faa'} protein_databases = {key: '%s/%s' % (databases, database) \\ for key, database in list(protein_databases.items())} return proteins, protein_databases",
+        "label": 0
+    },
+    {
+        "code": "def find_next(start, stop, i2hits): \"\"\" which protein has the best hit, the one to the 'right' or to the 'left?' \"\"\" if start not in i2hits and stop in i2hits: index = stop elif stop not in i2hits and start in i2hits: index = start elif start not in i2hits and stop not in i2hits: index = choice([start, stop]) i2hits[index] = [[False]] else: A, B = i2hits[start][0], i2hits[stop][0] if B[10] <= A[10]: index = stop else: index = start if index == start: nstart = start - 1 nstop = stop else: nstop = stop + 1 nstart = start match = i2hits[index][0] rp = match[-1] return index, nstart, nstop, rp, match",
+        "label": 0
+    },
+    {
+        "code": "def find_ribosomal(rps, scaffolds, s2rp, min_hits, max_hits_rp, max_errors): \"\"\" determine which hits represent real ribosomal proteins, identify each in syntenic block max_hits_rp = maximum number of hits to consider per ribosomal protein per scaffold \"\"\" for scaffold, proteins in list(s2rp.items()): hits = {p: [i for i in sorted(hits, key = itemgetter(10))][0:max_hits_rp] for p, hits in list(proteins.items()) if len(hits) > 0} if len(hits) < min_hits: continue best = sorted([hit[0] + [p] for p, hit in list(hits.items())], key = itemgetter(10))[0] block = find_block(rps, scaffolds[scaffold], hits, best, max_errors) if (len(block) - 1) >= min_hits: yield scaffold, block",
+        "label": 0
+    },
+    {
+        "code": "def filter_rep_set(inF, otuSet): \"\"\" Parse the rep set file and remove all sequences not associated with unique OTUs. :@type inF: file :@param inF: The representative sequence set :@rtype: list :@return: The set of sequences associated with unique OTUs \"\"\" seqs = [] for record in SeqIO.parse(inF, \"fasta\"): if record.id in otuSet: seqs.append(record) return seqs",
+        "label": 0
+    },
+    {
+        "code": "def _update_report_item(self, **update_props): \"\"\" Update the text for each element at the configured path if attribute matches \"\"\" tree_to_update = update_props['tree_to_update'] prop = update_props['prop'] values = wrap_value(update_props['values']) xroot = self._get_xroot_for(prop) attr_key = 'type' attr_val = u'' if prop == 'attribute_accuracy': attr_val = 'DQQuanAttAcc' elif prop == 'dataset_completeness': attr_val = 'DQCompOm' for elem in get_elements(tree_to_update, xroot): if get_element_attributes(elem).get(attr_key) == attr_val: clear_element(elem) remove_empty_element(tree_to_update, xroot) attrs = {attr_key: attr_val} updated = [] for idx, value in enumerate(values): elem = insert_element(tree_to_update, idx, xroot, **attrs) updated.append(insert_element(elem, idx, 'measDesc', value)) return updated",
+        "label": 0
+    },
+    {
+        "code": "def _clear_interrupt(self, intbit): \"\"\"Clear the specified interrupt bit in the interrupt status register. \"\"\" int_status = self._device.readU8(VCNL4010_INTSTAT); int_status &= ~intbit; self._device.write8(VCNL4010_INTSTAT, int_status);",
+        "label": 0
+    },
+    {
+        "code": "def move(self): \"\"\"Swaps two nodes\"\"\" a = random.randint(0, len(self.state) - 1) b = random.randint(0, len(self.state) - 1) self.state[[a,b]] = self.state[[b,a]]",
+        "label": 0
+    },
+    {
+        "code": "def self_signed(self, value): \"\"\" A bool - if the certificate should be self-signed. \"\"\" self._self_signed = bool(value) if self._self_signed: self._issuer = None",
+        "label": 0
+    },
+    {
+        "code": "def _get_crl_url(self, distribution_points): \"\"\" Grabs the first URL out of a asn1crypto.x509.CRLDistributionPoints object :param distribution_points: The x509.CRLDistributionPoints object to pull the URL out of :return: A unicode string or None \"\"\" if distribution_points is None: return None for distribution_point in distribution_points: name = distribution_point['distribution_point'] if name.name == 'full_name' and name.chosen[0].name == 'uniform_resource_identifier': return name.chosen[0].chosen.native return None",
+        "label": 0
+    }
+    
+    
+]
