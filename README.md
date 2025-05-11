@@ -14,13 +14,15 @@ The `menu.py` script is a command-line utility for analyzing source code files f
 
 ## Requirements
 
+**Note:** Requires python version 3.10
+
 Ensure you have the necessary Python packages installed. Create a `requirements.txt` file with the following content:
 
 ```plaintext
-numpy
+numpy==1.2.2
 torch
 transformers
-scikit-learn
+scikit-learn==1.2.2
 colorama
 
 ```
