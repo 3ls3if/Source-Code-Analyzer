@@ -1,5 +1,5 @@
-numpy
+numpy==1.2.2
 torch
 transformers
-scikit-learn
+scikit-learn==1.2.2
 colorama
